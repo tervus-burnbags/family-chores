@@ -833,8 +833,12 @@
 
     function setupDrawers() {
       elements.scoreboardToggle.addEventListener('click', () => {
+        const opening = !elements.scoreboardDrawer.classList.contains('open');
         elements.scoreboardDrawer.classList.toggle('open');
         elements.settingsDrawer.classList.remove('open');
+        if (opening && typeof window.refreshPhase4 === 'function') {
+          window.refreshPhase4().catch((error) => console.error(error));
+        }
       });
 
       elements.settingsToggle.addEventListener('click', () => {
@@ -1786,6 +1790,7 @@
       async function renderScoreboardPanel() {
         const phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
+          elements.scoreboardDrawer.innerHTML = '<div class="drawer-grid"><article class="stat-card"><p>Loading...</p></article></div>';
           return;
         }
         ensurePhase4Styles();
@@ -1876,6 +1881,7 @@
         });
       }
 
+      window.refreshPhase4 = refreshPhase4;
       async function refreshPhase4() {
         const phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
@@ -1950,11 +1956,6 @@
         }
       });
 
-      elements.scoreboardToggle.addEventListener('click', () => {
-        if (elements.scoreboardDrawer.classList.contains('open')) {
-          refreshPhase4().catch((error) => console.error(error));
-        }
-      });
 
       const phase4Warmup = setInterval(() => {
         const phase = runtime();
