@@ -1782,18 +1782,19 @@
           const weeklyPay = phase.calculateWeeklyPay(kidConfig.payTiers, weeklyPoints);
           const topTier = (kidConfig.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
           const topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
-          const wb = kidConfig.weeklyBonus || kidConfig.monthlyBonus || { extraPts: 10, bonus: 2 };
-          const bonusThreshold = topMinPts + (wb.extraPts || 10);
-          const weeklyBonus = weeklyPoints >= bonusThreshold ? (wb.bonus || 2) : 0;
+          const wb = kidConfig.weeklyBonus || { extraPts: 10, bonus: 2 };
+          const extraPoints = Math.max(0, weeklyPoints - topMinPts);
+          const bonusChunks = Math.floor(extraPoints / (wb.extraPts || 10));
+          const weeklyBonus = bonusChunks * (wb.bonus || 2);
           const threshold = thresholdInfo(phase, kidId, weeklyPoints);
-          return { kidId, weeklyPoints, weeklyPay, weeklyBonus, bonusThreshold, threshold, owed: Number(((balances[kidId] && balances[kidId].owed) || 0)) };
+          return { kidId, weeklyPoints, weeklyPay, weeklyBonus, bonusChunks, extraPoints, topMinPts, wb, threshold, owed: Number(((balances[kidId] && balances[kidId].owed) || 0)) };
         });
         const debtRows = debts.filter((debt) => !debt.settled);
         elements.scoreboardDrawer.innerHTML = [
           '<div class="drawer-grid">',
           '<article class="stat-card">',
           '<h2>This Week (' + formatWeekRange(now) + ')</h2>',
-          kidRows.map((row) => '<div class="score-row"><div class="score-top"><div><div class="score-name">' + phase.currentConfig.kids[row.kidId].name + '</div><div class="score-pay">' + row.weeklyPoints + 'pts | ' + phase.dollars(row.weeklyPay) + ' earned</div></div><div class="score-next">next: ' + row.threshold.next.minPts + 'pts</div></div><div class="progress ' + row.kidId + '"><span style="width:' + row.threshold.width + '%"></span></div><div class="score-pay">bonus at ' + row.bonusThreshold + 'pts: ' + (row.weeklyBonus > 0 ? phase.dollars(row.weeklyBonus) + ' earned!' : 'not yet') + '</div></div>').join(''),
+          kidRows.map((row) => '<div class="score-row"><div class="score-top"><div><div class="score-name">' + phase.currentConfig.kids[row.kidId].name + '</div><div class="score-pay">' + row.weeklyPoints + 'pts | ' + phase.dollars(row.weeklyPay) + ' earned</div></div><div class="score-next">next: ' + row.threshold.next.minPts + 'pts</div></div><div class="progress ' + row.kidId + '"><span style="width:' + row.threshold.width + '%"></span></div><div class="score-pay">bonus: ' + phase.dollars(row.wb.bonus || 2) + ' per ' + (row.wb.extraPts || 10) + 'pts over ' + row.topMinPts + ' — ' + (row.weeklyBonus > 0 ? phase.dollars(row.weeklyBonus) + ' earned!' : 'none yet') + '</div></div>').join(''),
           '</article>',
           '<article class="stat-card">',
           '<p class="score-section-title">Balances</p>',
