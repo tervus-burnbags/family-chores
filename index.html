@@ -1149,6 +1149,8 @@
         if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) return { intent: 'settle_debt', kids };
         const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
+        if (/\bspent\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text) };
+        if (/\bgave\b/.test(normalized) && /\bcash\b/.test(normalized) && kids.length) return { intent: 'gave_cash', kids: [kids[0]], amount: parseAmount(text) };
         if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
         if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
           return { intent: 'freepoints', kids, points: -parsePoints(text) };
@@ -1225,7 +1227,7 @@
       async function adjustBalance(kidId, delta) {
         const balances = await getBalances();
         const current = Number(((balances[kidId] && balances[kidId].owed) || 0));
-        const next = Math.max(0, current + delta);
+        const next = Number((current + delta).toFixed(2));
         await setOwed(kidId, next);
         return next;
       }
@@ -1317,7 +1319,7 @@
           const points = entries.filter((entry) => entry.kid === kidId && entry.week === week).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
           const pay = calculateWeeklyPay(currentConfig.kids[kidId].payTiers, points);
           const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
-          return currentConfig.kids[kidId].name + ': ' + points + 'pts, ' + dollars(pay) + ' earned, ' + dollars(owed) + ' owed';
+          return currentConfig.kids[kidId].name + ': ' + points + 'pts, ' + dollars(pay) + ' earned, ' + (owed >= 0 ? dollars(owed) + ' owed to them' : 'owes you ' + dollars(Math.abs(owed)));
         });
         addMessage('system', lines.join(' | '));
       }
@@ -1385,7 +1387,31 @@
           }
           const kidId = result.kids[0];
           const balance = await writePayment(kidId, result.amount, 'manual', 'Recorded from chat');
-          addMessage('system', 'Recorded payment for ' + currentConfig.kids[kidId].name + ': ' + dollars(result.amount) + '. Balance is now ' + dollars(balance) + '.');
+          addMessage('system', 'Recorded payment for ' + currentConfig.kids[kidId].name + ': ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          return;
+        }
+        if (result.intent === 'kid_spent') {
+          if (result.amount === null) {
+            addMessage('system', 'How much did they spend?');
+            return;
+          }
+          const kidId = result.kids[0];
+          const balance = await adjustBalance(kidId, -result.amount);
+          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'spend', timestamp: Date.now(), date: toDateString(new Date()), note: 'Recorded from chat' };
+          await database.ref('families/' + familyId + '/payments').push().set(entry);
+          addMessage('system', currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          return;
+        }
+        if (result.intent === 'gave_cash') {
+          if (result.amount === null) {
+            addMessage('system', 'How much cash did you give them?');
+            return;
+          }
+          const kidId = result.kids[0];
+          const balance = await adjustBalance(kidId, -result.amount);
+          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'cash', timestamp: Date.now(), date: toDateString(new Date()), note: 'Gave cash' };
+          await database.ref('families/' + familyId + '/payments').push().set(entry);
+          addMessage('system', 'Gave ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + ' cash. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
         if (result.intent === 'record_debt') {
@@ -1468,6 +1494,8 @@
           '{"intent":"freepoints","kids":["alex"],"points":3}\n' +
           '{"intent":"adhoc","kids":["alex"],"points":2,"choreLabel":"description of chore"}\n' +
           '{"intent":"record_payment","kids":["alex"],"amount":6}\n' +
+          '{"intent":"kid_spent","kids":["alex"],"amount":5}\n' +
+          '{"intent":"gave_cash","kids":["louisa"],"amount":10}\n' +
           '{"intent":"record_debt","kids":["louisa","alex"],"amount":2,"verb":"owes"}\n' +
           '{"intent":"settle_debt","kids":["louisa","alex"]}\n' +
           '{"intent":"change_points","choreId":"feed_dog_am","choreLabel":"Feed dog (AM)","points":2}\n' +
@@ -1790,7 +1818,7 @@
           '<article class="stat-card">',
           '<p class="score-section-title">Balances</p>',
           '<div class="score-actions">',
-          kidRows.map((row) => '<div class="score-action"><span>' + phase.currentConfig.kids[row.kidId].name + ' owed: ' + phase.dollars(row.owed) + '</span><button type="button" data-score-action="pay-balance" data-kid="' + row.kidId + '">Pay</button></div>').join(''),
+          kidRows.map((row) => '<div class="score-action"><span>' + phase.currentConfig.kids[row.kidId].name + ': ' + (row.owed >= 0 ? 'you owe ' + phase.dollars(row.owed) : 'owes you ' + phase.dollars(Math.abs(row.owed))) + '</span><button type="button" data-score-action="pay-balance" data-kid="' + row.kidId + '">Pay</button><button type="button" data-score-action="kid-spent" data-kid="' + row.kidId + '">Spent</button><button type="button" data-score-action="gave-cash" data-kid="' + row.kidId + '">Gave Cash</button></div>').join(''),
           debtRows.length ? debtRows.map((debt) => '<div class="score-action"><span>' + phase.currentConfig.kids[debt.from].name + ' owes ' + phase.currentConfig.kids[debt.to].name + ': ' + phase.dollars(debt.amount) + '</span><button type="button" data-score-action="settle-debt" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>').join('') : '<div class="score-empty">No active debts.</div>',
           '</div>',
           '</article>',
@@ -1878,6 +1906,33 @@
             console.error(error);
             phase.addMessage('system', 'Payment failed.', error.message);
           });
+          return;
+        }
+        if (action === 'kid-spent') {
+          const kidId = button.dataset.kid;
+          const amountText = window.prompt(phase.currentConfig.kids[kidId].name + ' spent how much?');
+          const amount = amountText === null ? null : Number(amountText);
+          if (!amount || Number.isNaN(amount) || amount <= 0) return;
+          const noteText = window.prompt('What was it for?', '') || '';
+          phase.adjustBalance(kidId, -amount).then((balance) => {
+            const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'spend', timestamp: Date.now(), date: phase.toDateString(new Date()), note: noteText };
+            phase.database.ref('families/' + phase.familyId + '/payments').push().set(entry);
+            phase.addMessage('system', phase.currentConfig.kids[kidId].name + ' spent ' + phase.dollars(amount) + (noteText ? ' on ' + noteText : '') + '. Balance: ' + (balance >= 0 ? phase.dollars(balance) + ' owed to them.' : 'they owe you ' + phase.dollars(Math.abs(balance)) + '.'));
+            refreshPhase4().catch((error) => console.error(error));
+          }).catch((error) => { console.error(error); phase.addMessage('system', 'Failed to record spend.', error.message); });
+          return;
+        }
+        if (action === 'gave-cash') {
+          const kidId = button.dataset.kid;
+          const amountText = window.prompt('How much cash did you give ' + phase.currentConfig.kids[kidId].name + '?');
+          const amount = amountText === null ? null : Number(amountText);
+          if (!amount || Number.isNaN(amount) || amount <= 0) return;
+          phase.adjustBalance(kidId, -amount).then((balance) => {
+            const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'cash', timestamp: Date.now(), date: phase.toDateString(new Date()), note: 'Gave cash' };
+            phase.database.ref('families/' + phase.familyId + '/payments').push().set(entry);
+            phase.addMessage('system', 'Gave ' + phase.currentConfig.kids[kidId].name + ' ' + phase.dollars(amount) + ' cash. Balance: ' + (balance >= 0 ? phase.dollars(balance) + ' owed to them.' : 'they owe you ' + phase.dollars(Math.abs(balance)) + '.'));
+            refreshPhase4().catch((error) => console.error(error));
+          }).catch((error) => { console.error(error); phase.addMessage('system', 'Failed to record cash.', error.message); });
           return;
         }
         if (action === 'settle-debt') {
