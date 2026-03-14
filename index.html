@@ -1015,6 +1015,9 @@
         const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
         if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
+        if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
+          return { intent: 'freepoints', kids, points: -parsePoints(text) };
+        }
         if (kids.length && parsePoints(text) !== null && /\b(gets?|earns?|earned|give|add|award)\b/.test(normalized)) {
           return { intent: 'freepoints', kids, points: parsePoints(text) };
         }
@@ -1031,6 +1034,9 @@
           if (!choreMatch || choreMatch.score < 0.3) {
             if (/\b(new chore|something new|something extra)\b/.test(normalized)) {
               return { intent: 'adhoc', kids, points: parsePoints(text), choreLabel: extractAdhocLabel(text, kids) };
+            }
+            if (/\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
+              return { intent: 'freepoints', kids, points: -parsePoints(text) };
             }
             return { intent: 'freepoints', kids, points: parsePoints(text) };
           }
