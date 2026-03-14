@@ -1812,7 +1812,7 @@
         if (!filtered.length) {
           return '<div class="history-list"><div class="history-item">No matching history.</div></div>';
         }
-        return '<div class="history-list">' + filtered.map((entry) => '<div class="history-item"><strong>' + safeName((app.currentConfig.kids[entry.kid] || {}).name || entry.kid) + '</strong> - ' + safeName(entry.choreLabel) + ' (' + entry.points + 'pts)<div class="settings-note">' + safeName(entry.date) + '</div></div>').join('') + '</div>';
+        return '<div class="history-list">' + filtered.map((entry) => '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[entry.kid] || {}).name || entry.kid) + '</strong> - ' + safeName(entry.choreLabel) + ' (' + entry.points + 'pts)<div class="settings-note">' + safeName(entry.date) + '</div></div><button type="button" data-setting-action="delete-log" data-log-id="' + entry.id + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>').join('') + '</div>';
       }
 
       async function renderSettingsPanel() {
@@ -1919,6 +1919,16 @@
         }
         if (action === 'remove-chore') {
           removeChore(button.dataset.chore).catch((error) => console.error(error));
+          return;
+        }
+        if (action === 'delete-log') {
+          const app = phase();
+          const logId = button.dataset.logId;
+          if (!app || !logId) return;
+          app.database.ref('families/' + app.familyId + '/log/' + logId).remove().then(() => {
+            app.addMessage('system', 'Deleted log entry.');
+            renderSettingsPanel().catch((error) => console.error(error));
+          }).catch((error) => { console.error(error); app.addMessage('system', 'Failed to delete.', error.message); });
         }
       });
 
