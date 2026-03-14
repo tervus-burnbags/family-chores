@@ -2518,7 +2518,7 @@
       }
 
       function renderPayTierEditor(kidId, kid) {
-        return '<div class="stat-card"><h3>' + safeName(kidName) + ' pay tiers</h3><div class="settings-list">' +
+        return '<div class="stat-card"><h3>' + safeName(kid.name || kidId) + ' pay tiers</h3><div class="settings-list">' +
           (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><input type="number" min="1" value="' + tier.minPts + '" data-setting="pay-tier-pts" data-kid="' + kidId + '" data-index="' + index + '" style="width:60px"><span class="settings-note">pts =</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$</span></div>').join('') +
           '<div class="settings-row"><span>Bonus: $</span><input type="number" min="0" value="' + ((kid.weeklyBonus || { bonus: 2 }).bonus) + '" data-setting="bonus-pay" data-kid="' + kidId + '"><span class="settings-note">per every</span><input type="number" min="1" value="' + ((kid.weeklyBonus || { extraPts: 10 }).extraPts) + '" data-setting="bonus-pts" data-kid="' + kidId + '"><span class="settings-note">pts above goal</span></div>' +
           '</div></div>';
