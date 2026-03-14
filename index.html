@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Family Chores</title>
+  <meta name="theme-color" content="#4a90d9">
+  <meta name="description" content="Voice-first family chore tracker PWA.">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-alt: #edf4ff;
+      --line: #d7e0ee;
+      --text: #1f2937;
+      --muted: #64748b;
+      --alex: #4a90d9;
+      --louisa: #8a5bd1;
+      --danger: #d64545;
+      --shadow: 0 18px 44px rgba(39, 58, 87, 0.12);
+      --radius: 20px;
+      --tap: 48px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(74, 144, 217, 0.14), transparent 28%),
+        radial-gradient(circle at top right, rgba(138, 91, 209, 0.14), transparent 24%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100%, 560px);
+      min-height: calc(100vh - 32px);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(215, 224, 238, 0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      line-height: 1.2;
+    }
+
+    .brand small {
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      min-width: var(--tap);
+      min-height: var(--tap);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 14px;
+      background: var(--panel-alt);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.98);
+    }
+
+    .drawer {
+      display: none;
+      padding: 14px 16px;
+    }
+
+    .drawer.open {
+      display: block;
+    }
+
+    .drawer-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stat-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(237, 244, 255, 0.9));
+      border: 1px solid var(--line);
+    }
+
+    .stat-card h2,
+    .stat-card h3,
+    .stat-card p {
+      margin: 0;
+    }
+
+    .stat-card h2,
+    .stat-card h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .stat-card p {
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .messages {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      min-height: 320px;
+    }
+
+    .message {
+      max-width: 88%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .message.system {
+      align-self: flex-start;
+      background: #eef5ff;
+      border: 1px solid #d5e4fb;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(74, 144, 217, 0.12), rgba(138, 91, 209, 0.14));
+      border: 1px solid rgba(111, 135, 195, 0.22);
+    }
+
+    .message-meta {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .composer {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .composer input {
+      min-height: var(--tap);
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+
+    .composer button {
+      min-width: var(--tap);
+      min-height: var(--tap);
+      padding: 0 16px;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .send-btn {
+      background: var(--alex);
+      color: #fff;
+    }
+
+    .mic-btn {
+      background: rgba(138, 91, 209, 0.14);
+      color: var(--louisa);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: var(--muted);
+    }
+
+    .badge.alex {
+      background: rgba(74, 144, 217, 0.14);
+      color: var(--alex);
+    }
+
+    .badge.louisa {
+      background: rgba(138, 91, 209, 0.14);
+      color: var(--louisa);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.38);
+      z-index: 20;
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(100%, 440px);
+      padding: 20px;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
+      display: grid;
+      gap: 14px;
+    }
+
+    .modal h2,
+    .modal p {
+      margin: 0;
+    }
+
+    .modal p {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .modal-actions button,
+    .modal-actions input {
+      min-height: var(--tap);
+      border-radius: 14px;
+    }
+
+    .primary {
+      border: 0;
+      background: var(--alex);
+      color: #fff;
+    }
+
+    .secondary {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+
+    .family-join {
+      display: grid;
+      gap: 10px;
+      padding-top: 4px;
+      border-top: 1px solid #e8eef7;
+    }
+
+    .family-join input {
+      padding: 0 14px;
+      border: 1px solid var(--line);
+    }
+
+    .status {
+      min-height: 1.2em;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .app {
+        min-height: calc(100vh - 20px);
+      }
+
+      .composer {
+        grid-template-columns: 1fr auto;
+      }
+
+      .send-btn {
+        display: none;
+      }
+
+      .message {
+        max-width: 94%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel header" aria-label="App header">
+      <div class="brand">
+        <h1>Family Chores</h1>
+        <small id="familyLabel">Connecting to Firebase...</small>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="scoreboardToggle" type="button" aria-label="Toggle scoreboard">??</button>
+        <button class="icon-btn" id="settingsToggle" type="button" aria-label="Open settings">??</button>
+      </div>
+    </section>
+
+    <section class="panel drawer" id="scoreboardDrawer" aria-label="Scoreboard panel">
+      <div class="drawer-grid">
+        <article class="stat-card">
+          <h2>This Week</h2>
+          <p>Scoreboard and pay progress arrive in Phase 4.</p>
+          <div class="badge-row">
+            <span class="badge alex">Alex</span>
+            <span class="badge louisa">Louisa</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel drawer" id="settingsDrawer" aria-label="Settings panel">
+      <div class="drawer-grid">
+        <article class="stat-card">
+          <h3>Settings</h3>
+          <p>Chore editing, pay tiers, family sharing, and history are planned for Phase 5.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
+
+    <form class="panel composer" id="composer">
+      <label class="visually-hidden" for="messageInput">Type a chore update</label>
+      <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
+      <button class="send-btn" type="submit">Send</button>
+      <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">??</button>
+    </form>
+  </main>
+
+  <div class="overlay" id="familyModal" role="dialog" aria-modal="true" aria-labelledby="familyModalTitle">
+    <div class="modal">
+      <h2 id="familyModalTitle">Set up your family</h2>
+      <p>Create a new family code or join an existing one to sync chores across devices.</p>
+      <div class="modal-actions">
+        <button class="primary" id="createFamilyButton" type="button">Create New Family</button>
+      </div>
+      <div class="family-join">
+        <input id="joinFamilyInput" type="text" maxlength="8" placeholder="Enter 8-character code" autocomplete="off">
+        <button class="secondary" id="joinFamilyButton" type="button">Join Family</button>
+      </div>
+      <div class="status" id="familyModalStatus"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const STORAGE_KEY = 'familyChores.familyId';
+    const KIDS = {
+      alex: {
+        name: 'Alex',
+        born: '2019-02-15',
+        payTiers: [
+          { minPts: 12, pay: 3 },
+          { minPts: 20, pay: 6 }
+        ],
+        monthlyBonus: { threshold: 100, bonus: 6 }
+      },
+      louisa: {
+        name: 'Louisa',
+        born: '2021-07-02',
+        payTiers: [
+          { minPts: 8, pay: 2 },
+          { minPts: 12, pay: 4 }
+        ],
+        monthlyBonus: { threshold: 60, bonus: 4 }
+      }
+    };
+
+    const CHORES = {
+      feed_dog_am: {
+        label: 'Feed dog (AM)',
+        points: 1,
+        kids: ['alex', 'louisa'],
+        keywords: ['fed the dog this morning', 'fed dog', 'dog food morning']
+      },
+      feed_dog_pm: {
+        label: 'Feed dog (PM)',
+        points: 1,
+        kids: ['alex', 'louisa'],
+        keywords: ['fed the dog tonight', 'fed dog pm', 'dog food evening']
+      },
+      refill_dog_water: {
+        label: 'Refill dog water',
+        points: 1,
+        kids: ['alex', 'louisa'],
+        keywords: ['refill water', 'dog water', 'filled water bowl']
+      },
+      make_bed: {
+        label: 'Make bed',
+        points: 1,
+        kids: ['alex', 'louisa'],
+        keywords: ['made bed', 'make bed', 'made their bed', 'beds']
+      },
+      put_away_laundry: {
+        label: 'Put away clean laundry',
+        points: 1,
+        kids: ['alex'],
+        keywords: ['put away laundry', 'put away clothes', 'laundry away']
+      },
+      put_away_clothes: {
+        label: 'Put away clothes',
+        points: 1,
+        kids: ['louisa'],
+        keywords: ['put away clothes', 'clothes away']
+      },
+      wipe_bathroom: {
+        label: 'Wipe bathroom counter',
+        points: 1,
+        kids: ['alex'],
+        keywords: ['wipe bathroom', 'bathroom counter', 'cleaned bathroom']
+      },
+      wipe_surfaces: {
+        label: 'Wipe surfaces',
+        points: 2,
+        kids: ['alex', 'louisa'],
+        keywords: ['wiped surfaces', 'wipe surfaces', 'wiped table', 'wiped counter', 'cleaned surfaces', 'wiped tower']
+      },
+      help_pack_lunch: {
+        label: 'Help pack lunch',
+        points: 2,
+        kids: ['alex'],
+        keywords: ['pack lunch', 'packed lunch', 'lunch for tomorrow']
+      },
+      fold_laundry: {
+        label: 'Fold laundry',
+        points: 2,
+        kids: ['alex'],
+        keywords: ['fold laundry', 'folded laundry', 'folded towels', 'folded clothes']
+      },
+      match_socks: {
+        label: 'Match socks',
+        points: 2,
+        kids: ['louisa'],
+        keywords: ['match socks', 'matched socks', 'sock matching']
+      },
+      fold_washcloths: {
+        label: 'Fold washcloths',
+        points: 2,
+        kids: ['louisa'],
+        keywords: ['fold washcloths', 'folded washcloths']
+      },
+      bins_in: {
+        label: 'Bring bins back in',
+        points: 2,
+        kids: ['alex', 'louisa'],
+        keywords: ['bins in', 'bring bins', 'bins back', 'brought bins in', 'garbage in', 'recycling in']
+      },
+      bins_curb: {
+        label: 'Bins to curb',
+        points: 3,
+        kids: ['alex', 'louisa'],
+        keywords: ['bins to curb', 'bins out', 'took bins out', 'trash out', 'garbage out', 'recycling out', 'took out trash']
+      },
+      water_plants: {
+        label: 'Water plants',
+        points: 3,
+        kids: ['alex', 'louisa'],
+        keywords: ['water plants', 'watered plants', 'watered the plants']
+      }
+    };
+
+    const elements = {
+      messages: document.getElementById('messages'),
+      familyLabel: document.getElementById('familyLabel'),
+      familyModal: document.getElementById('familyModal'),
+      familyModalStatus: document.getElementById('familyModalStatus'),
+      createFamilyButton: document.getElementById('createFamilyButton'),
+      joinFamilyButton: document.getElementById('joinFamilyButton'),
+      joinFamilyInput: document.getElementById('joinFamilyInput'),
+      composer: document.getElementById('composer'),
+      messageInput: document.getElementById('messageInput'),
+      micButton: document.getElementById('micButton'),
+      scoreboardToggle: document.getElementById('scoreboardToggle'),
+      settingsToggle: document.getElementById('settingsToggle'),
+      scoreboardDrawer: document.getElementById('scoreboardDrawer'),
+      settingsDrawer: document.getElementById('settingsDrawer')
+    };
+
+    let auth;
+    let database;
+    let familyId = null;
+    let currentUser = null;
+
+    function buildDefaultConfig() {
+      return {
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        kids: KIDS,
+        chores: CHORES
+      };
+    }
+
+    function addMessage(role, text, meta) {
+      const message = document.createElement('article');
+      message.className = 'message ' + role;
+      message.innerHTML = '<div>' + escapeHtml(text) + '</div>';
+      if (meta) {
+        const metaNode = document.createElement('div');
+        metaNode.className = 'message-meta';
+        metaNode.textContent = meta;
+        message.appendChild(metaNode);
+      }
+      elements.messages.appendChild(message);
+      elements.messages.scrollTop = elements.messages.scrollHeight;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function setModalStatus(text, isError) {
+      elements.familyModalStatus.textContent = text || '';
+      elements.familyModalStatus.classList.toggle('error', Boolean(isError));
+    }
+
+    function openModal() {
+      elements.familyModal.classList.add('open');
+      elements.joinFamilyInput.focus();
+    }
+
+    function closeModal() {
+      elements.familyModal.classList.remove('open');
+      setModalStatus('', false);
+    }
+
+    function generateFamilyCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 8; i += 1) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return code;
+    }
+
+    async function createFamily() {
+      setModalStatus('Creating family...', false);
+      let nextFamilyId = generateFamilyCode();
+      let existing = await database.ref('families/' + nextFamilyId + '/config').get();
+      while (existing.exists()) {
+        nextFamilyId = generateFamilyCode();
+        existing = await database.ref('families/' + nextFamilyId + '/config').get();
+      }
+
+      await database.ref('families/' + nextFamilyId + '/config').set(buildDefaultConfig());
+      localStorage.setItem(STORAGE_KEY, nextFamilyId);
+      familyId = nextFamilyId;
+      closeModal();
+      updateFamilyLabel();
+      addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
+    }
+
+    async function joinFamily() {
+      const code = elements.joinFamilyInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      elements.joinFamilyInput.value = code;
+      if (code.length !== 8) {
+        setModalStatus('Enter the 8-character family code.', true);
+        return;
+      }
+
+      setModalStatus('Joining family...', false);
+      const snapshot = await database.ref('families/' + code + '/config').get();
+      if (!snapshot.exists()) {
+        setModalStatus('Family code not found. Check the code and try again.', true);
+        return;
+      }
+
+      localStorage.setItem(STORAGE_KEY, code);
+      familyId = code;
+      closeModal();
+      updateFamilyLabel();
+      addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Joined family: ' + familyId);
+    }
+
+    function updateFamilyLabel() {
+      if (!currentUser) {
+        elements.familyLabel.textContent = 'Signing in...';
+        return;
+      }
+      if (!familyId) {
+        elements.familyLabel.textContent = 'Choose a family code to continue';
+        return;
+      }
+      elements.familyLabel.textContent = 'Family code: ' + familyId + ' | Sync ready';
+    }
+
+    function setupDrawers() {
+      elements.scoreboardToggle.addEventListener('click', () => {
+        elements.scoreboardDrawer.classList.toggle('open');
+        elements.settingsDrawer.classList.remove('open');
+      });
+
+      elements.settingsToggle.addEventListener('click', () => {
+        elements.settingsDrawer.classList.toggle('open');
+        elements.scoreboardDrawer.classList.remove('open');
+      });
+    }
+
+    function setupComposer() {
+      elements.composer.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const text = elements.messageInput.value.trim();
+        if (!text) {
+          return;
+        }
+        addMessage('user', text);
+        addMessage('system', 'Phase 2 will parse and log this message.', 'Firebase is connected and ready.');
+        elements.messageInput.value = '';
+      });
+
+      elements.micButton.addEventListener('click', () => {
+        addMessage('system', 'Voice input arrives in Phase 3.', 'Use text entry for now.');
+      });
+    }
+
+    async function initFirebase() {
+      if (typeof firebaseConfig !== 'object') {
+        throw new Error('firebase-config.js is missing a valid firebaseConfig object.');
+      }
+
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      database = firebase.database();
+      updateFamilyLabel();
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          return;
+        }
+        currentUser = user;
+        updateFamilyLabel();
+        familyId = localStorage.getItem(STORAGE_KEY);
+        if (familyId) {
+          const configSnapshot = await database.ref('families/' + familyId + '/config').get();
+          if (!configSnapshot.exists()) {
+            localStorage.removeItem(STORAGE_KEY);
+            familyId = null;
+            updateFamilyLabel();
+            openModal();
+            setModalStatus('Saved family code was not found. Create a new family or join again.', true);
+            return;
+          }
+          updateFamilyLabel();
+          addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
+        } else {
+          openModal();
+        }
+      });
+
+      await auth.signInAnonymously();
+    }
+
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch((error) => {
+            console.error('Service worker registration failed:', error);
+          });
+        });
+      }
+    }
+
+    function bindFamilyActions() {
+      elements.createFamilyButton.addEventListener('click', () => {
+        createFamily().catch((error) => {
+          console.error(error);
+          setModalStatus('Unable to create a family right now.', true);
+        });
+      });
+
+      elements.joinFamilyButton.addEventListener('click', () => {
+        joinFamily().catch((error) => {
+          console.error(error);
+          setModalStatus('Unable to join the family right now.', true);
+        });
+      });
+
+      elements.joinFamilyInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          elements.joinFamilyButton.click();
+        }
+      });
+    }
+
+    setupDrawers();
+    setupComposer();
+    bindFamilyActions();
+    addMessage('system', 'Connecting to Firebase...', 'Anonymous auth will start on load.');
+    registerServiceWorker();
+    initFirebase().catch((error) => {
+      console.error(error);
+      elements.familyLabel.textContent = 'Firebase connection failed';
+      addMessage('system', 'Firebase setup failed. Check your config and project settings.', error.message);
+    });
+  </script>
+</body>
+</html>
+
