@@ -1713,10 +1713,14 @@
         }
       }
 
-      const GEMINI_KEY = 'AIzaSyAjrqU0Kc19rmLEZh1KcVe7tKTFBkp9XNY';
-      const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY;
+      const GEMINI_KEY = typeof GEMINI_API_KEY === 'string' ? GEMINI_API_KEY.trim() : '';
+      const GEMINI_ENABLED = typeof AI_PARSER_ENABLED === 'boolean' ? AI_PARSER_ENABLED : false;
+      const GEMINI_URL = GEMINI_KEY ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY : '';
 
       async function askGemini(text) {
+        if (!GEMINI_ENABLED || !GEMINI_URL) {
+          return null;
+        }
         const choreList = choreEntries().map(([id, c]) => id + ': ' + c.label + ' (' + c.points + 'pts)').join(', ');
         const prompt = 'You are a chore tracker assistant for a family with two kids: Alex and Louisa. ' +
           'Available chores: ' + choreList + '. ' +
@@ -1758,8 +1762,8 @@
         }
         addMessage('user', text);
         let result = parseIntent(text);
-        var shouldTryGemini = result.intent === 'no_match' || result.intent === 'missing_kid' ||
-          (result.intent === 'check_status' && parsePoints(text) !== null);
+        var shouldTryGemini = GEMINI_ENABLED && GEMINI_URL && (result.intent === 'no_match' || result.intent === 'missing_kid' ||
+          (result.intent === 'check_status' && parsePoints(text) !== null));
         var geminiTriedAndFailed = false;
         if (shouldTryGemini) {
           try {
@@ -1779,6 +1783,24 @@
           return;
         }
         await executeIntent(result);
+      }
+
+      async function waitForRuntimeReady(getRuntime, timeoutMs) {
+        const startedAt = Date.now();
+        return new Promise(function (resolve, reject) {
+          const poll = setInterval(function () {
+            const runtime = getRuntime();
+            if (runtime && runtime.familyId && runtime.configLoaded) {
+              clearInterval(poll);
+              resolve(runtime);
+              return;
+            }
+            if (Date.now() - startedAt >= timeoutMs) {
+              clearInterval(poll);
+              reject(new Error('Timed out while loading family data.'));
+            }
+          }, 300);
+        });
       }
       let recognition = null;
       let isListening = false;
@@ -2126,12 +2148,12 @@
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
           document.getElementById('scoreboardDrawer').querySelector('.drawer-grid').innerHTML = '<article class="stat-card"><p>Loading...</p></article>';
-          await new Promise(function (resolve) {
-            var poll = setInterval(function () {
-              phase = runtime();
-              if (phase && phase.familyId && phase.configLoaded) { clearInterval(poll); resolve(); }
-            }, 300);
-          });
+          try {
+            phase = await waitForRuntimeReady(runtime, 5000);
+          } catch (error) {
+            document.getElementById('scoreboardDrawer').querySelector('.drawer-grid').innerHTML = '<article class="stat-card"><p>Unable to load scoreboard right now.</p></article>';
+            return;
+          }
         }
         await maybeRunWeeklyPay();
         await renderScoreboardPanel();
@@ -2141,15 +2163,12 @@
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
           document.getElementById('cardContent').innerHTML = '<p style="color:var(--muted)">Loading...</p>';
-          await new Promise(function (resolve) {
-            var poll = setInterval(function () {
-              phase = runtime();
-              if (phase && phase.familyId && phase.configLoaded) {
-                clearInterval(poll);
-                resolve();
-              }
-            }, 300);
-          });
+          try {
+            phase = await waitForRuntimeReady(runtime, 5000);
+          } catch (error) {
+            document.getElementById('cardContent').innerHTML = '<p style="color:var(--danger)">Unable to load card right now.</p>';
+            return;
+          }
         }
         try {
         const kid = phase.currentConfig.kids[kidId];
@@ -2397,12 +2416,12 @@
         var app = phase();
         if (!app || !app.familyId || !app.configLoaded) {
           elements.settingsDrawer.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading...</p></article></div>';
-          await new Promise(function (resolve) {
-            var poll = setInterval(function () {
-              app = phase();
-              if (app && app.familyId && app.configLoaded) { clearInterval(poll); resolve(); }
-            }, 300);
-          });
+          try {
+            app = await waitForRuntimeReady(phase, 5000);
+          } catch (error) {
+            elements.settingsDrawer.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Unable to load settings right now.</p></article></div>';
+            return;
+          }
         }
         ensurePhase5Styles();
         const kids = app.currentConfig.kids || KIDS;
