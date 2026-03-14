@@ -10,3 +10,6 @@ Thumbs.db
 *.swo
 *~
 .vscode/
+
+# Private local notes / family codes
+*.txt

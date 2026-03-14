@@ -50,10 +50,18 @@
     }
 
     .app {
-      width: min(100%, 560px);
+      width: min(100%, 720px);
       min-height: calc(100vh - 32px);
       display: grid;
-      grid-template-rows: auto auto 1fr auto auto;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "header"
+        "card"
+        "settings"
+        "quick"
+        "messages"
+        "composer";
+      grid-template-rows: auto auto auto auto minmax(320px, 1fr) auto;
       gap: 12px;
       overflow-x: hidden;
     }
@@ -67,9 +75,10 @@
     }
 
     .header {
+      grid-area: header;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: stretch;
       gap: 12px;
       padding: 16px 18px;
     }
@@ -89,6 +98,9 @@
 
     .brand small {
       color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
@@ -99,7 +111,8 @@
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
-      justify-content: flex-end;
+      justify-content: flex-start;
+      width: 100%;
       min-width: 0;
     }
 
@@ -132,6 +145,14 @@
     .drawer {
       display: none;
       padding: 14px 16px;
+    }
+
+    #cardDrawer {
+      grid-area: card;
+    }
+
+    #settingsDrawer {
+      grid-area: settings;
     }
 
     .drawer.open {
@@ -182,6 +203,7 @@
     }
 
     .messages {
+      grid-area: messages;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -225,6 +247,7 @@
     }
 
     .composer {
+      grid-area: composer;
       padding: 12px;
       display: grid;
       grid-template-columns: 1fr auto auto;
@@ -486,6 +509,7 @@
     }
 
     .quick-points {
+      grid-area: quick;
       padding: 10px 12px;
       display: flex;
       flex-direction: column;
@@ -675,10 +699,6 @@
         min-height: calc(100vh - 20px);
       }
 
-      .header {
-        align-items: flex-start;
-      }
-
       .brand {
         flex: 1 1 100%;
       }
@@ -735,13 +755,12 @@
     <section class="panel header" aria-label="App header">
       <div class="brand">
         <h1>Family Chores</h1>
-        <small id="familyLabel">Connecting to Firebase...</small>
+        <small id="familyLabel"></small>
       </div>
       <div class="header-actions">
         <button class="icon-btn card-btn alex" id="cardAlex" type="button" data-card-kid="alex" aria-label="Alex's card">A</button>
         <button class="icon-btn card-btn louisa" id="cardLouisa" type="button" data-card-kid="louisa" aria-label="Louisa's card">L</button>
-        <button class="icon-btn" id="scoreboardToggle" type="button" aria-label="Toggle scoreboard">Score</button>
-        <button class="icon-btn" id="settingsToggle" type="button" aria-label="Open settings">Settings</button>
+        <button class="icon-btn" id="settingsToggle" type="button" aria-label="Open settings">&#9881;</button>
       </div>
     </section>
 
@@ -749,15 +768,9 @@
       <div id="cardContent"></div>
     </section>
 
-    <section class="panel drawer" id="scoreboardDrawer" aria-label="Scoreboard panel">
-      <div class="drawer-grid"></div>
-    </section>
-
     <section class="panel drawer" id="settingsDrawer" aria-label="Settings panel">
       <div class="drawer-grid"></div>
     </section>
-
-    <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
 
     <div class="panel quick-points" id="quickPoints">
       <div class="qp-row">
@@ -772,6 +785,8 @@
         <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
       </div>
     </div>
+
+    <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
 
     <form class="panel composer" id="composer">
       <label class="visually-hidden" for="messageInput">Type a chore update</label>
@@ -937,9 +952,7 @@
       composer: document.getElementById('composer'),
       messageInput: document.getElementById('messageInput'),
       micButton: document.getElementById('micButton'),
-      scoreboardToggle: document.getElementById('scoreboardToggle'),
       settingsToggle: document.getElementById('settingsToggle'),
-      scoreboardDrawer: document.getElementById('scoreboardDrawer'),
       settingsDrawer: document.getElementById('settingsDrawer'),
       cardDrawer: document.getElementById('cardDrawer'),
       cardContent: document.getElementById('cardContent')
@@ -1035,7 +1048,6 @@
       familyId = nextFamilyId;
       closeModal();
       updateFamilyLabel();
-      addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
     }
 
     async function joinFamily() {
@@ -1057,12 +1069,11 @@
       familyId = code;
       closeModal();
       updateFamilyLabel();
-      addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Joined family: ' + familyId);
     }
 
     function updateFamilyLabel() {
       if (!currentUser) {
-        elements.familyLabel.textContent = 'Signing in...';
+        elements.familyLabel.textContent = '';
         return;
       }
       if (!familyId) {
@@ -1074,21 +1085,9 @@
 
     function setupDrawers() {
       function closeAllDrawers() {
-        elements.scoreboardDrawer.classList.remove('open');
         elements.settingsDrawer.classList.remove('open');
         elements.cardDrawer.classList.remove('open');
       }
-
-      elements.scoreboardToggle.addEventListener('click', () => {
-        const opening = !elements.scoreboardDrawer.classList.contains('open');
-        closeAllDrawers();
-        if (opening) {
-          elements.scoreboardDrawer.classList.add('open');
-          if (typeof window.refreshPhase4 === 'function') {
-            window.refreshPhase4().catch((error) => console.error(error));
-          }
-        }
-      });
 
       elements.settingsToggle.addEventListener('click', () => {
         const opening = !elements.settingsDrawer.classList.contains('open');
@@ -1110,7 +1109,9 @@
           if (!wasOpen || !wasSameKid) {
             elements.cardDrawer.classList.add('open');
             elements.cardDrawer.dataset.kid = kidId;
-            if (typeof window.renderCardView === 'function') {
+            if (typeof window.openCardForKid === 'function') {
+              window.openCardForKid(kidId);
+            } else if (typeof window.renderCardView === 'function') {
               window.renderCardView(kidId).catch((error) => console.error(error));
             }
           }
@@ -1171,7 +1172,6 @@
             await window.loadFamilyConfigV2();
           }
           updateFamilyLabel();
-          addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
         } else {
           openModal();
         }
@@ -1216,7 +1216,6 @@
     setupDrawers();
     setupComposer();
     bindFamilyActions();
-    addMessage('system', 'Connecting to Firebase...', 'Anonymous auth will start on load.');
     registerServiceWorker();
     initFirebase().catch((error) => {
       console.error(error);
@@ -1284,7 +1283,6 @@
         await loadFamilyConfigV2();
         closeModal();
         updateFamilyLabel();
-        addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
       };
 
       const originalJoinFamily = joinFamily;
@@ -2098,50 +2096,6 @@
         return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
       }
 
-      async function renderScoreboardPanel() {
-        const phase = runtime();
-        if (!phase || !phase.familyId || !phase.configLoaded) {
-          elements.scoreboardDrawer.innerHTML = '<div class="drawer-grid"><article class="stat-card"><p>Loading...</p></article></div>';
-          return;
-        }
-        ensurePhase4Styles();
-        const entries = await phase.getAllLogEntries();
-        const balances = await phase.getBalances();
-        const debts = await getDebts(phase);
-        const now = new Date();
-        const currentWeek = phase.toIsoWeek(now);
-        const kids = Object.keys(phase.currentConfig.kids || KIDS);
-        const kidRows = kids.map((kidId) => {
-          const kidConfig = phase.currentConfig.kids[kidId];
-          const weeklyPoints = entries.filter((entry) => entry.kid === kidId && entry.week === currentWeek).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
-          const weeklyPay = phase.calculateWeeklyPay(kidConfig.payTiers, weeklyPoints);
-          const topTier = (kidConfig.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
-          const topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
-          const wb = kidConfig.weeklyBonus || { extraPts: 10, bonus: 2 };
-          const extraPoints = Math.max(0, weeklyPoints - topMinPts);
-          const bonusChunks = Math.floor(extraPoints / (wb.extraPts || 10));
-          const weeklyBonus = bonusChunks * (wb.bonus || 2);
-          const threshold = thresholdInfo(phase, kidId, weeklyPoints);
-          return { kidId, weeklyPoints, weeklyPay, weeklyBonus, bonusChunks, extraPoints, topMinPts, wb, threshold, owed: Number(((balances[kidId] && balances[kidId].owed) || 0)) };
-        });
-        const debtRows = debts.filter((debt) => !debt.settled);
-        elements.scoreboardDrawer.innerHTML = [
-          '<div class="drawer-grid">',
-          '<article class="stat-card">',
-          '<h2>This Week (' + formatWeekRange(now) + ')</h2>',
-          kidRows.map((row) => '<div class="score-row"><div class="score-top"><div><div class="score-name">' + phase.currentConfig.kids[row.kidId].name + '</div><div class="score-pay">' + row.weeklyPoints + 'pts | ' + phase.dollars(row.weeklyPay) + ' earned</div></div><div class="score-next">next: ' + row.threshold.next.minPts + 'pts</div></div><div class="progress ' + row.kidId + '"><span style="width:' + row.threshold.width + '%"></span></div><div class="score-pay">bonus: ' + phase.dollars(row.wb.bonus || 2) + ' per ' + (row.wb.extraPts || 10) + 'pts over ' + row.topMinPts + ' — ' + (row.weeklyBonus > 0 ? phase.dollars(row.weeklyBonus) + ' earned!' : 'none yet') + '</div></div>').join(''),
-          '</article>',
-          '<article class="stat-card">',
-          '<p class="score-section-title">Balances</p>',
-          '<div class="score-actions">',
-          kidRows.map((row) => '<div class="score-action"><span>' + phase.currentConfig.kids[row.kidId].name + ': ' + (row.owed >= 0 ? 'you owe ' + phase.dollars(row.owed) : 'owes you ' + phase.dollars(Math.abs(row.owed))) + '</span><button type="button" data-score-action="pay-balance" data-kid="' + row.kidId + '">Pay</button><button type="button" data-score-action="kid-spent" data-kid="' + row.kidId + '">Spent</button><button type="button" data-score-action="gave-cash" data-kid="' + row.kidId + '">Gave Cash</button></div>').join(''),
-          debtRows.length ? debtRows.map((debt) => '<div class="score-action"><span>' + phase.currentConfig.kids[debt.from].name + ' owes ' + phase.currentConfig.kids[debt.to].name + ': ' + phase.dollars(debt.amount) + '</span><button type="button" data-score-action="settle-debt" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>').join('') : '<div class="score-empty">No active debts.</div>',
-          '</div>',
-          '</article>',
-          '</div>'
-        ].join('');
-      }
-
       async function maybeRunWeeklyPay() {
         const phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
@@ -2192,21 +2146,13 @@
         });
       }
 
-      window.refreshPhase4 = refreshPhase4;
-      async function refreshPhase4() {
-        var phase = runtime();
-        if (!phase || !phase.familyId || !phase.configLoaded) {
-          document.getElementById('scoreboardDrawer').querySelector('.drawer-grid').innerHTML = '<article class="stat-card"><p>Loading...</p></article>';
-          try {
-            phase = await waitForRuntimeReady(runtime, 5000);
-          } catch (error) {
-            document.getElementById('scoreboardDrawer').querySelector('.drawer-grid').innerHTML = '<article class="stat-card"><p>Unable to load scoreboard right now.</p></article>';
-            return;
-          }
+      window.openCardForKid = function openCardForKid(kidId) {
+        elements.cardDrawer.classList.add('open');
+        elements.cardDrawer.dataset.kid = kidId;
+        if (typeof window.renderCardView === 'function') {
+          window.renderCardView(kidId).catch((error) => console.error(error));
         }
-        await maybeRunWeeklyPay();
-        await renderScoreboardPanel();
-      }
+      };
 
       window.renderCardView = async function renderCardView(kidId) {
         var phase = runtime();
@@ -2220,81 +2166,114 @@
           }
         }
         try {
-        const kid = phase.currentConfig.kids[kidId];
-        const balances = await phase.getBalances();
-        const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
-        const entries = await phase.getAllLogEntries();
-        const now = new Date();
-        const currentWeek = phase.toIsoWeek(now);
-        const weeklyPoints = entries.filter((e) => e.kid === kidId && e.week === currentWeek).reduce((sum, e) => sum + Number(e.points || 0), 0);
-        var txns = [];
-        try {
-          const paySnap = await phase.database.ref('families/' + phase.familyId + '/payments').get();
-          if (paySnap.exists()) {
-            paySnap.forEach((child) => {
-              var val = child.val();
-              if (val.kid === kidId) txns.push(val);
-            });
-          }
-        } catch (e) { console.error('Card payments fetch error:', e); }
-        txns = txns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
-        // Also include chore log entries as credits
-        var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
-        // Merge and sort all transactions
-        var allTxns = [];
-        recentLogs.forEach((e) => {
-          allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: e.points, date: e.date, timestamp: e.timestamp || 0 });
-        });
-        txns.forEach((t) => {
-          allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: t.amount, date: t.date, timestamp: t.timestamp || 0 });
-        });
-        allTxns.sort((a, b) => b.timestamp - a.timestamp);
-        allTxns = allTxns.slice(0, 25);
+          ensurePhase4Styles();
+          await maybeRunWeeklyPay();
+          const kid = phase.currentConfig.kids[kidId];
+          const balances = await phase.getBalances();
+          const debts = await getDebts(phase);
+          const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
+          const entries = await phase.getAllLogEntries();
+          const now = new Date();
+          const currentWeek = phase.toIsoWeek(now);
+          const weeklyPoints = entries.filter((e) => e.kid === kidId && e.week === currentWeek).reduce((sum, e) => sum + Number(e.points || 0), 0);
+          const weeklyPay = phase.calculateWeeklyPay(kid.payTiers || [], weeklyPoints);
+          const topTier = (kid.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
+          const topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
+          const wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
+          const extraPoints = Math.max(0, weeklyPoints - topMinPts);
+          const weeklyBonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
+          const threshold = thresholdInfo(phase, kidId, weeklyPoints);
+          const relatedDebts = debts.filter((debt) => !debt.settled && (debt.from === kidId || debt.to === kidId));
+          var txns = [];
+          try {
+            const paySnap = await phase.database.ref('families/' + phase.familyId + '/payments').get();
+            if (paySnap.exists()) {
+              paySnap.forEach((child) => {
+                var val = child.val();
+                if (val.kid === kidId) txns.push(val);
+              });
+            }
+          } catch (e) { console.error('Card payments fetch error:', e); }
+          txns = txns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
+          var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
+          var allTxns = [];
+          recentLogs.forEach((e) => {
+            allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: e.points, date: e.date, timestamp: e.timestamp || 0 });
+          });
+          txns.forEach((t) => {
+            allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: t.amount, date: t.date, timestamp: t.timestamp || 0 });
+          });
+          allTxns.sort((a, b) => b.timestamp - a.timestamp);
+          allTxns = allTxns.slice(0, 25);
 
-        var balanceLabel = owed >= 0 ? 'Available Balance' : 'Amount Owed';
-        var balanceDisplay = owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed));
+          var balanceLabel = owed >= 0 ? 'Available Balance' : 'Amount Owed';
+          var balanceDisplay = owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed));
+          var debtMarkup = relatedDebts.length ? relatedDebts.map((debt) => {
+            var otherKid = debt.from === kidId ? debt.to : debt.from;
+            var direction = debt.from === kidId ? 'owes ' + phase.currentConfig.kids[otherKid].name : 'is owed by ' + phase.currentConfig.kids[otherKid].name;
+            return '<div class="score-action"><span>' + kid.name + ' ' + direction + ' ' + phase.dollars(debt.amount) + '</span><button type="button" data-card-action="settle-debt" data-kid="' + kidId + '" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>';
+          }).join('') : '<div class="score-empty">No active debts.</div>';
 
-        var stmtRows = allTxns.map((t) => {
-          if (t.type === 'chore') {
-            return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + ' &middot; +' + t.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
-          }
-          var label = t.type === 'spend' ? 'Purchase' : t.type === 'cash' ? 'Cash given' : t.type === 'weekly' ? 'Weekly pay' : 'Payment';
-          var note = t.label && t.label !== t.type ? t.label : '';
-          return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + (note ? ': ' + note : '') + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount debit">-' + phase.dollars(t.amount) + '</span></div>';
-        }).join('');
+          var stmtRows = allTxns.map((t) => {
+            if (t.type === 'chore') {
+              return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + ' &middot; +' + t.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
+            }
+            var label = t.type === 'spend' ? 'Purchase' : t.type === 'cash' ? 'Cash given' : t.type === 'weekly' ? 'Weekly pay' : 'Payment';
+            var note = t.label && t.label !== t.type ? ': ' + t.label : '';
+            return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + note + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount debit">-' + phase.dollars(t.amount) + '</span></div>';
+          }).join('');
 
-        document.getElementById('cardContent').innerHTML =
-          '<div class="kid-card ' + kidId + '">' +
-            '<div class="card-top">' +
-              '<div class="card-label">Family Chores Card</div>' +
-              '<div class="card-chip"></div>' +
+          document.getElementById('cardContent').innerHTML =
+            '<div class="kid-card ' + kidId + '">' +
+              '<div class="card-top">' +
+                '<div class="card-label">Family Chores Card</div>' +
+                '<div class="card-chip"></div>' +
+              '</div>' +
+              '<div class="card-balance">' +
+                '<div class="card-balance-amount">' + balanceDisplay + '</div>' +
+                '<div class="card-balance-label">' + balanceLabel + '</div>' +
+              '</div>' +
+              '<div class="card-bottom">' +
+                '<div class="card-name">' + kid.name + '</div>' +
+                '<div class="card-pts">' + weeklyPoints + ' pts<br>this week</div>' +
+              '</div>' +
             '</div>' +
-            '<div class="card-balance">' +
-              '<div class="card-balance-amount">' + balanceDisplay + '</div>' +
-              '<div class="card-balance-label">' + balanceLabel + '</div>' +
-            '</div>' +
-            '<div class="card-bottom">' +
-              '<div class="card-name">' + kid.name + '</div>' +
-              '<div class="card-pts">' + weeklyPoints + ' pts<br>this week</div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="card-statement">' +
-            '<h3>Recent Activity</h3>' +
-            (stmtRows || '<p class="stmt-empty">No activity yet.</p>') +
-          '</div>';
+            '<div class="drawer-grid">' +
+              '<article class="stat-card">' +
+                '<h3>This Week (' + formatWeekRange(now) + ')</h3>' +
+                '<div class="score-row">' +
+                  '<div class="score-top"><div><div class="score-name">' + kid.name + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">next: ' + threshold.next.minPts + 'pts</div></div>' +
+                  '<div class="progress ' + kidId + '"><span style="width:' + threshold.width + '%"></span></div>' +
+                  '<div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div>' +
+                '</div>' +
+              '</article>' +
+              '<article class="stat-card">' +
+                '<h3>Balance</h3>' +
+                '<div class="score-actions">' +
+                  '<div class="score-action"><span>' + (owed >= 0 ? 'You owe ' + kid.name + ' ' + phase.dollars(owed) : kid.name + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div>' +
+                '</div>' +
+              '</article>' +
+              '<article class="stat-card">' +
+                '<h3>Debts</h3>' +
+                '<div class="score-actions">' + debtMarkup + '</div>' +
+              '</article>' +
+              '<div class="card-statement">' +
+                '<h3>Recent Activity</h3>' +
+                (stmtRows || '<p class="stmt-empty">No activity yet.</p>') +
+              '</div>' +
+            '</div>';
         } catch (err) {
           console.error('Card render error:', err);
           document.getElementById('cardContent').innerHTML = '<p style="color:var(--danger)">Error loading card. Check console.</p>';
         }
       };
 
-      elements.scoreboardDrawer.addEventListener('click', (event) => {
+      function handleCardAction(button) {
         const phase = runtime();
-        const button = event.target.closest('button[data-score-action]');
         if (!button || !phase) {
           return;
         }
-        const action = button.dataset.scoreAction;
+        const action = button.dataset.cardAction || button.dataset.scoreAction;
         if (action === 'pay-balance') {
           const kidId = button.dataset.kid;
           const amountText = window.prompt('Payment amount for ' + phase.currentConfig.kids[kidId].name + '?');
@@ -2302,9 +2281,9 @@
           if (!amount || Number.isNaN(amount) || amount <= 0) {
             return;
           }
-          phase.writePayment(kidId, amount, 'manual', 'Manual pay from scoreboard').then((balance) => {
+          phase.writePayment(kidId, amount, 'manual', 'Manual pay from card').then((balance) => {
             phase.addMessage('system', 'Recorded payment for ' + phase.currentConfig.kids[kidId].name + ': ' + phase.dollars(amount) + '. Balance is now ' + phase.dollars(balance) + '.');
-            refreshPhase4().catch((error) => console.error(error));
+            openCardForKid(kidId);
           }).catch((error) => {
             console.error(error);
             phase.addMessage('system', 'Payment failed.', error.message);
@@ -2321,21 +2300,8 @@
             const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'spend', timestamp: Date.now(), date: phase.toDateString(new Date()), note: noteText };
             phase.database.ref('families/' + phase.familyId + '/payments').push().set(entry);
             phase.addMessage('system', phase.currentConfig.kids[kidId].name + ' spent ' + phase.dollars(amount) + (noteText ? ' on ' + noteText : '') + '. Balance: ' + (balance >= 0 ? phase.dollars(balance) + ' owed to them.' : 'they owe you ' + phase.dollars(Math.abs(balance)) + '.'));
-            refreshPhase4().catch((error) => console.error(error));
+            openCardForKid(kidId);
           }).catch((error) => { console.error(error); phase.addMessage('system', 'Failed to record spend.', error.message); });
-          return;
-        }
-        if (action === 'gave-cash') {
-          const kidId = button.dataset.kid;
-          const amountText = window.prompt('How much cash did you give ' + phase.currentConfig.kids[kidId].name + '?');
-          const amount = amountText === null ? null : Number(amountText);
-          if (!amount || Number.isNaN(amount) || amount <= 0) return;
-          phase.adjustBalance(kidId, -amount).then((balance) => {
-            const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'cash', timestamp: Date.now(), date: phase.toDateString(new Date()), note: 'Gave cash' };
-            phase.database.ref('families/' + phase.familyId + '/payments').push().set(entry);
-            phase.addMessage('system', 'Gave ' + phase.currentConfig.kids[kidId].name + ' ' + phase.dollars(amount) + ' cash. Balance: ' + (balance >= 0 ? phase.dollars(balance) + ' owed to them.' : 'they owe you ' + phase.dollars(Math.abs(balance)) + '.'));
-            refreshPhase4().catch((error) => console.error(error));
-          }).catch((error) => { console.error(error); phase.addMessage('system', 'Failed to record cash.', error.message); });
           return;
         }
         if (action === 'settle-debt') {
@@ -2344,20 +2310,27 @@
           phase.settleDebt([from, to]).then((debt) => {
             if (debt) {
               phase.addMessage('system', 'Settled debt: ' + phase.currentConfig.kids[from].name + ' to ' + phase.currentConfig.kids[to].name + ' for ' + phase.dollars(debt.amount) + '.');
-              refreshPhase4().catch((error) => console.error(error));
+              openCardForKid(button.dataset.kid || from);
             }
           }).catch((error) => {
             console.error(error);
             phase.addMessage('system', 'Debt settlement failed.', error.message);
           });
         }
-      });
+      }
 
+      elements.cardDrawer.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-card-action], button[data-score-action]');
+        if (!button) {
+          return;
+        }
+        handleCardAction(button);
+      });
 
       const phase4Warmup = setInterval(() => {
         const phase = runtime();
         if (phase && phase.database && phase.familyId && phase.configLoaded) {
-          refreshPhase4().then(() => maybeShowBirthdayPrompt()).catch((error) => console.error(error));
+          maybeRunWeeklyPay().then(() => maybeShowBirthdayPrompt()).catch((error) => console.error(error));
           clearInterval(phase4Warmup);
         }
       }, 500);
@@ -2399,13 +2372,6 @@
         const dot = document.getElementById('onlineDot');
         if (!dot) return;
         dot.classList.toggle('online', navigator.onLine);
-      }
-
-      function greetingForNow() {
-        const hour = new Date().getHours();
-        if (hour < 12) return 'Good morning!';
-        if (hour < 18) return 'Good afternoon!';
-        return 'Good evening!';
       }
 
       function safeName(value) {
@@ -2638,8 +2604,7 @@
           keepPathsSynced().catch((error) => console.error(error));
           renderSettingsPanel().catch((error) => console.error(error));
           if (!greeted) {
-            app.addMessage('system', greetingForNow() + ' What chores have been done today?');
-            greeted = true;
+          greeted = true;
           }
           clearInterval(phase5Warmup);
         }
