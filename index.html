@@ -1876,6 +1876,10 @@
       }
       let recognition = null;
       let isListening = false;
+      let speechFinalText = '';
+      let speechInterimText = '';
+      let speechSubmitTimer = null;
+      let speechManualStop = false;
 
       function ensureSpeechStyles() {
         if (document.getElementById('speechStyles')) {
@@ -1896,6 +1900,49 @@
         }
       }
 
+      function clearSpeechSubmitTimer() {
+        if (speechSubmitTimer) {
+          clearTimeout(speechSubmitTimer);
+          speechSubmitTimer = null;
+        }
+      }
+
+      function getSpeechDraft() {
+        return [speechFinalText.trim(), speechInterimText.trim()].filter(Boolean).join(' ').trim();
+      }
+
+      function resetSpeechDraft() {
+        speechFinalText = '';
+        speechInterimText = '';
+        clearSpeechSubmitTimer();
+      }
+
+      function flushSpeechDraft(submit) {
+        const draft = getSpeechDraft();
+        clearSpeechSubmitTimer();
+        if (!draft) {
+          resetSpeechDraft();
+          return;
+        }
+        elements.messageInput.value = draft;
+        resetSpeechDraft();
+        if (!submit) {
+          return;
+        }
+        elements.messageInput.value = '';
+        handleUserInput(draft).catch((error) => {
+          console.error(error);
+          addMessage('system', 'Something went wrong while handling that request.', error.message);
+        });
+      }
+
+      function scheduleSpeechSubmit(delayMs) {
+        clearSpeechSubmitTimer();
+        speechSubmitTimer = setTimeout(() => {
+          flushSpeechDraft(true);
+        }, delayMs);
+      }
+
       function initSpeechRecognition() {
         ensureSpeechStyles();
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1906,39 +1953,50 @@
         const nextRecognition = new SpeechRecognition();
         nextRecognition.lang = 'en-US';
         nextRecognition.interimResults = true;
-        nextRecognition.continuous = false;
+        nextRecognition.continuous = true;
+        nextRecognition.maxAlternatives = 1;
         nextRecognition.onstart = () => {
+          speechManualStop = false;
+          resetSpeechDraft();
           setListeningState(true);
         };
         nextRecognition.onresult = (event) => {
           let interim = '';
-          let finalText = '';
+          let sawFinal = false;
           for (let i = event.resultIndex; i < event.results.length; i += 1) {
-            const transcript = event.results[i][0].transcript;
+            const transcript = String(event.results[i][0].transcript || '').trim();
+            if (!transcript) continue;
             if (event.results[i].isFinal) {
-              finalText += transcript;
+              speechFinalText = [speechFinalText, transcript].filter(Boolean).join(' ').trim();
+              sawFinal = true;
             } else {
-              interim += transcript;
+              interim += (interim ? ' ' : '') + transcript;
             }
           }
-          const shown = (finalText || interim).trim();
+          speechInterimText = interim.trim();
+          const shown = getSpeechDraft();
           if (shown) {
             elements.messageInput.value = shown;
           }
-          if (finalText.trim()) {
-            const submitted = finalText.trim();
-            elements.messageInput.value = '';
-            handleUserInput(submitted).catch((error) => {
-              console.error(error);
-              addMessage('system', 'Something went wrong while handling that request.', error.message);
-            });
+          if (sawFinal) {
+            scheduleSpeechSubmit(1400);
           }
         };
-        nextRecognition.onerror = () => {
+        nextRecognition.onerror = (event) => {
           setListeningState(false);
+          if (event && event.error !== 'aborted' && getSpeechDraft()) {
+            scheduleSpeechSubmit(300);
+          }
         };
         nextRecognition.onend = () => {
           setListeningState(false);
+          if (speechManualStop) {
+            flushSpeechDraft(true);
+            return;
+          }
+          if (getSpeechDraft()) {
+            scheduleSpeechSubmit(500);
+          }
         };
         return nextRecognition;
       }
@@ -1952,6 +2010,7 @@
           return;
         }
         if (isListening) {
+          speechManualStop = true;
           recognition.stop();
           return;
         }
@@ -2445,9 +2504,9 @@
           return '<div class="history-list"><div class="history-item">No transactions yet.</div></div>';
         }
         return '<div class="history-list">' + filtered.map(function (p) {
-          var label = p.type === 'spend' ? 'Purchase' : p.type === 'cash' ? 'Cash given' : p.type === 'weekly' ? 'Weekly pay' : p.type === 'owed' ? 'Owes parent' : 'Payment';
+          var label = p.type === 'spend' ? 'Purchase' : p.type === 'cash' ? 'Cash given' : p.type === 'weekly' ? 'Weekly pay' : p.type === 'owed' ? 'Owes parent' : p.type === 'credit' ? 'You owe them' : 'Payment';
           var note = p.note && p.note !== label ? ': ' + safeName(p.note) : '';
-          return '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[p.kid] || {}).name || p.kid) + '</strong> - ' + label + note + ' (' + app.dollars(p.amount) + ')<div class="settings-note">' + safeName(p.date || '') + '</div></div><button type="button" data-setting-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>';
+          return '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[p.kid] || {}).name || p.kid) + '</strong> - ' + label + note + ' (' + app.dollars(p.amount) + ')<div class="settings-note">' + safeName(p.date || '') + '</div></div><button type="button" data-setting-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" data-payment-type="' + (p.type || 'payment') + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>';
         }).join('') + '</div>';
       }
 
@@ -2605,9 +2664,11 @@
           const paymentId = button.dataset.paymentId;
           const paymentKid = button.dataset.paymentKid;
           const paymentAmount = Number(button.dataset.paymentAmount || 0);
+          const paymentType = button.dataset.paymentType || 'payment';
           if (!app || !paymentId) return;
           app.database.ref('families/' + app.familyId + '/payments/' + paymentId).remove().then(() => {
-            return app.adjustBalance(paymentKid, paymentAmount);
+            const reverseDelta = paymentType === 'credit' ? -paymentAmount : paymentAmount;
+            return app.adjustBalance(paymentKid, reverseDelta);
           }).then(() => {
             app.addMessage('system', 'Deleted transaction and reversed ' + app.dollars(paymentAmount) + '.');
             renderSettingsPanel().catch((error) => console.error(error));
