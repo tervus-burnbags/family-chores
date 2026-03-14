@@ -1367,6 +1367,7 @@
         if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) return { intent: 'settle_debt', kids };
         const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
+        if (debtVerbMatch && kids.length === 1 && /\b(me|us|parents?)\b/.test(normalized)) return { intent: 'kid_owes_parent', kids, amount: parseAmount(text) };
         if (/\bspent\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text) };
         if (/\bgave\b/.test(normalized) && /\bcash\b/.test(normalized) && kids.length) return { intent: 'gave_cash', kids: [kids[0]], amount: parseAmount(text) };
         if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
@@ -1630,6 +1631,18 @@
           const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'cash', timestamp: Date.now(), date: toDateString(new Date()), note: 'Gave cash' };
           await database.ref('families/' + familyId + '/payments').push().set(entry);
           addMessage('system', 'Gave ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + ' cash. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          return;
+        }
+        if (result.intent === 'kid_owes_parent') {
+          if (result.amount === null) {
+            addMessage('system', 'How much do they owe?');
+            return;
+          }
+          const kidId = result.kids[0];
+          const balance = await adjustBalance(kidId, -result.amount);
+          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'owed', timestamp: Date.now(), date: toDateString(new Date()), note: 'Owes parent' };
+          await database.ref('families/' + familyId + '/payments').push().set(entry);
+          addMessage('system', currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
         if (result.intent === 'record_debt') {
@@ -2106,10 +2119,18 @@
       }
 
       window.renderCardView = async function renderCardView(kidId) {
-        const phase = runtime();
+        var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
           elements.cardContent.innerHTML = '<p style="color:var(--muted)">Loading...</p>';
-          return;
+          await new Promise(function (resolve) {
+            var poll = setInterval(function () {
+              phase = runtime();
+              if (phase && phase.familyId && phase.configLoaded) {
+                clearInterval(poll);
+                resolve();
+              }
+            }, 300);
+          });
         }
         const kid = phase.currentConfig.kids[kidId];
         const balances = await phase.getBalances();
