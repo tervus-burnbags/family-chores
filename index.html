@@ -125,20 +125,18 @@
     }
 
     .drawer {
-      display: grid;
-      grid-template-rows: 0fr;
-      padding: 0 16px;
-      transition: grid-template-rows 0.35s ease, padding 0.35s ease;
-      overflow: hidden;
-    }
-
-    .drawer > * {
-      overflow: hidden;
+      display: none;
+      padding: 14px 16px;
     }
 
     .drawer.open {
-      grid-template-rows: 1fr;
-      padding: 14px 16px;
+      display: block;
+      animation: drawerIn 0.25s ease-out;
+    }
+
+    @keyframes drawerIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .drawer-grid {
