@@ -1449,7 +1449,7 @@
         }
         if (result.intent === 'freepoints') {
           const now = new Date();
-          await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'freepoints', choreLabel: 'Free points', points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' })));
+          await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'freepoints', choreLabel: 'Quick points', points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' })));
           var fpNames = result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ');
           if (result.points < 0) {
             addMessage('system', 'Removed ' + Math.abs(result.points) + ' point' + (Math.abs(result.points) !== 1 ? 's' : '') + ' from ' + fpNames + '.');
@@ -1724,7 +1724,7 @@
             var kids = qpKid === 'both' ? ['alex', 'louisa'] : [qpKid];
             var now = new Date();
             saveLogEntries(kids.map(function (kidId) {
-              return { kid: kidId, choreId: 'freepoints', choreLabel: 'Free points', points: pts, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' };
+              return { kid: kidId, choreId: 'freepoints', choreLabel: 'Quick points', points: pts, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' };
             }));
             var names = kids.map(function (kidId) { return currentConfig.kids[kidId].name; }).join(' and ');
             addMessage('system', 'Added ' + pts + ' point' + (pts !== 1 ? 's' : '') + ' for ' + names + '.');
@@ -1754,7 +1754,7 @@
         }
         const style = document.createElement('style');
         style.id = 'phase4Styles';
-        style.textContent = '.score-row{display:grid;gap:8px;margin-top:10px}.score-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.score-name{font-weight:700}.score-pay{color:var(--muted);font-size:.9rem}.progress{height:12px;border-radius:999px;background:#e7eef8;overflow:hidden}.progress>span{display:block;height:100%;border-radius:999px;transition:width 0.6s ease-out}.progress.alex>span{background:linear-gradient(90deg,var(--alex),#7cb9f0)}.progress.louisa>span{background:linear-gradient(90deg,var(--louisa),#b08ae6)}.score-next{font-size:.82rem;color:var(--muted)}.score-actions{display:grid;gap:10px}.score-action{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:transform 0.15s ease}.score-action:active{transform:scale(0.98)}.score-action button{min-height:40px;padding:0 12px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--alex),#3a7bc8);color:#fff;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.2s ease;box-shadow:0 2px 8px rgba(74,144,217,0.25)}.score-action button:active{transform:scale(0.95)}.score-section-title{font-size:.95rem;font-weight:700;margin:0 0 8px}.score-empty{color:var(--muted)}';
+        style.textContent = '.score-row{display:grid;gap:8px;margin-top:10px}.score-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.score-name{font-weight:700}.score-pay{color:var(--muted);font-size:.9rem}.progress{height:12px;border-radius:999px;background:#e7eef8;overflow:hidden}.progress>span{display:block;height:100%;border-radius:999px;transition:width 0.6s ease-out}.progress.alex>span{background:linear-gradient(90deg,var(--alex),#7cb9f0)}.progress.louisa>span{background:linear-gradient(90deg,var(--louisa),#b08ae6)}.score-next{font-size:.82rem;color:var(--muted)}.score-actions{display:grid;gap:10px}.score-action{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:transform 0.15s ease}.score-action>span{flex:1;min-width:100%}.score-action:active{transform:scale(0.98)}.score-action button{flex:1;min-height:40px;padding:0 12px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--alex),#3a7bc8);color:#fff;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.2s ease;box-shadow:0 2px 8px rgba(74,144,217,0.25)}.score-action button:active{transform:scale(0.95)}.score-section-title{font-size:.95rem;font-weight:700;margin:0 0 8px}.score-empty{color:var(--muted)}';
         document.head.appendChild(style);
       }
 
