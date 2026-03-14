@@ -339,10 +339,6 @@
       border-color: transparent;
     }
 
-    .qp-pts.neg {
-      background: rgba(214, 69, 69, 0.1);
-      color: var(--danger);
-    }
 
     .badge-row {
       display: flex;
@@ -534,8 +530,7 @@
         <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
         <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
         <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
-        <button type="button" class="qp-pts" data-qp-pts="5">+5</button>
-        <button type="button" class="qp-pts neg" data-qp-pts="-1">-1</button>
+        <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
       </div>
     </div>
 
@@ -1700,11 +1695,7 @@
               return { kid: kidId, choreId: 'freepoints', choreLabel: 'Free points', points: pts, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' };
             }));
             var names = kids.map(function (kidId) { return currentConfig.kids[kidId].name; }).join(' and ');
-            if (pts < 0) {
-              addMessage('system', 'Removed ' + Math.abs(pts) + ' point' + (Math.abs(pts) !== 1 ? 's' : '') + ' from ' + names + '.');
-            } else {
-              addMessage('system', 'Added ' + pts + ' point' + (pts !== 1 ? 's' : '') + ' for ' + names + '.');
-            }
+            addMessage('system', 'Added ' + pts + ' point' + (pts !== 1 ? 's' : '') + ' for ' + names + '.');
           }
         });
       })();
