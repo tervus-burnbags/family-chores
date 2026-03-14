@@ -55,6 +55,7 @@
       display: grid;
       grid-template-rows: auto auto 1fr auto auto;
       gap: 12px;
+      overflow-x: hidden;
     }
 
     .panel {
@@ -150,6 +151,8 @@
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(237, 244, 255, 0.9));
       border: 1px solid var(--line);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+      word-break: break-word;
     }
 
     .stat-card:hover {
@@ -1378,7 +1381,6 @@
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
         if (debtVerbMatch && kids.length === 1 && /\b(me|us|parents?)\b/.test(normalized)) return { intent: 'kid_owes_parent', kids, amount: parseAmount(text) };
         if (/\b(spent|bought|purchased)\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text), note: text };
-        if (/\bgave\b/.test(normalized) && /\bcash\b/.test(normalized) && kids.length) return { intent: 'gave_cash', kids: [kids[0]], amount: parseAmount(text) };
         if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
         if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
           return { intent: 'freepoints', kids, points: -parsePoints(text) };
@@ -1634,16 +1636,6 @@
           addMessage('system', currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + ' on ' + spendNote + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
-        if (result.intent === 'gave_cash') {
-          if (result.amount === null) {
-            addMessage('system', 'How much cash did you give them?');
-            return;
-          }
-          const kidId = result.kids[0];
-          const balance = await writePayment(kidId, result.amount, 'cash', 'Gave cash');
-          addMessage('system', 'Gave ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + ' cash. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
-          return;
-        }
         if (result.intent === 'kid_owes_parent') {
           if (result.amount === null) {
             addMessage('system', 'How much do they owe?');
@@ -1735,7 +1727,6 @@
           '{"intent":"adhoc","kids":["alex"],"points":2,"choreLabel":"description of chore"}\n' +
           '{"intent":"record_payment","kids":["alex"],"amount":6}\n' +
           '{"intent":"kid_spent","kids":["alex"],"amount":5}\n' +
-          '{"intent":"gave_cash","kids":["louisa"],"amount":10}\n' +
           '{"intent":"record_debt","kids":["louisa","alex"],"amount":2,"verb":"owes"}\n' +
           '{"intent":"settle_debt","kids":["louisa","alex"]}\n' +
           '{"intent":"change_points","choreId":"feed_dog_am","choreLabel":"Feed dog (AM)","points":2}\n' +
@@ -2320,7 +2311,7 @@
         }
         const style = document.createElement('style');
         style.id = 'phase5Styles';
-        style.textContent = '.status-dot{width:10px;height:10px;border-radius:999px;background:#94a3b8;display:inline-block}.status-dot.online{background:#22c55e}.settings-grid{display:grid;gap:12px}.settings-list{display:grid;gap:8px}.settings-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.settings-row span:first-child{flex:1;min-width:80px}.settings-row input,.settings-row select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px;width:70px;flex-shrink:0}.settings-row button,.settings-btn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer;flex-shrink:0}.settings-chip-row{display:flex;flex-wrap:wrap;gap:8px}.settings-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}.settings-chip.active{background:var(--alex);border-color:var(--alex);color:#fff}.history-list{display:grid;gap:8px;max-height:240px;overflow:auto}.history-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.settings-note{font-size:.85rem;color:var(--muted)}';
+        style.textContent = '.status-dot{width:10px;height:10px;border-radius:999px;background:#94a3b8;display:inline-block}.status-dot.online{background:#22c55e}.settings-grid{display:grid;gap:12px}.settings-list{display:grid;gap:8px}.settings-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.settings-row span:first-child{flex:1;min-width:80px}.settings-row input,.settings-row select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px;width:70px;flex-shrink:0}.settings-row button,.settings-btn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer;flex-shrink:0}.settings-chip-row{display:flex;flex-wrap:wrap;gap:8px}.settings-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}.settings-chip.active{background:var(--alex);border-color:var(--alex);color:#fff}.history-list{display:grid;gap:8px;max-height:240px;overflow:auto}.history-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;word-break:break-word}.settings-note{font-size:.85rem;color:var(--muted)}';
         document.head.appendChild(style);
       }
 
