@@ -59,9 +59,9 @@
         "card"
         "settings"
         "quick"
-        "messages"
-        "composer";
-      grid-template-rows: auto auto auto auto minmax(320px, 1fr) auto;
+        "composer"
+        "messages";
+      grid-template-rows: auto auto auto auto auto minmax(320px, 1fr);
       gap: 12px;
       overflow-x: hidden;
     }
@@ -711,12 +711,14 @@
 
       .header-actions {
         width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
       }
 
       .header-actions .icon-btn {
         min-width: 0;
-        flex: 1 1 calc(50% - 3px);
+        width: 100%;
         padding: 0 8px;
         font-size: 0.92rem;
       }
@@ -786,14 +788,14 @@
       </div>
     </div>
 
-    <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
-
     <form class="panel composer" id="composer">
       <label class="visually-hidden" for="messageInput">Type a chore update</label>
       <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
       <button class="send-btn" type="submit">Send</button>
       <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">Mic</button>
     </form>
+
+    <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
   </main>
 
   <div class="overlay" id="familyModal" role="dialog" aria-modal="true" aria-labelledby="familyModalTitle">
@@ -1691,6 +1693,21 @@
           const kidId = result.kids[0];
           const balance = await writePayment(kidId, result.amount, 'owed', 'Owes parent');
           addMessage('system', currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          return;
+        }
+        if (result.intent === 'parent_owes_kid') {
+          if (result.amount === null) {
+            addMessage('system', 'How much do you owe them?');
+            return;
+          }
+          const kidId = result.kids[0];
+          const note = (result.note || '').replace(/(i|we|me|us|parent|parents?|owe|owed|owes|alex|louisa)/gi, '').replace(/$?d+(.d+)?/g, '').replace(/for/gi, '').replace(/s+/g, ' ').trim() || 'Owed from chat';
+          const balance = await adjustBalance(kidId, result.amount);
+          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'credit', timestamp: Date.now(), date: toDateString(new Date()), note };
+          const ref = database.ref('families/' + familyId + '/payments').push();
+          await ref.set(entry);
+          lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: -entry.amount };
+          addMessage('system', 'Recorded that you owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + (note && note !== 'Owed from chat' ? ' for ' + note : '') + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
         if (result.intent === 'record_debt') {
@@ -2604,7 +2621,8 @@
           keepPathsSynced().catch((error) => console.error(error));
           renderSettingsPanel().catch((error) => console.error(error));
           if (!greeted) {
-          greeted = true;
+            app.addMessage('system', 'Ready. Log a chore or use quick points.');
+            greeted = true;
           }
           clearInterval(phase5Warmup);
         }
