@@ -1519,6 +1519,16 @@
         return next;
       }
 
+      function paymentBalanceDelta(payment) {
+        if (payment && typeof payment.balanceDelta === 'number') {
+          return Number(payment.balanceDelta || 0);
+        }
+        const amount = Number((payment && payment.amount) || 0);
+        if (!payment) return 0;
+        if (payment.type === 'credit' || payment.type === 'weekly') return amount;
+        return -amount;
+      }
+
       async function findDuplicate(kidId, choreId, dateStr) {
         const entries = await getLogEntriesByDate(dateStr);
         return entries.find((entry) => entry.kid === kidId && entry.choreId === choreId) || null;
@@ -2286,8 +2296,13 @@
             allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: e.points, date: e.date, timestamp: e.timestamp || 0 });
           });
           txns.forEach((t) => {
-            allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: t.amount, date: t.date, timestamp: t.timestamp || 0 });
+            allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: t.amount, date: t.date, timestamp: t.timestamp || 0, balanceDelta: paymentBalanceDelta(t) });
           });
+          var explainedBalance = txns.reduce((sum, txn) => sum + paymentBalanceDelta(txn), 0);
+          var openingBalance = Number((owed - explainedBalance).toFixed(2));
+          if (Math.abs(openingBalance) >= 0.01) {
+            allTxns.push({ type: 'opening_balance', label: 'Starting balance carried forward', amount: Math.abs(openingBalance), date: 'Earlier', timestamp: -1, balanceDelta: openingBalance });
+          }
           allTxns.sort((a, b) => b.timestamp - a.timestamp);
           allTxns = allTxns.slice(0, 200);
 
@@ -2303,9 +2318,14 @@
             if (t.type === 'chore') {
               return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + ' &middot; +' + t.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
             }
+            if (t.type === 'opening_balance') {
+              return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount ' + (t.balanceDelta >= 0 ? 'credit' : 'debit') + '">' + (t.balanceDelta >= 0 ? '+' : '-') + phase.dollars(Math.abs(t.balanceDelta)) + '</span></div>';
+            }
             var label = t.type === 'spend' ? 'Purchase' : t.type === 'cash' ? 'Cash given' : t.type === 'weekly' ? 'Weekly pay' : t.type === 'credit' ? 'You owe them' : 'Payment';
             var note = t.label && t.label !== t.type ? ': ' + t.label : '';
-            return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + note + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount debit">-' + phase.dollars(t.amount) + '</span></div>';
+            var sign = (t.balanceDelta || 0) >= 0 ? '+' : '-';
+            var cls = (t.balanceDelta || 0) >= 0 ? 'credit' : 'debit';
+            return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + note + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount ' + cls + '">' + sign + phase.dollars(Math.abs(Number(t.amount || 0))) + '</span></div>';
           }).join('');
 
           document.getElementById('cardContent').innerHTML =
@@ -2500,14 +2520,27 @@
           return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
         }
         const payments = (await app.getAllPayments()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-        const filtered = payments.filter((p) => (historyState.kid === 'all' || p.kid === historyState.kid) && (!historyState.date || p.date === historyState.date)).slice(0, 200);
+        const balances = await app.getBalances();
+        const synthetic = [];
+        Object.keys(app.currentConfig.kids || KIDS).forEach((kidId) => {
+          const currentOwed = Number(((balances[kidId] && balances[kidId].owed) || 0));
+          const kidPayments = payments.filter((p) => p.kid === kidId);
+          const explained = kidPayments.reduce((sum, payment) => sum + paymentBalanceDelta(payment), 0);
+          const openingBalance = Number((currentOwed - explained).toFixed(2));
+          if (Math.abs(openingBalance) >= 0.01) {
+            synthetic.push({ id: 'opening-' + kidId, kid: kidId, type: 'opening_balance', amount: Math.abs(openingBalance), date: 'Earlier', note: 'Starting balance carried forward', timestamp: -1, balanceDelta: openingBalance, synthetic: true });
+          }
+        });
+        const combined = payments.concat(synthetic).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+        const filtered = combined.filter((p) => (historyState.kid === 'all' || p.kid === historyState.kid) && (!historyState.date || p.date === historyState.date)).slice(0, 200);
         if (!filtered.length) {
           return '<div class="history-list"><div class="history-item">No transactions yet.</div></div>';
         }
         return '<div class="history-list">' + filtered.map(function (p) {
-          var label = p.type === 'spend' ? 'Purchase' : p.type === 'cash' ? 'Cash given' : p.type === 'weekly' ? 'Weekly pay' : p.type === 'owed' ? 'Owes parent' : p.type === 'credit' ? 'You owe them' : 'Payment';
+          var label = p.type === 'spend' ? 'Purchase' : p.type === 'cash' ? 'Cash given' : p.type === 'weekly' ? 'Weekly pay' : p.type === 'owed' ? 'Owes parent' : p.type === 'credit' ? 'You owe them' : p.type === 'opening_balance' ? 'Starting balance' : 'Payment';
           var note = p.note && p.note !== label ? ': ' + safeName(p.note) : '';
-          return '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[p.kid] || {}).name || p.kid) + '</strong> - ' + label + note + ' (' + app.dollars(p.amount) + ')<div class="settings-note">' + safeName(p.date || '') + '</div></div><button type="button" data-setting-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" data-payment-type="' + (p.type || 'payment') + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>';
+          var deleteButton = p.synthetic ? '' : '<button type="button" data-setting-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" data-payment-type="' + (p.type || 'payment') + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button>';
+          return '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[p.kid] || {}).name || p.kid) + '</strong> - ' + label + note + ' (' + app.dollars(p.amount) + ')<div class="settings-note">' + safeName(p.date || '') + '</div></div>' + deleteButton + '</div>';
         }).join('') + '</div>';
       }
 
