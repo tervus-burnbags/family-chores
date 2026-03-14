@@ -1108,16 +1108,21 @@
           return { intent: 'change_points', choreId: match && match.choreId, choreLabel: match && match.chore && match.chore.label, points: parsePoints(text), confidence: match ? match.score : 0 };
         }
         if (/\bpoints?\b/.test(normalized) && parsePoints(text) !== null && kids.length) {
-          const choreMatch = inferChore(text);
-          if (!choreMatch || choreMatch.score < 0.3) {
-            if (/\b(new chore|something new|something extra)\b/.test(normalized)) {
-              return { intent: 'adhoc', kids, points: parsePoints(text), choreLabel: extractAdhocLabel(text, kids) };
-            }
-            if (/\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
-              return { intent: 'freepoints', kids, points: -parsePoints(text) };
-            }
-            return { intent: 'freepoints', kids, points: parsePoints(text) };
+          var explicitPts = parsePoints(text);
+          var choreMatch = inferChore(text);
+          if (/\b(new chore|something new|something extra)\b/.test(normalized)) {
+            return { intent: 'adhoc', kids, points: explicitPts, choreLabel: extractAdhocLabel(text, kids) };
           }
+          if (/\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
+            return { intent: 'freepoints', kids, points: -explicitPts };
+          }
+          if (choreMatch && choreMatch.score >= 0.5) {
+            return { intent: 'log_chore', kids, choreId: choreMatch.choreId, choreLabel: choreMatch.chore.label, points: explicitPts };
+          }
+          if (choreMatch && choreMatch.score >= 0.3) {
+            return { intent: 'confirm_chore', kids, choreId: choreMatch.choreId, choreLabel: choreMatch.chore.label, points: explicitPts };
+          }
+          return { intent: 'freepoints', kids, points: explicitPts };
         }
         if (isQuestion(text)) return { intent: 'check_status', kids };
 
@@ -1433,7 +1438,9 @@
         }
         addMessage('user', text);
         let result = parseIntent(text);
-        if (result.intent === 'no_match' || result.intent === 'missing_kid') {
+        var shouldTryGemini = result.intent === 'no_match' || result.intent === 'missing_kid' ||
+          (result.intent === 'check_status' && parsePoints(text) !== null);
+        if (shouldTryGemini) {
           try {
             const geminiResult = await askGemini(text);
             if (geminiResult && geminiResult.intent && geminiResult.intent !== 'no_match') {
