@@ -53,7 +53,7 @@
       width: min(100%, 560px);
       min-height: calc(100vh - 32px);
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
+      grid-template-rows: auto auto 1fr auto auto;
       gap: 12px;
     }
 
@@ -297,6 +297,53 @@
       border: 0;
     }
 
+    .quick-points {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .qp-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .qp-kid, .qp-pts {
+      flex: 1;
+      min-height: 44px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+
+    .qp-kid:active, .qp-pts:active {
+      transform: scale(0.94);
+    }
+
+    .qp-kid.alex { color: var(--alex); }
+    .qp-kid.louisa { color: var(--louisa); }
+    .qp-kid.both { color: var(--muted); }
+
+    .qp-kid.active.alex { background: var(--alex); color: #fff; border-color: var(--alex); }
+    .qp-kid.active.louisa { background: var(--louisa); color: #fff; border-color: var(--louisa); }
+    .qp-kid.active.both { background: var(--muted); color: #fff; border-color: var(--muted); }
+
+    .qp-pts {
+      background: var(--panel-alt);
+      color: var(--text);
+      border-color: transparent;
+    }
+
+    .qp-pts.neg {
+      background: rgba(214, 69, 69, 0.1);
+      color: var(--danger);
+    }
+
     .badge-row {
       display: flex;
       flex-wrap: wrap;
@@ -477,6 +524,21 @@
 
     <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
 
+    <div class="panel quick-points" id="quickPoints">
+      <div class="qp-row">
+        <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
+        <button type="button" class="qp-kid louisa" data-qp-kid="louisa">Louisa</button>
+        <button type="button" class="qp-kid both" data-qp-kid="both">Both</button>
+      </div>
+      <div class="qp-row">
+        <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
+        <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
+        <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
+        <button type="button" class="qp-pts" data-qp-pts="5">+5</button>
+        <button type="button" class="qp-pts neg" data-qp-pts="-1">-1</button>
+      </div>
+    </div>
+
     <form class="panel composer" id="composer">
       <label class="visually-hidden" for="messageInput">Type a chore update</label>
       <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
@@ -524,7 +586,7 @@
           { minPts: 12, pay: 3 },
           { minPts: 22, pay: 7 }
         ],
-        monthlyBonus: { threshold: 100, bonus: 6 }
+        weeklyBonus: { extraPts: 10, bonus: 2 }
       },
       louisa: {
         name: 'Louisa',
@@ -533,7 +595,7 @@
           { minPts: 8, pay: 2 },
           { minPts: 12, pay: 4 }
         ],
-        monthlyBonus: { threshold: 60, bonus: 4 }
+        weeklyBonus: { extraPts: 10, bonus: 2 }
       }
     };
 
@@ -1615,6 +1677,38 @@
         addMessage
       };
       bindPhase2Composer();
+
+      // Quick Points panel
+      (function () {
+        var qpKid = 'alex';
+        var qpPanel = document.getElementById('quickPoints');
+        if (!qpPanel) return;
+        qpPanel.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-qp-kid]');
+          if (btn) {
+            qpKid = btn.dataset.qpKid;
+            qpPanel.querySelectorAll('.qp-kid').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            return;
+          }
+          var ptsBtn = e.target.closest('[data-qp-pts]');
+          if (ptsBtn) {
+            var pts = Number(ptsBtn.dataset.qpPts);
+            var kids = qpKid === 'both' ? ['alex', 'louisa'] : [qpKid];
+            var now = new Date();
+            saveLogEntries(kids.map(function (kidId) {
+              return { kid: kidId, choreId: 'freepoints', choreLabel: 'Free points', points: pts, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' };
+            }));
+            var names = kids.map(function (kidId) { return currentConfig.kids[kidId].name; }).join(' and ');
+            if (pts < 0) {
+              addMessage('system', 'Removed ' + Math.abs(pts) + ' point' + (Math.abs(pts) !== 1 ? 's' : '') + ' from ' + names + '.');
+            } else {
+              addMessage('system', 'Added ' + pts + ' point' + (pts !== 1 ? 's' : '') + ' for ' + names + '.');
+            }
+          }
+        });
+      })();
+
       const configWarmup = setInterval(() => {
         if (database && familyId && !configLoaded) {
           loadFamilyConfigV2().catch((error) => console.error(error));
@@ -1681,23 +1775,25 @@
         const debts = await getDebts(phase);
         const now = new Date();
         const currentWeek = phase.toIsoWeek(now);
-        const since = new Date(now);
-        since.setDate(since.getDate() - 27);
         const kids = Object.keys(phase.currentConfig.kids || KIDS);
         const kidRows = kids.map((kidId) => {
+          const kidConfig = phase.currentConfig.kids[kidId];
           const weeklyPoints = entries.filter((entry) => entry.kid === kidId && entry.week === currentWeek).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
-          const recentPoints = entries.filter((entry) => entry.kid === kidId && entry.timestamp >= since.getTime()).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
-          const weeklyPay = phase.calculateWeeklyPay(phase.currentConfig.kids[kidId].payTiers, weeklyPoints);
-          const monthlyBonus = recentPoints >= phase.currentConfig.kids[kidId].monthlyBonus.threshold ? phase.currentConfig.kids[kidId].monthlyBonus.bonus : 0;
+          const weeklyPay = phase.calculateWeeklyPay(kidConfig.payTiers, weeklyPoints);
+          const topTier = (kidConfig.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
+          const topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
+          const wb = kidConfig.weeklyBonus || kidConfig.monthlyBonus || { extraPts: 10, bonus: 2 };
+          const bonusThreshold = topMinPts + (wb.extraPts || 10);
+          const weeklyBonus = weeklyPoints >= bonusThreshold ? (wb.bonus || 2) : 0;
           const threshold = thresholdInfo(phase, kidId, weeklyPoints);
-          return { kidId, weeklyPoints, weeklyPay, monthlyBonus, recentPoints, threshold, owed: Number(((balances[kidId] && balances[kidId].owed) || 0)) };
+          return { kidId, weeklyPoints, weeklyPay, weeklyBonus, bonusThreshold, threshold, owed: Number(((balances[kidId] && balances[kidId].owed) || 0)) };
         });
         const debtRows = debts.filter((debt) => !debt.settled);
         elements.scoreboardDrawer.innerHTML = [
           '<div class="drawer-grid">',
           '<article class="stat-card">',
           '<h2>This Week (' + formatWeekRange(now) + ')</h2>',
-          kidRows.map((row) => '<div class="score-row"><div class="score-top"><div><div class="score-name">' + phase.currentConfig.kids[row.kidId].name + '</div><div class="score-pay">' + row.weeklyPoints + 'pts | ' + phase.dollars(row.weeklyPay) + ' earned</div></div><div class="score-next">next: ' + row.threshold.next.minPts + 'pts</div></div><div class="progress ' + row.kidId + '"><span style="width:' + row.threshold.width + '%"></span></div><div class="score-pay">4-week points: ' + row.recentPoints + ' | bonus: ' + phase.dollars(row.monthlyBonus) + '</div></div>').join(''),
+          kidRows.map((row) => '<div class="score-row"><div class="score-top"><div><div class="score-name">' + phase.currentConfig.kids[row.kidId].name + '</div><div class="score-pay">' + row.weeklyPoints + 'pts | ' + phase.dollars(row.weeklyPay) + ' earned</div></div><div class="score-next">next: ' + row.threshold.next.minPts + 'pts</div></div><div class="progress ' + row.kidId + '"><span style="width:' + row.threshold.width + '%"></span></div><div class="score-pay">bonus at ' + row.bonusThreshold + 'pts: ' + (row.weeklyBonus > 0 ? phase.dollars(row.weeklyBonus) + ' earned!' : 'not yet') + '</div></div>').join(''),
           '</article>',
           '<article class="stat-card">',
           '<p class="score-section-title">Balances</p>',
@@ -1838,7 +1934,7 @@
         }
         const style = document.createElement('style');
         style.id = 'phase5Styles';
-        style.textContent = '.status-dot{width:10px;height:10px;border-radius:999px;background:#94a3b8;display:inline-block}.status-dot.online{background:#22c55e}.settings-grid{display:grid;gap:12px}.settings-list{display:grid;gap:8px}.settings-row{display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.settings-row input,.settings-row select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px}.settings-row button,.settings-btn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer}.settings-chip-row{display:flex;flex-wrap:wrap;gap:8px}.settings-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}.settings-chip.active{background:var(--alex);border-color:var(--alex);color:#fff}.history-list{display:grid;gap:8px;max-height:240px;overflow:auto}.history-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.settings-note{font-size:.85rem;color:var(--muted)}';
+        style.textContent = '.status-dot{width:10px;height:10px;border-radius:999px;background:#94a3b8;display:inline-block}.status-dot.online{background:#22c55e}.settings-grid{display:grid;gap:12px}.settings-list{display:grid;gap:8px}.settings-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.settings-row span:first-child{flex:1;min-width:80px}.settings-row input,.settings-row select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px;width:70px;flex-shrink:0}.settings-row button,.settings-btn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer;flex-shrink:0}.settings-chip-row{display:flex;flex-wrap:wrap;gap:8px}.settings-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}.settings-chip.active{background:var(--alex);border-color:var(--alex);color:#fff}.history-list{display:grid;gap:8px;max-height:240px;overflow:auto}.history-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.settings-note{font-size:.85rem;color:var(--muted)}';
         document.head.appendChild(style);
       }
 
