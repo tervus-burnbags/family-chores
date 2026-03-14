@@ -353,11 +353,7 @@
       }
 
       .composer {
-        grid-template-columns: 1fr auto;
-      }
-
-      .send-btn {
-        display: none;
+        grid-template-columns: 1fr auto auto;
       }
 
       .message {
@@ -374,8 +370,8 @@
         <small id="familyLabel">Connecting to Firebase...</small>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="scoreboardToggle" type="button" aria-label="Toggle scoreboard">??</button>
-        <button class="icon-btn" id="settingsToggle" type="button" aria-label="Open settings">??</button>
+        <button class="icon-btn" id="scoreboardToggle" type="button" aria-label="Toggle scoreboard">Score</button>
+        <button class="icon-btn" id="settingsToggle" type="button" aria-label="Open settings">Settings</button>
       </div>
     </section>
 
@@ -407,7 +403,7 @@
       <label class="visually-hidden" for="messageInput">Type a chore update</label>
       <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
       <button class="send-btn" type="submit">Send</button>
-      <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">??</button>
+      <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">Mic</button>
     </form>
   </main>
 
@@ -429,17 +425,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAw9wKpzo40N5fQ-PHlWn5X8lyfZ9gQ4bE",
-      authDomain: "family-chores-2e3f4.firebaseapp.com",
-      databaseURL: "https://family-chores-2e3f4-default-rtdb.firebaseio.com",
-      projectId: "family-chores-2e3f4",
-      storageBucket: "family-chores-2e3f4.firebasestorage.app",
-      messagingSenderId: "981430222985",
-      appId: "1:981430222985:web:51a5e2b29dd9b379910658"
-    };
-  </script>
+  <script src="firebase-config.js"></script>
   <script>
     const STORAGE_KEY = 'familyChores.familyId';
     const KIDS = {
@@ -586,7 +572,7 @@
       };
     }
 
-    function addMessage(role, text, meta) {
+    function addMessage(role, text, meta, actions) {
       const message = document.createElement('article');
       message.className = 'message ' + role;
       message.innerHTML = '<div>' + escapeHtml(text) + '</div>';
@@ -595,6 +581,22 @@
         metaNode.className = 'message-meta';
         metaNode.textContent = meta;
         message.appendChild(metaNode);
+      }
+      if (Array.isArray(actions) && actions.length) {
+        const row = document.createElement('div');
+        row.className = 'badge-row';
+        actions.forEach((action) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'icon-btn';
+          button.dataset.action = action.action;
+          if (action.value) {
+            button.dataset.value = action.value;
+          }
+          button.textContent = action.label;
+          row.appendChild(button);
+        });
+        message.appendChild(row);
       }
       elements.messages.appendChild(message);
       elements.messages.scrollTop = elements.messages.scrollHeight;
@@ -729,7 +731,12 @@
         }
         currentUser = user;
         updateFamilyLabel();
-        familyId = localStorage.getItem(STORAGE_KEY);
+        const searchParams = new URLSearchParams(window.location.search);
+        const familyFromUrl = (searchParams.get('family') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+        familyId = familyFromUrl || localStorage.getItem(STORAGE_KEY);
+        if (familyFromUrl) {
+          localStorage.setItem(STORAGE_KEY, familyFromUrl);
+        }
         if (familyId) {
           const configSnapshot = await database.ref('families/' + familyId + '/config').get();
           if (!configSnapshot.exists()) {
@@ -794,6 +801,1088 @@
       addMessage('system', 'Firebase setup failed. Check your config and project settings.', error.message);
     });
   </script>
+
+  <script>
+    (function () {
+      const QUESTION_WORDS = ['how', 'what', 'whats', "what's", 'status', 'score', 'balance', 'owe', 'doing', 'points'];
+      const YES_WORDS = ['yes', 'y', 'yeah', 'yep', 'sure', 'ok', 'okay'];
+      const NO_WORDS = ['no', 'n', 'nope', 'cancel', 'stop'];
+      const FILLER_WORDS = ['um', 'uh', 'like', 'so', 'well'];
+      const KID_ALIASES = {
+        alex: ['alex'],
+        louisa: ['louisa', 'lou'],
+        both: ['both', 'both kids', 'the kids', 'everyone']
+      };
+
+      let currentConfig = buildDefaultConfig();
+      let configLoaded = false;
+      let pendingAction = null;
+      let lastUndoAction = null;
+
+      function deepClone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function resetComposerBindings() {
+        const newComposer = elements.composer.cloneNode(true);
+        elements.composer.replaceWith(newComposer);
+        elements.composer = newComposer;
+        elements.messageInput = newComposer.querySelector('#messageInput');
+        elements.micButton = newComposer.querySelector('#micButton');
+      }
+
+      async function loadFamilyConfigV2() {
+        if (!familyId) {
+          return;
+        }
+        const snapshot = await database.ref('families/' + familyId + '/config').get();
+        currentConfig = snapshot.exists() ? snapshot.val() : buildDefaultConfig();
+        configLoaded = true;
+      }
+
+      async function seedFamilyV2(nextFamilyId) {
+        await database.ref('families/' + nextFamilyId + '/config').set(buildDefaultConfig());
+        await database.ref('families/' + nextFamilyId + '/balances').set({ alex: { owed: 0 }, louisa: { owed: 0 } });
+      }
+
+      const originalCreateFamily = createFamily;
+      createFamily = async function () {
+        setModalStatus('Creating family...', false);
+        let nextFamilyId = generateFamilyCode();
+        let existing = await database.ref('families/' + nextFamilyId + '/config').get();
+        while (existing.exists()) {
+          nextFamilyId = generateFamilyCode();
+          existing = await database.ref('families/' + nextFamilyId + '/config').get();
+        }
+        await seedFamilyV2(nextFamilyId);
+        localStorage.setItem(STORAGE_KEY, nextFamilyId);
+        familyId = nextFamilyId;
+        await loadFamilyConfigV2();
+        closeModal();
+        updateFamilyLabel();
+        addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
+      };
+
+      const originalJoinFamily = joinFamily;
+      joinFamily = async function () {
+        await originalJoinFamily();
+        if (familyId) {
+          await loadFamilyConfigV2();
+        }
+      };
+
+      const originalInitFirebase = initFirebase;
+      initFirebase = async function () {
+        await originalInitFirebase();
+        if (familyId) {
+          await loadFamilyConfigV2();
+        }
+      };
+
+      function normalizeText(text) {
+        let normalized = String(text || '').toLowerCase();
+        FILLER_WORDS.forEach((word) => {
+          normalized = normalized.replace(new RegExp('\\b' + word + '\\b', 'g'), ' ');
+        });
+        return normalized.replace(/[^a-z0-9$\s']/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      function splitClauses(text) {
+        return String(text || '').split(/\b(?:and|also|plus)\b/g).map((part) => part.trim()).filter(Boolean);
+      }
+
+      function extractKidIds(text) {
+        const normalized = normalizeText(text);
+        if (KID_ALIASES.both.some((alias) => normalized.includes(alias))) {
+          return ['alex', 'louisa'];
+        }
+        const ids = [];
+        if (KID_ALIASES.alex.some((alias) => normalized.includes(alias))) ids.push('alex');
+        if (KID_ALIASES.louisa.some((alias) => normalized.includes(alias))) ids.push('louisa');
+        return Array.from(new Set(ids));
+      }
+
+      function detectDateContext(text) {
+        const date = new Date();
+        if (normalizeText(text).includes('yesterday')) {
+          date.setDate(date.getDate() - 1);
+        }
+        return date;
+      }
+
+      function toDateString(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+      }
+
+      function toIsoWeek(date) {
+        const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const day = target.getUTCDay() || 7;
+        target.setUTCDate(target.getUTCDate() + 4 - day);
+        const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+        return target.getUTCFullYear() + '-W' + String(weekNo).padStart(2, '0');
+      }
+
+      function dollars(value) {
+        return '$' + Number(value || 0).toFixed(2);
+      }
+
+      function calculateWeeklyPay(payTiers, weeklyPoints) {
+        let earned = 0;
+        (payTiers || []).slice().sort((a, b) => a.minPts - b.minPts).forEach((tier) => {
+          if (weeklyPoints >= tier.minPts) earned = tier.pay;
+        });
+        return earned;
+      }
+
+      function choreEntries() {
+        return Object.entries((currentConfig && currentConfig.chores) || CHORES);
+      }
+
+      function scoreChore(text, chore) {
+        const tokens = new Set(normalizeText(text).split(' ').filter(Boolean));
+        let best = 0;
+        (chore.keywords || []).forEach((phrase) => {
+          const phraseTokens = normalizeText(phrase).split(' ').filter(Boolean);
+          if (!phraseTokens.length) return;
+          let matched = 0;
+          phraseTokens.forEach((token) => {
+            if (tokens.has(token)) matched += 1;
+          });
+          best = Math.max(best, matched / phraseTokens.length);
+        });
+        return best;
+      }
+
+      function inferChore(text) {
+        const normalized = normalizeText(text);
+        const currentHour = new Date().getHours();
+        const isMorning = normalized.includes('morning') || normalized.includes('am') || (!normalized.includes('tonight') && !normalized.includes('evening') && !normalized.includes('pm') && currentHour < 12);
+        const isEvening = normalized.includes('tonight') || normalized.includes('evening') || normalized.includes('pm') || (!normalized.includes('morning') && !normalized.includes('am') && currentHour >= 12);
+        let best = null;
+        choreEntries().forEach(([choreId, chore]) => {
+          let score = scoreChore(text, chore);
+          if (choreId === 'feed_dog_am' && isMorning) score += 0.2;
+          if (choreId === 'feed_dog_pm' && isEvening) score += 0.2;
+          if (!best || score > best.score) best = { choreId, chore, score };
+        });
+        return best;
+      }
+
+      function parseAmount(text) {
+        const match = normalizeText(text).match(/\$?\s*(\d+(?:\.\d{1,2})?)/);
+        return match ? Number(match[1]) : null;
+      }
+
+      function parsePoints(text) {
+        const normalized = normalizeText(text);
+        const match = normalized.match(/(\d+)\s*points?/);
+        return match ? Number(match[1]) : null;
+      }
+
+      function extractAdhocLabel(text, kids) {
+        let label = normalizeText(text);
+        kids.forEach((kidId) => {
+          label = label.replace(new RegExp('\\b' + (currentConfig.kids[kidId].name || kidId).toLowerCase() + '\\b', 'g'), ' ');
+        });
+        label = label.replace(/\b(gets?|earns?|earned|did|new chore|something new|something extra|give|him|her|points?)\b/g, ' ');
+        label = label.replace(/\d+/g, ' ').replace(/\s+/g, ' ').trim();
+        return label || 'Ad hoc chore';
+      }
+
+      function isQuestion(text) {
+        const normalized = normalizeText(text);
+        return QUESTION_WORDS.some((word) => normalized.includes(word)) || /\?$/.test(String(text || '').trim());
+      }
+
+      function parseIntent(text) {
+        const normalized = normalizeText(text);
+        const kids = extractKidIds(text);
+        if (YES_WORDS.includes(normalized)) return { intent: 'confirm_yes' };
+        if (NO_WORDS.includes(normalized)) return { intent: 'confirm_no' };
+        if (/\bundo\b|take that back/.test(normalized)) return { intent: 'undo' };
+        if (/\b(paid back|settle|settled)\b/.test(normalized) && kids.length >= 2) return { intent: 'settle_debt', kids };
+        const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
+        if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
+        if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
+        if (/\b(change|make|update|should be)\b/.test(normalized)) {
+          const match = inferChore(text);
+          return { intent: 'change_points', choreId: match && match.choreId, choreLabel: match && match.chore && match.chore.label, points: parsePoints(text), confidence: match ? match.score : 0 };
+        }
+        if (/\bpoints?\b/.test(normalized) && parsePoints(text) !== null && kids.length) {
+          const choreMatch = inferChore(text);
+          if (!choreMatch || choreMatch.score < 0.3) {
+            if (/\b(new chore|something new|something extra)\b/.test(normalized)) {
+              return { intent: 'adhoc', kids, points: parsePoints(text), choreLabel: extractAdhocLabel(text, kids) };
+            }
+            return { intent: 'freepoints', kids, points: parsePoints(text) };
+          }
+        }        if (isQuestion(text)) return { intent: 'check_status', kids };
+
+        const clauses = splitClauses(text);
+        const actions = [];
+        for (const clause of clauses) {
+          const clauseKids = extractKidIds(clause).length ? extractKidIds(clause) : kids;
+          if (!clauseKids.length) return { intent: 'missing_kid' };
+          const match = inferChore(clause);
+          if (match && match.score >= 0.5) {
+            actions.push({ intent: 'log_chore', kids: clauseKids, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(clause) });
+            continue;
+          }
+          if (match && match.score >= 0.3) {
+            return { intent: 'confirm_chore', kids: clauseKids, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(clause) };
+          }
+        }
+        if (actions.length) return { intent: 'log_chore', multi: actions };
+        if (kids.length && parsePoints(text) !== null) return { intent: 'adhoc', kids, points: parsePoints(text), choreLabel: extractAdhocLabel(text, kids) };
+        if (!kids.length) return { intent: 'missing_kid' };
+        return { intent: 'no_match' };
+      }
+
+      async function getLogEntriesByDate(dateStr) {
+        const snapshot = await database.ref('families/' + familyId + '/log').orderByChild('date').equalTo(dateStr).get();
+        return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
+      }
+
+      async function getAllLogEntries() {
+        const snapshot = await database.ref('families/' + familyId + '/log').get();
+        return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
+      }
+
+      async function getBalances() {
+        const snapshot = await database.ref('families/' + familyId + '/balances').get();
+        return snapshot.exists() ? snapshot.val() : { alex: { owed: 0 }, louisa: { owed: 0 } };
+      }
+
+      async function setOwed(kidId, amount) {
+        await database.ref('families/' + familyId + '/balances/' + kidId + '/owed').set(Number(amount.toFixed(2)));
+      }
+
+      async function adjustBalance(kidId, delta) {
+        const balances = await getBalances();
+        const current = Number(((balances[kidId] && balances[kidId].owed) || 0));
+        const next = Math.max(0, current + delta);
+        await setOwed(kidId, next);
+        return next;
+      }
+
+      async function findDuplicate(kidId, choreId, dateStr) {
+        const entries = await getLogEntriesByDate(dateStr);
+        return entries.find((entry) => entry.kid === kidId && entry.choreId === choreId) || null;
+      }
+
+      async function saveLogEntries(entries) {
+        const saved = [];
+        for (const entry of entries) {
+          const ref = database.ref('families/' + familyId + '/log').push();
+          await ref.set(entry);
+          saved.push({ id: ref.key, ...entry });
+        }
+        lastUndoAction = { type: 'log', entries: saved };
+        return saved;
+      }
+
+      async function writePayment(kidId, amount, type, note) {
+        const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type, timestamp: Date.now(), date: toDateString(new Date()), note: note || '' };
+        const ref = database.ref('families/' + familyId + '/payments').push();
+        await ref.set(entry);
+        const nextBalance = await adjustBalance(kidId, -entry.amount);
+        lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount };
+        return nextBalance;
+      }
+
+      async function writeDebt(from, to, amount) {
+        const entry = { from, to, amount: Number(amount.toFixed(2)), reason: 'Recorded from chat', timestamp: Date.now(), settled: false };
+        const ref = database.ref('families/' + familyId + '/debts').push();
+        await ref.set(entry);
+        lastUndoAction = { type: 'debt', debtId: ref.key };
+      }
+
+      async function settleDebt(kids) {
+        const snapshot = await database.ref('families/' + familyId + '/debts').get();
+        if (!snapshot.exists()) return null;
+        const match = Object.entries(snapshot.val()).find(([, debt]) => !debt.settled && kids.includes(debt.from) && kids.includes(debt.to));
+        if (!match) return null;
+        const [debtId, debt] = match;
+        await database.ref('families/' + familyId + '/debts/' + debtId + '/settled').set(true);
+        lastUndoAction = { type: 'settle_debt', debtId };
+        return debt;
+      }
+
+      async function updateChorePoints(choreId, points) {
+        const previous = Number(currentConfig.chores[choreId].points || 0);
+        await database.ref('families/' + familyId + '/config/chores/' + choreId + '/points').set(points);
+        currentConfig.chores[choreId].points = points;
+        lastUndoAction = { type: 'change_points', choreId, previous };
+      }
+
+      async function undoLastAction() {
+        if (!lastUndoAction) {
+          addMessage('system', 'Nothing to undo yet.');
+          return;
+        }
+        if (lastUndoAction.type === 'log') {
+          for (const entry of lastUndoAction.entries) {
+            await database.ref('families/' + familyId + '/log/' + entry.id).remove();
+          }
+          addMessage('system', 'Removed the most recent log entry.');
+        } else if (lastUndoAction.type === 'payment') {
+          await database.ref('families/' + familyId + '/payments/' + lastUndoAction.paymentId).remove();
+          await adjustBalance(lastUndoAction.kidId, lastUndoAction.amount);
+          addMessage('system', 'Removed the most recent payment.');
+        } else if (lastUndoAction.type === 'debt') {
+          await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId).remove();
+          addMessage('system', 'Removed the most recent debt record.');
+        } else if (lastUndoAction.type === 'settle_debt') {
+          await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId + '/settled').set(false);
+          addMessage('system', 'Reopened the settled debt.');
+        } else if (lastUndoAction.type === 'change_points') {
+          await database.ref('families/' + familyId + '/config/chores/' + lastUndoAction.choreId + '/points').set(lastUndoAction.previous);
+          currentConfig.chores[lastUndoAction.choreId].points = lastUndoAction.previous;
+          addMessage('system', 'Restored the previous point value.');
+        }
+        lastUndoAction = null;
+      }
+
+      async function renderStatus(kids) {
+        const entries = await getAllLogEntries();
+        const balances = await getBalances();
+        const week = toIsoWeek(new Date());
+        const targetKids = kids.length ? kids : Object.keys(currentConfig.kids || KIDS);
+        const lines = targetKids.map((kidId) => {
+          const points = entries.filter((entry) => entry.kid === kidId && entry.week === week).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
+          const pay = calculateWeeklyPay(currentConfig.kids[kidId].payTiers, points);
+          const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
+          return currentConfig.kids[kidId].name + ': ' + points + 'pts, ' + dollars(pay) + ' earned, ' + dollars(owed) + ' owed';
+        });
+        addMessage('system', lines.join(' | '));
+      }
+
+      async function executeLogAction(action, options) {
+        const entries = [];
+        const date = action.dateContext || new Date();
+        const dateStr = toDateString(date);
+        const week = toIsoWeek(date);
+        for (const kidId of action.kids) {
+          if (!options || !options.skipDuplicateCheck) {
+            const duplicate = await findDuplicate(kidId, action.choreId, dateStr);
+            if (duplicate) {
+              pendingAction = { type: 'duplicate', action };
+              addMessage('system', currentConfig.kids[kidId].name + ' already logged ' + action.choreLabel + ' today. Log again?');
+              return;
+            }
+          }
+          entries.push({ kid: kidId, choreId: action.choreId, choreLabel: action.choreLabel, points: action.points, timestamp: Date.now(), date: dateStr, week, note: action.note || '' });
+        }
+        const saved = await saveLogEntries(entries);
+        addMessage('system', 'Got it! ' + saved.map((entry) => currentConfig.kids[entry.kid].name + ' - ' + entry.choreLabel + ' ' + entry.points + 'pt').join(' | ') + '. Use Undo if needed.');
+      }
+
+      async function executeIntent(result) {
+        if (!familyId || !configLoaded) {
+          addMessage('system', 'Finish connecting to a family before logging chores.');
+          return;
+        }
+        if (result.intent === 'confirm_yes') {
+          if (!pendingAction) {
+            addMessage('system', 'Nothing is waiting for confirmation.');
+            return;
+          }
+          const pending = pendingAction;
+          pendingAction = null;
+          if (pending.type === 'duplicate' || pending.type === 'confirm_chore') {
+            await executeLogAction(pending.action, { skipDuplicateCheck: true });
+          }
+          return;
+        }
+        if (result.intent === 'confirm_no') {
+          pendingAction = null;
+          addMessage('system', 'Okay, I did not log that.');
+          return;
+        }
+        if (result.intent === 'undo') return undoLastAction();
+        if (result.intent === 'missing_kid') {
+          addMessage('system', 'Which kid?', '', [
+            { action: 'prefill', value: 'Alex ', label: 'Alex' },
+            { action: 'prefill', value: 'Louisa ', label: 'Louisa' },
+            { action: 'prefill', value: 'Both kids ', label: 'Both' }
+          ]);
+          return;
+        }
+        if (result.intent === 'no_match') {
+          addMessage('system', "I didn't catch that. Try again or type it out?");
+          return;
+        }
+        if (result.intent === 'check_status') return renderStatus(result.kids || []);
+        if (result.intent === 'record_payment') {
+          if (result.amount === null) {
+            addMessage('system', 'How much was the payment?');
+            return;
+          }
+          const kidId = result.kids[0];
+          const balance = await writePayment(kidId, result.amount, 'manual', 'Recorded from chat');
+          addMessage('system', 'Recorded payment for ' + currentConfig.kids[kidId].name + ': ' + dollars(result.amount) + '. Balance is now ' + dollars(balance) + '.');
+          return;
+        }
+        if (result.intent === 'record_debt') {
+          if (result.amount === null) {
+            addMessage('system', 'How much is owed?');
+            return;
+          }
+          const fromKid = result.verb === 'lent' ? result.kids[1] : result.kids[0];
+          const toKid = result.verb === 'lent' ? result.kids[0] : result.kids[1];
+          await writeDebt(fromKid, toKid, result.amount);
+          addMessage('system', currentConfig.kids[fromKid].name + ' now owes ' + currentConfig.kids[toKid].name + ' ' + dollars(result.amount) + '.');
+          return;
+        }
+        if (result.intent === 'settle_debt') {
+          const debt = await settleDebt(result.kids);
+          if (!debt) {
+            addMessage('system', 'I could not find an active debt between those kids.');
+            return;
+          }
+          addMessage('system', 'Settled debt: ' + currentConfig.kids[debt.from].name + ' to ' + currentConfig.kids[debt.to].name + ' for ' + dollars(debt.amount) + '.');
+          return;
+        }
+        if (result.intent === 'change_points') {
+          if (!result.choreId || result.points === null) {
+            addMessage('system', 'Tell me which chore and how many points to set.');
+            return;
+          }
+          await updateChorePoints(result.choreId, result.points);
+          addMessage('system', 'Updated ' + result.choreLabel + ' to ' + result.points + ' points.');
+          return;
+        }
+        if (result.intent === 'freepoints') {
+          const now = new Date();
+          await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'freepoints', choreLabel: 'Free points', points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' })));
+          addMessage('system', 'Added free points for ' + result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ') + '.');
+          return;
+        }
+        if (result.intent === 'adhoc') {
+          if (result.points === null) {
+            addMessage('system', 'How many points for that?');
+            return;
+          }
+          const now = new Date();
+          await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'adhoc', choreLabel: result.choreLabel, points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: result.choreLabel })));
+          addMessage('system', 'Logged ad-hoc chore: ' + result.choreLabel + ' for ' + result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ') + '.');
+          return;
+        }
+        if (result.intent === 'confirm_chore') {
+          pendingAction = { type: 'confirm_chore', action: result };
+          addMessage('system', 'Did you mean ' + result.choreLabel + '? Reply yes or no.');
+          return;
+        }
+        if (result.intent === 'log_chore') {
+          if (Array.isArray(result.multi)) {
+            for (const action of result.multi) {
+              await executeLogAction(action, {});
+              if (pendingAction) break;
+            }
+            return;
+          }
+          await executeLogAction(result, {});
+        }
+      }
+
+      async function handleUserInput(text) {
+        if (familyId && !configLoaded) {
+          await loadFamilyConfigV2();
+        }
+        addMessage('user', text);
+        await executeIntent(parseIntent(text));
+      }
+      let recognition = null;
+      let isListening = false;
+
+      function ensureSpeechStyles() {
+        if (document.getElementById('speechStyles')) {
+          return;
+        }
+        const style = document.createElement('style');
+        style.id = 'speechStyles';
+        style.textContent = '.mic-btn.listening{background:#d64545;color:#fff;box-shadow:0 0 0 0 rgba(214,69,69,.55);animation:micPulse 1.2s infinite;}@keyframes micPulse{0%{box-shadow:0 0 0 0 rgba(214,69,69,.55);}70%{box-shadow:0 0 0 12px rgba(214,69,69,0);}100%{box-shadow:0 0 0 0 rgba(214,69,69,0);}}';
+        document.head.appendChild(style);
+      }
+
+      function setListeningState(listening) {
+        isListening = listening;
+        elements.micButton.classList.toggle('listening', listening);
+        elements.micButton.textContent = listening ? 'Stop' : 'Mic';
+        elements.micButton.setAttribute('aria-label', listening ? 'Stop voice input' : 'Voice input');
+        if (listening) {
+          elements.messageInput.placeholder = 'Listening...';
+        } else {
+          elements.messageInput.placeholder = 'Type or speak...';
+        }
+      }
+
+      function initSpeechRecognition() {
+        ensureSpeechStyles();
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          elements.micButton.style.display = 'none';
+          return null;
+        }
+        const nextRecognition = new SpeechRecognition();
+        nextRecognition.lang = 'en-US';
+        nextRecognition.interimResults = true;
+        nextRecognition.continuous = false;
+        nextRecognition.onstart = () => {
+          setListeningState(true);
+        };
+        nextRecognition.onresult = (event) => {
+          let interim = '';
+          let finalText = '';
+          for (let i = event.resultIndex; i < event.results.length; i += 1) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalText += transcript;
+            } else {
+              interim += transcript;
+            }
+          }
+          const shown = (finalText || interim).trim();
+          if (shown) {
+            elements.messageInput.value = shown;
+          }
+          if (finalText.trim()) {
+            const submitted = finalText.trim();
+            elements.messageInput.value = '';
+            handleUserInput(submitted).catch((error) => {
+              console.error(error);
+              addMessage('system', 'Something went wrong while handling that request.', error.message);
+            });
+          }
+        };
+        nextRecognition.onerror = () => {
+          setListeningState(false);
+        };
+        nextRecognition.onend = () => {
+          setListeningState(false);
+        };
+        return nextRecognition;
+      }
+
+      function toggleSpeechRecognition() {
+        if (!recognition) {
+          recognition = initSpeechRecognition();
+        }
+        if (!recognition) {
+          addMessage('system', 'Speech recognition is not available in this browser.', 'Use text entry for now.');
+          return;
+        }
+        if (isListening) {
+          recognition.stop();
+          return;
+        }
+        try {
+          recognition.start();
+        } catch (error) {
+          console.error(error);
+          setListeningState(false);
+          addMessage('system', 'Unable to start speech recognition.', error.message || 'Try tapping the mic again.');
+        }
+      }
+
+      function bindPhase2Composer() {
+        resetComposerBindings();
+        elements.composer.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const text = elements.messageInput.value.trim();
+          if (!text) return;
+          elements.messageInput.value = '';
+          handleUserInput(text).catch((error) => {
+            console.error(error);
+            addMessage('system', 'Something went wrong while handling that request.', error.message);
+          });
+        });
+        elements.messages.addEventListener('click', (event) => {
+          const button = event.target.closest('button[data-action]');
+          if (!button) return;
+          const action = button.dataset.action;
+          if (action === 'prefill') {
+            elements.messageInput.value = button.dataset.value || '';
+            elements.messageInput.focus();
+            return;
+          }
+          if (action === 'undo') {
+            undoLastAction().catch((error) => {
+              console.error(error);
+              addMessage('system', 'Undo failed.', error.message);
+            });
+            return;
+          }
+          if (action === 'pending_yes') {
+            executeIntent({ intent: 'confirm_yes' }).catch((error) => {
+              console.error(error);
+              addMessage('system', 'Confirmation failed.', error.message);
+            });
+            return;
+          }
+          if (action === 'pending_no') {
+            executeIntent({ intent: 'confirm_no' }).catch((error) => {
+              console.error(error);
+              addMessage('system', 'Cancellation failed.', error.message);
+            });
+          }
+        });
+        elements.micButton.textContent = 'Mic';
+        elements.micButton.addEventListener('click', () => {
+          toggleSpeechRecognition();
+        });
+      }
+
+      window.phaseRuntime = {
+        get database() { return database; },
+        get familyId() { return familyId; },
+        get currentConfig() { return currentConfig; },
+        get configLoaded() { return configLoaded; },
+        get pendingAction() { return pendingAction; },
+        set pendingAction(value) { pendingAction = value; },
+        getAllLogEntries,
+        getBalances,
+        saveLogEntries,
+        writePayment,
+        writeDebt,
+        settleDebt,
+        updateChorePoints,
+        undoLastAction,
+        executeLogAction,
+        renderStatus,
+        calculateWeeklyPay,
+        dollars,
+        toIsoWeek,
+        toDateString,
+        adjustBalance,
+        addMessage
+      };
+      bindPhase2Composer();
+      const configWarmup = setInterval(() => {
+        if (database && familyId && !configLoaded) {
+          loadFamilyConfigV2().catch((error) => console.error(error));
+        }
+        if (configLoaded || (database && !familyId)) {
+          clearInterval(configWarmup);
+        }
+      }, 300);
+    })();
+  </script>
+  <script>
+    (function () {
+      function runtime() {
+        return window.phaseRuntime;
+      }
+
+      function ensurePhase4Styles() {
+        if (document.getElementById('phase4Styles')) {
+          return;
+        }
+        const style = document.createElement('style');
+        style.id = 'phase4Styles';
+        style.textContent = '.score-row{display:grid;gap:8px;margin-top:10px}.score-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.score-name{font-weight:700}.score-pay{color:var(--muted);font-size:.9rem}.progress{height:12px;border-radius:999px;background:#e7eef8;overflow:hidden}.progress>span{display:block;height:100%}.progress.alex>span{background:linear-gradient(90deg,var(--alex),#7cb9f0)}.progress.louisa>span{background:linear-gradient(90deg,var(--louisa),#b08ae6)}.score-next{font-size:.82rem;color:var(--muted)}.score-actions{display:grid;gap:10px}.score-action{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}.score-action button{min-height:40px;padding:0 12px;border:0;border-radius:12px;background:var(--alex);color:#fff;cursor:pointer}.score-section-title{font-size:.95rem;font-weight:700;margin:0 0 8px}.score-empty{color:var(--muted)}';
+        document.head.appendChild(style);
+      }
+
+      function previousWeek(date, phase) {
+        const prior = new Date(date);
+        prior.setDate(prior.getDate() - 7);
+        return phase.toIsoWeek(prior);
+      }
+
+      function formatWeekRange(date) {
+        const base = new Date(date);
+        const day = base.getDay();
+        const diffToMonday = (day + 6) % 7;
+        const monday = new Date(base);
+        monday.setDate(base.getDate() - diffToMonday);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const fmt = (value) => value.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        return fmt(monday) + ' - ' + fmt(sunday);
+      }
+
+      function thresholdInfo(phase, kidId, points) {
+        const tiers = (phase.currentConfig.kids[kidId].payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
+        const next = tiers.find((tier) => points < tier.minPts) || tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
+        return { next, width: Math.min(100, Math.round((points / Math.max(next.minPts, 1)) * 100)) };
+      }
+
+      async function getDebts(phase) {
+        const snapshot = await phase.database.ref('families/' + phase.familyId + '/debts').get();
+        return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
+      }
+
+      async function renderScoreboardPanel() {
+        const phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          return;
+        }
+        ensurePhase4Styles();
+        const entries = await phase.getAllLogEntries();
+        const balances = await phase.getBalances();
+        const debts = await getDebts(phase);
+        const now = new Date();
+        const currentWeek = phase.toIsoWeek(now);
+        const since = new Date(now);
+        since.setDate(since.getDate() - 27);
+        const kids = Object.keys(phase.currentConfig.kids || KIDS);
+        const kidRows = kids.map((kidId) => {
+          const weeklyPoints = entries.filter((entry) => entry.kid === kidId && entry.week === currentWeek).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
+          const recentPoints = entries.filter((entry) => entry.kid === kidId && entry.timestamp >= since.getTime()).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
+          const weeklyPay = phase.calculateWeeklyPay(phase.currentConfig.kids[kidId].payTiers, weeklyPoints);
+          const monthlyBonus = recentPoints >= phase.currentConfig.kids[kidId].monthlyBonus.threshold ? phase.currentConfig.kids[kidId].monthlyBonus.bonus : 0;
+          const threshold = thresholdInfo(phase, kidId, weeklyPoints);
+          return { kidId, weeklyPoints, weeklyPay, monthlyBonus, recentPoints, threshold, owed: Number(((balances[kidId] && balances[kidId].owed) || 0)) };
+        });
+        const debtRows = debts.filter((debt) => !debt.settled);
+        elements.scoreboardDrawer.innerHTML = [
+          '<div class="drawer-grid">',
+          '<article class="stat-card">',
+          '<h2>This Week (' + formatWeekRange(now) + ')</h2>',
+          kidRows.map((row) => '<div class="score-row"><div class="score-top"><div><div class="score-name">' + phase.currentConfig.kids[row.kidId].name + '</div><div class="score-pay">' + row.weeklyPoints + 'pts | ' + phase.dollars(row.weeklyPay) + ' earned</div></div><div class="score-next">next: ' + row.threshold.next.minPts + 'pts</div></div><div class="progress ' + row.kidId + '"><span style="width:' + row.threshold.width + '%"></span></div><div class="score-pay">4-week points: ' + row.recentPoints + ' | bonus: ' + phase.dollars(row.monthlyBonus) + '</div></div>').join(''),
+          '</article>',
+          '<article class="stat-card">',
+          '<p class="score-section-title">Balances</p>',
+          '<div class="score-actions">',
+          kidRows.map((row) => '<div class="score-action"><span>' + phase.currentConfig.kids[row.kidId].name + ' owed: ' + phase.dollars(row.owed) + '</span><button type="button" data-score-action="pay-balance" data-kid="' + row.kidId + '">Pay</button></div>').join(''),
+          debtRows.length ? debtRows.map((debt) => '<div class="score-action"><span>' + phase.currentConfig.kids[debt.from].name + ' owes ' + phase.currentConfig.kids[debt.to].name + ': ' + phase.dollars(debt.amount) + '</span><button type="button" data-score-action="settle-debt" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>').join('') : '<div class="score-empty">No active debts.</div>',
+          '</div>',
+          '</article>',
+          '</div>'
+        ].join('');
+      }
+
+      async function maybeRunWeeklyPay() {
+        const phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          return;
+        }
+        const now = new Date();
+        const currentWeek = phase.toIsoWeek(now);
+        const previous = previousWeek(now, phase);
+        const metaRef = phase.database.ref('families/' + phase.familyId + '/meta/lastWeeklyPayWeek');
+        const metaSnap = await metaRef.get();
+        const lastWeek = metaSnap.exists() ? metaSnap.val() : null;
+        if (lastWeek === currentWeek) {
+          return;
+        }
+        const paymentsSnap = await phase.database.ref('families/' + phase.familyId + '/payments').orderByChild('type').equalTo('weekly').get();
+        const existingPayments = paymentsSnap.exists() ? Object.values(paymentsSnap.val()) : [];
+        const entries = await phase.getAllLogEntries();
+        for (const kidId of Object.keys(phase.currentConfig.kids || KIDS)) {
+          const alreadyPaid = existingPayments.some((payment) => payment.kid === kidId && payment.note === ('Auto weekly pay for ' + previous));
+          if (alreadyPaid) {
+            continue;
+          }
+          const weeklyPoints = entries.filter((entry) => entry.kid === kidId && entry.week === previous).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
+          const amount = phase.calculateWeeklyPay(phase.currentConfig.kids[kidId].payTiers, weeklyPoints);
+          if (amount > 0) {
+            const paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: 'Auto weekly pay for ' + previous };
+            const ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
+            await ref.set(paymentEntry);
+            await phase.adjustBalance(kidId, amount);
+          }
+        }
+        await metaRef.set(currentWeek);
+      }
+
+      function maybeShowBirthdayPrompt() {
+        const phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          return;
+        }
+        const today = new Date();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
+        Object.values(phase.currentConfig.kids || KIDS).forEach((kid) => {
+          const born = new Date(kid.born);
+          if (born.getMonth() + 1 === month && born.getDate() === day) {
+            phase.addMessage('system', kid.name + ' has a birthday today. Want to update pay tiers in settings?');
+          }
+        });
+      }
+
+      async function refreshPhase4() {
+        const phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          return;
+        }
+        await maybeRunWeeklyPay();
+        await renderScoreboardPanel();
+      }
+
+      elements.scoreboardDrawer.addEventListener('click', (event) => {
+        const phase = runtime();
+        const button = event.target.closest('button[data-score-action]');
+        if (!button || !phase) {
+          return;
+        }
+        const action = button.dataset.scoreAction;
+        if (action === 'pay-balance') {
+          const kidId = button.dataset.kid;
+          const amountText = window.prompt('Payment amount for ' + phase.currentConfig.kids[kidId].name + '?');
+          const amount = amountText === null ? null : Number(amountText);
+          if (!amount || Number.isNaN(amount) || amount <= 0) {
+            return;
+          }
+          phase.writePayment(kidId, amount, 'manual', 'Manual pay from scoreboard').then((balance) => {
+            phase.addMessage('system', 'Recorded payment for ' + phase.currentConfig.kids[kidId].name + ': ' + phase.dollars(amount) + '. Balance is now ' + phase.dollars(balance) + '.');
+            refreshPhase4().catch((error) => console.error(error));
+          }).catch((error) => {
+            console.error(error);
+            phase.addMessage('system', 'Payment failed.', error.message);
+          });
+          return;
+        }
+        if (action === 'settle-debt') {
+          const from = button.dataset.from;
+          const to = button.dataset.to;
+          phase.settleDebt([from, to]).then((debt) => {
+            if (debt) {
+              phase.addMessage('system', 'Settled debt: ' + phase.currentConfig.kids[from].name + ' to ' + phase.currentConfig.kids[to].name + ' for ' + phase.dollars(debt.amount) + '.');
+              refreshPhase4().catch((error) => console.error(error));
+            }
+          }).catch((error) => {
+            console.error(error);
+            phase.addMessage('system', 'Debt settlement failed.', error.message);
+          });
+        }
+      });
+
+      elements.scoreboardToggle.addEventListener('click', () => {
+        if (elements.scoreboardDrawer.classList.contains('open')) {
+          refreshPhase4().catch((error) => console.error(error));
+        }
+      });
+
+      const phase4Warmup = setInterval(() => {
+        const phase = runtime();
+        if (phase && phase.database && phase.familyId && phase.configLoaded) {
+          refreshPhase4().then(() => maybeShowBirthdayPrompt()).catch((error) => console.error(error));
+          clearInterval(phase4Warmup);
+        }
+      }, 500);
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const historyState = { kid: 'all', date: '' };
+      let greeted = false;
+
+      function phase() {
+        return window.phaseRuntime;
+      }
+
+      function ensurePhase5Styles() {
+        if (document.getElementById('phase5Styles')) {
+          return;
+        }
+        const style = document.createElement('style');
+        style.id = 'phase5Styles';
+        style.textContent = '.status-dot{width:10px;height:10px;border-radius:999px;background:#94a3b8;display:inline-block}.status-dot.online{background:#22c55e}.settings-grid{display:grid;gap:12px}.settings-list{display:grid;gap:8px}.settings-row{display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.settings-row input,.settings-row select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px}.settings-row button,.settings-btn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer}.settings-chip-row{display:flex;flex-wrap:wrap;gap:8px}.settings-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}.settings-chip.active{background:var(--alex);border-color:var(--alex);color:#fff}.history-list{display:grid;gap:8px;max-height:240px;overflow:auto}.history-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}.settings-note{font-size:.85rem;color:var(--muted)}';
+        document.head.appendChild(style);
+      }
+
+      function ensureOnlineIndicator() {
+        if (document.getElementById('onlineDot')) {
+          return;
+        }
+        const dot = document.createElement('span');
+        dot.id = 'onlineDot';
+        dot.className = 'status-dot';
+        elements.familyLabel.parentNode.insertBefore(dot, elements.familyLabel);
+        dot.style.marginRight = '8px';
+        updateOnlineIndicator();
+      }
+
+      function updateOnlineIndicator() {
+        const dot = document.getElementById('onlineDot');
+        if (!dot) return;
+        dot.classList.toggle('online', navigator.onLine);
+      }
+
+      function greetingForNow() {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning!';
+        if (hour < 18) return 'Good afternoon!';
+        return 'Good evening!';
+      }
+
+      function safeName(value) {
+        return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      async function keepPathsSynced() {
+        const app = phase();
+        if (!app || !app.familyId || !app.database) return;
+        ['config', 'log', 'payments', 'balances', 'debts', 'meta'].forEach((part) => {
+          const ref = app.database.ref('families/' + app.familyId + '/' + part);
+          if (typeof ref.keepSynced === 'function') {
+            ref.keepSynced(true);
+          }
+        });
+      }
+
+      function renderPayTierEditor(kidId, kid) {
+        return '<div class="stat-card"><h3>' + safeName(kid.name) + ' pay tiers</h3><div class="settings-list">' +
+          (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><span>' + tier.minPts + ' pts</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$ amount</span></div>').join('') +
+          '<div class="settings-row"><span>Bonus at ' + kid.monthlyBonus.threshold + ' pts</span><input type="number" min="0" value="' + kid.monthlyBonus.bonus + '" data-setting="bonus" data-kid="' + kidId + '"><span class="settings-note">$ bonus</span></div>' +
+          '</div></div>';
+      }
+
+      async function renderHistory() {
+        const app = phase();
+        if (!app || !app.familyId || !app.configLoaded) {
+          return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
+        }
+        const entries = (await app.getAllLogEntries()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+        const filtered = entries.filter((entry) => (historyState.kid === 'all' || entry.kid === historyState.kid) && (!historyState.date || entry.date === historyState.date)).slice(0, 40);
+        if (!filtered.length) {
+          return '<div class="history-list"><div class="history-item">No matching history.</div></div>';
+        }
+        return '<div class="history-list">' + filtered.map((entry) => '<div class="history-item"><strong>' + safeName((app.currentConfig.kids[entry.kid] || {}).name || entry.kid) + '</strong> - ' + safeName(entry.choreLabel) + ' (' + entry.points + 'pts)<div class="settings-note">' + safeName(entry.date) + '</div></div>').join('') + '</div>';
+      }
+
+      async function renderSettingsPanel() {
+        const app = phase();
+        if (!app || !app.familyId || !app.configLoaded) return;
+        ensurePhase5Styles();
+        const kids = app.currentConfig.kids || KIDS;
+        const chores = app.currentConfig.chores || CHORES;
+        const historyMarkup = await renderHistory();
+        elements.settingsDrawer.innerHTML = [
+          '<div class="settings-grid">',
+          '<article class="stat-card"><h3>Family</h3><p class="settings-note">Family code: ' + safeName(app.familyId) + '</p><button type="button" class="settings-btn" data-setting-action="copy-family">Copy link</button></article>',
+          '<article class="stat-card"><h3>Chores</h3><div class="settings-list">',
+          Object.entries(chores).map(([choreId, chore]) => '<div class="settings-row"><span>' + safeName(chore.label) + '</span><input type="number" min="0" value="' + Number(chore.points || 0) + '" data-setting="chore-points" data-chore="' + choreId + '"><button type="button" data-setting-action="remove-chore" data-chore="' + choreId + '">Remove</button></div>').join(''),
+          '</div><button type="button" class="settings-btn" data-setting-action="add-chore">Add chore</button></article>',
+          Object.entries(kids).map(([kidId, kid]) => renderPayTierEditor(kidId, kid)).join(''),
+          '<article class="stat-card"><h3>History</h3><div class="settings-chip-row"><button type="button" class="settings-chip ' + (historyState.kid === 'all' ? 'active' : '') + '" data-history-kid="all">All</button><button type="button" class="settings-chip ' + (historyState.kid === 'alex' ? 'active' : '') + '" data-history-kid="alex">Alex</button><button type="button" class="settings-chip ' + (historyState.kid === 'louisa' ? 'active' : '') + '" data-history-kid="louisa">Louisa</button></div><div class="settings-row"><span>Date</span><input type="date" value="' + safeName(historyState.date) + '" data-setting="history-date"><span class="settings-note">Filter</span></div>' + historyMarkup + '</article>',
+          '</div>'
+        ].join('');
+      }
+
+      async function updatePayTier(kidId, index, pay) {
+        const app = phase();
+        const payTiers = (app.currentConfig.kids[kidId].payTiers || []).slice();
+        payTiers[index] = { ...payTiers[index], pay };
+        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/payTiers').set(payTiers);
+        app.currentConfig.kids[kidId].payTiers = payTiers;
+      }
+
+      async function updateBonus(kidId, bonus) {
+        const app = phase();
+        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/monthlyBonus/bonus').set(bonus);
+        app.currentConfig.kids[kidId].monthlyBonus.bonus = bonus;
+      }
+
+      async function addChoreViaPrompt() {
+        const app = phase();
+        const label = window.prompt('New chore name?');
+        if (!label) return;
+        const points = Number(window.prompt('Points for ' + label + '?', '1'));
+        if (!points || Number.isNaN(points)) return;
+        const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('chore_' + Date.now());
+        const chore = { label, points, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
+        await app.database.ref('families/' + app.familyId + '/config/chores/' + key).set(chore);
+        app.currentConfig.chores[key] = chore;
+        await renderSettingsPanel();
+      }
+
+      async function removeChore(choreId) {
+        const app = phase();
+        if (!window.confirm('Remove this chore?')) return;
+        await app.database.ref('families/' + app.familyId + '/config/chores/' + choreId).remove();
+        delete app.currentConfig.chores[choreId];
+        await renderSettingsPanel();
+      }
+
+      elements.settingsDrawer.addEventListener('change', (event) => {
+        const target = event.target;
+        const app = phase();
+        if (!app) return;
+        if (target.dataset.setting === 'chore-points') {
+          const points = Number(target.value);
+          if (Number.isNaN(points)) return;
+          app.updateChorePoints(target.dataset.chore, points).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+          return;
+        }
+        if (target.dataset.setting === 'pay-tier') {
+          const pay = Number(target.value);
+          if (Number.isNaN(pay)) return;
+          updatePayTier(target.dataset.kid, Number(target.dataset.index), pay).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+          return;
+        }
+        if (target.dataset.setting === 'bonus') {
+          const bonus = Number(target.value);
+          if (Number.isNaN(bonus)) return;
+          updateBonus(target.dataset.kid, bonus).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+          return;
+        }
+        if (target.dataset.setting === 'history-date') {
+          historyState.date = target.value;
+          renderSettingsPanel().catch((error) => console.error(error));
+        }
+      });
+
+      elements.settingsDrawer.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const action = button.dataset.settingAction;
+        if (button.dataset.historyKid) {
+          historyState.kid = button.dataset.historyKid;
+          renderSettingsPanel().catch((error) => console.error(error));
+          return;
+        }
+        if (action === 'copy-family') {
+          const app = phase();
+          navigator.clipboard.writeText(location.href.replace(/#.*$/, '') + '?family=' + app.familyId).then(() => {
+            app.addMessage('system', 'Copied the family link.');
+          }).catch((error) => console.error(error));
+          return;
+        }
+        if (action === 'add-chore') {
+          addChoreViaPrompt().catch((error) => console.error(error));
+          return;
+        }
+        if (action === 'remove-chore') {
+          removeChore(button.dataset.chore).catch((error) => console.error(error));
+        }
+      });
+
+      elements.settingsToggle.addEventListener('click', () => {
+        const app = phase();
+        if (app && app.familyId && app.configLoaded && elements.settingsDrawer.classList.contains('open')) {
+          renderSettingsPanel().catch((error) => console.error(error));
+        }
+      });
+
+      window.addEventListener('online', updateOnlineIndicator);
+      window.addEventListener('offline', updateOnlineIndicator);
+
+      const phase5Warmup = setInterval(() => {
+        const app = phase();
+        if (app && app.database) {
+          ensureOnlineIndicator();
+          updateOnlineIndicator();
+        }
+        if (app && app.database && app.familyId && app.configLoaded) {
+          keepPathsSynced().catch((error) => console.error(error));
+          renderSettingsPanel().catch((error) => console.error(error));
+          if (!greeted) {
+            app.addMessage('system', greetingForNow() + ' What chores have been done today?');
+            greeted = true;
+          }
+          clearInterval(phase5Warmup);
+        }
+      }, 500);
+    })();
+  </script>
 </body>
 </html>
+
+
 
