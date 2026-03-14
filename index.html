@@ -1304,12 +1304,57 @@
         }
       }
 
+      const GEMINI_KEY = 'AIzaSyAjrqU0Kc19rmLEZh1KcVe7tKTFBkp9XNY';
+      const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY;
+
+      async function askGemini(text) {
+        const choreList = choreEntries().map(([id, c]) => id + ': ' + c.label + ' (' + c.points + 'pts)').join(', ');
+        const prompt = 'You are a chore tracker assistant for a family with two kids: Alex and Louisa. ' +
+          'Available chores: ' + choreList + '. ' +
+          'The user said: "' + text + '"\n\n' +
+          'Determine the intent. Respond with ONLY valid JSON, no markdown, no explanation. Use one of these formats:\n' +
+          '{"intent":"log_chore","kids":["alex"],"choreId":"feed_dog_am","choreLabel":"Feed dog (AM)","points":1}\n' +
+          '{"intent":"freepoints","kids":["alex"],"points":3}\n' +
+          '{"intent":"adhoc","kids":["alex"],"points":2,"choreLabel":"description of chore"}\n' +
+          '{"intent":"record_payment","kids":["alex"],"amount":6}\n' +
+          '{"intent":"record_debt","kids":["louisa","alex"],"amount":2,"verb":"owes"}\n' +
+          '{"intent":"settle_debt","kids":["louisa","alex"]}\n' +
+          '{"intent":"change_points","choreId":"feed_dog_am","choreLabel":"Feed dog (AM)","points":2}\n' +
+          '{"intent":"check_status","kids":["alex"]}\n' +
+          '{"intent":"no_match"}\n' +
+          'For log_chore with multiple actions use: {"intent":"log_chore","multi":[...array of log_chore objects...]}\n' +
+          'Kid IDs are "alex" and "louisa" (lowercase). Use "both" as ["alex","louisa"].';
+
+        const response = await fetch(GEMINI_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        const raw = ((data.candidates || [])[0] || {}).content;
+        const resultText = ((raw || {}).parts || [])[0].text || '';
+        const cleaned = resultText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        return JSON.parse(cleaned);
+      }
+
       async function handleUserInput(text) {
         if (familyId && !configLoaded) {
           await loadFamilyConfigV2();
         }
         addMessage('user', text);
-        await executeIntent(parseIntent(text));
+        let result = parseIntent(text);
+        if (result.intent === 'no_match' || result.intent === 'missing_kid') {
+          try {
+            const geminiResult = await askGemini(text);
+            if (geminiResult && geminiResult.intent && geminiResult.intent !== 'no_match') {
+              result = geminiResult;
+            }
+          } catch (e) {
+            console.error('Gemini fallback failed:', e);
+          }
+        }
+        await executeIntent(result);
       }
       let recognition = null;
       let isListening = false;
