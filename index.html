@@ -2181,9 +2181,30 @@
       }
 
       function thresholdInfo(phase, kidId, points) {
-        const tiers = (phase.currentConfig.kids[kidId].payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
-        const next = tiers.find((tier) => points < tier.minPts) || tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
-        return { next, width: Math.min(100, Math.round((points / Math.max(next.minPts, 1)) * 100)) };
+        const kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || {};
+        const tiers = (kid.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
+        const topTier = tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
+        const nextTier = tiers.find((tier) => points < tier.minPts);
+        if (nextTier) {
+          return {
+            mode: 'tier',
+            next: nextTier,
+            targetPoints: Math.max(nextTier.minPts, 1),
+            width: Math.min(100, Math.round((points / Math.max(nextTier.minPts, 1)) * 100))
+          };
+        }
+        const weeklyBonus = kid.weeklyBonus || {};
+        const extraPts = Math.max(1, Number(weeklyBonus.extraPts || 10));
+        const bonusPoints = Math.max(0, points - Number(topTier.minPts || 0));
+        const completedBonusSteps = Math.floor(bonusPoints / extraPts);
+        const targetBonusPoints = (completedBonusSteps + 1) * extraPts;
+        return {
+          mode: 'bonus',
+          next: { minPts: Number(topTier.minPts || 0) + targetBonusPoints, pay: topTier.pay || 0 },
+          targetPoints: targetBonusPoints,
+          bonusPoints: bonusPoints,
+          width: Math.min(100, Math.round((bonusPoints / targetBonusPoints) * 100))
+        };
       }
 
       function paymentBalanceDelta(payment) {
@@ -2289,6 +2310,13 @@
           const extraPoints = Math.max(0, weeklyPoints - topMinPts);
           const weeklyBonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
           const threshold = thresholdInfo(phase, kidId, weeklyPoints);
+          const progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
+          const progressLabel = threshold.mode === 'bonus'
+            ? 'bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts'
+            : 'next: ' + threshold.next.minPts + 'pts';
+          const progressStyle = threshold.mode === 'bonus'
+            ? 'background:linear-gradient(90deg,#22c55e,#15803d)'
+            : '';
           const relatedDebts = debts.filter((debt) => debt && !debt.settled && (debt.from === kidId || debt.to === kidId));
           var txns = [];
           try {
@@ -2360,8 +2388,8 @@
               '<article class="stat-card">' +
                 '<h3>This Week (' + formatWeekRange(now) + ')</h3>' +
                 '<div class="score-row">' +
-                  '<div class="score-top"><div><div class="score-name">' + kidName + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">next: ' + threshold.next.minPts + 'pts</div></div>' +
-                  '<div class="progress ' + kidId + '"><span style="width:' + threshold.width + '%"></span></div>' +
+                  '<div class="score-top"><div><div class="score-name">' + kidName + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div>' +
+                  '<div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div>' +
                   '<div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div>' +
                 '</div>' +
               '</article>' +
@@ -2762,6 +2790,7 @@
   </script>
 </body>
 </html>
+
 
 
 
