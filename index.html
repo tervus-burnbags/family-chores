@@ -1041,7 +1041,12 @@
       elements.settingsToggle.addEventListener('click', () => {
         const opening = !elements.settingsDrawer.classList.contains('open');
         closeAllDrawers();
-        if (opening) elements.settingsDrawer.classList.add('open');
+        if (opening) {
+          elements.settingsDrawer.classList.add('open');
+          if (typeof window.renderSettingsPanel === 'function') {
+            window.renderSettingsPanel().catch((error) => console.error(error));
+          }
+        }
       });
 
       document.querySelectorAll('[data-card-kid]').forEach((btn) => {
@@ -1110,6 +1115,7 @@
             setModalStatus('Saved family code was not found. Create a new family or join again.', true);
             return;
           }
+          await loadFamilyConfigV2();
           updateFamilyLabel();
           addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
         } else {
@@ -2110,9 +2116,15 @@
 
       window.refreshPhase4 = refreshPhase4;
       async function refreshPhase4() {
-        const phase = runtime();
+        var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
-          return;
+          document.getElementById('scoreboardDrawer').querySelector('.drawer-grid').innerHTML = '<article class="stat-card"><p>Loading...</p></article>';
+          await new Promise(function (resolve) {
+            var poll = setInterval(function () {
+              phase = runtime();
+              if (phase && phase.familyId && phase.configLoaded) { clearInterval(poll); resolve(); }
+            }, 300);
+          });
         }
         await maybeRunWeeklyPay();
         await renderScoreboardPanel();
@@ -2356,9 +2368,18 @@
         return '<div class="history-list">' + filtered.map((entry) => '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[entry.kid] || {}).name || entry.kid) + '</strong> - ' + safeName(entry.choreLabel) + ' (' + entry.points + 'pts)<div class="settings-note">' + safeName(entry.date) + '</div></div><button type="button" data-setting-action="delete-log" data-log-id="' + entry.id + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>').join('') + '</div>';
       }
 
+      window.renderSettingsPanel = renderSettingsPanel;
       async function renderSettingsPanel() {
-        const app = phase();
-        if (!app || !app.familyId || !app.configLoaded) return;
+        var app = phase();
+        if (!app || !app.familyId || !app.configLoaded) {
+          elements.settingsDrawer.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading...</p></article></div>';
+          await new Promise(function (resolve) {
+            var poll = setInterval(function () {
+              app = phase();
+              if (app && app.familyId && app.configLoaded) { clearInterval(poll); resolve(); }
+            }, 300);
+          });
+        }
         ensurePhase5Styles();
         const kids = app.currentConfig.kids || KIDS;
         const chores = app.currentConfig.chores || CHORES;
@@ -2496,12 +2517,6 @@
         }
       });
 
-      elements.settingsToggle.addEventListener('click', () => {
-        const app = phase();
-        if (app && app.familyId && app.configLoaded && elements.settingsDrawer.classList.contains('open')) {
-          renderSettingsPanel().catch((error) => console.error(error));
-        }
-      });
 
       window.addEventListener('online', updateOnlineIndicator);
       window.addEventListener('offline', updateOnlineIndicator);
