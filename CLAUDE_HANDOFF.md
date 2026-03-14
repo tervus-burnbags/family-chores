@@ -40,3 +40,11 @@ Commit: d125530 (`fix app startup and interaction bugs`)
 - `index.html` should eventually be split up or at least refactored into smaller modules/functions.
 - There are old placeholder/handoff messages in parts of the UI that no longer reflect the current implemented state.
 - The app mixes optimistic layering with wrapper scripts; cleanup should consolidate phase-added behavior into a single coherent runtime.
+
+## Update 2026-03-14
+- User reports mobile layout is correct immediately after refresh, then expands wider after runtime updates.
+- Strong suspicion: a post-load header/status update or drawer/runtime render is reintroducing overflow after initial paint.
+- Recent local-only change: family status text now wraps instead of forcing one line, but user still sees delayed expansion.
+- Likely next debugging target: inspect post-init DOM/text updates to familyLabel, header button sizing after JS runs, and any drawer/quick-points render that mutates layout after startup.
+- Latest uncommitted local state includes the header wrap tweak only.
+
