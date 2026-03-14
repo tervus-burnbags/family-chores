@@ -995,7 +995,7 @@
         kids.forEach((kidId) => {
           label = label.replace(new RegExp('\\b' + (currentConfig.kids[kidId].name || kidId).toLowerCase() + '\\b', 'g'), ' ');
         });
-        label = label.replace(/\b(gets?|earns?|earned|did|new chore|something new|something extra|give|him|her|points?)\b/g, ' ');
+        label = label.replace(/\b(gets?|earns?|earned|did|new chore|something new|something extra|give|gave|add|him|her|a|an|the|for|to|points?)\b/g, ' ');
         label = label.replace(/\d+/g, ' ').replace(/\s+/g, ' ').trim();
         return label || 'Ad hoc chore';
       }
@@ -1011,12 +1011,19 @@
         if (YES_WORDS.includes(normalized)) return { intent: 'confirm_yes' };
         if (NO_WORDS.includes(normalized)) return { intent: 'confirm_no' };
         if (/\bundo\b|take that back/.test(normalized)) return { intent: 'undo' };
-        if (/\b(paid back|settle|settled)\b/.test(normalized) && kids.length >= 2) return { intent: 'settle_debt', kids };
+        if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) return { intent: 'settle_debt', kids };
         const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
         if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
-        if (/\b(change|make|update|should be)\b/.test(normalized)) {
-          const match = inferChore(text);
+        if (kids.length && parsePoints(text) !== null && /\b(gets?|earns?|earned|give|add|award)\b/.test(normalized)) {
+          return { intent: 'freepoints', kids, points: parsePoints(text) };
+        }
+        if (/\bpoints?\s+for\b/.test(normalized) && kids.length && parsePoints(text) !== null) {
+          return { intent: 'freepoints', kids, points: parsePoints(text) };
+        }
+        if (/\b(change|update|should be)\b/.test(normalized) || (/\bmake\b/.test(normalized) && /\bpoints?\b/.test(normalized) && parsePoints(text) !== null)) {
+          const choreText = text.replace(/\b(change|make|update|should be)\b/gi, ' ').trim();
+          const match = inferChore(choreText);
           return { intent: 'change_points', choreId: match && match.choreId, choreLabel: match && match.chore && match.chore.label, points: parsePoints(text), confidence: match ? match.score : 0 };
         }
         if (/\bpoints?\b/.test(normalized) && parsePoints(text) !== null && kids.length) {
@@ -1027,7 +1034,8 @@
             }
             return { intent: 'freepoints', kids, points: parsePoints(text) };
           }
-        }        if (isQuestion(text)) return { intent: 'check_status', kids };
+        }
+        if (isQuestion(text)) return { intent: 'check_status', kids };
 
         const clauses = splitClauses(text);
         const actions = [];
