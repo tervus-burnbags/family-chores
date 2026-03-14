@@ -1115,7 +1115,9 @@
             setModalStatus('Saved family code was not found. Create a new family or join again.', true);
             return;
           }
-          await loadFamilyConfigV2();
+          if (typeof window.loadFamilyConfigV2 === 'function') {
+            await window.loadFamilyConfigV2();
+          }
           updateFamilyLabel();
           addMessage('system', 'Welcome! Type or tap the mic to log chores.', 'Family code: ' + familyId);
         } else {
@@ -1200,6 +1202,7 @@
         elements.micButton = newComposer.querySelector('#micButton');
       }
 
+      window.loadFamilyConfigV2 = loadFamilyConfigV2;
       async function loadFamilyConfigV2() {
         if (!familyId) {
           return;
@@ -1374,7 +1377,7 @@
         const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
         if (debtVerbMatch && kids.length === 1 && /\b(me|us|parents?)\b/.test(normalized)) return { intent: 'kid_owes_parent', kids, amount: parseAmount(text) };
-        if (/\bspent\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text) };
+        if (/\b(spent|bought|purchased)\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text), note: text };
         if (/\bgave\b/.test(normalized) && /\bcash\b/.test(normalized) && kids.length) return { intent: 'gave_cash', kids: [kids[0]], amount: parseAmount(text) };
         if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
         if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
@@ -1437,6 +1440,11 @@
 
       async function getAllLogEntries() {
         const snapshot = await database.ref('families/' + familyId + '/log').get();
+        return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
+      }
+
+      async function getAllPayments() {
+        const snapshot = await database.ref('families/' + familyId + '/payments').get();
         return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
       }
 
@@ -1621,10 +1629,9 @@
             return;
           }
           const kidId = result.kids[0];
-          const balance = await adjustBalance(kidId, -result.amount);
-          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'spend', timestamp: Date.now(), date: toDateString(new Date()), note: 'Recorded from chat' };
-          await database.ref('families/' + familyId + '/payments').push().set(entry);
-          addMessage('system', currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          var spendNote = (result.note || text || '').replace(/\b(alex|louisa|both kids?)\b/gi, '').replace(/\b(spent|bought|purchased)\b/gi, '').replace(/\$?\d+(\.\d+)?/g, '').replace(/\bfor\b/gi, '').replace(/\s+/g, ' ').trim() || 'Purchase';
+          const balance = await writePayment(kidId, result.amount, 'spend', spendNote);
+          addMessage('system', currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + ' on ' + spendNote + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
         if (result.intent === 'gave_cash') {
@@ -1633,9 +1640,7 @@
             return;
           }
           const kidId = result.kids[0];
-          const balance = await adjustBalance(kidId, -result.amount);
-          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'cash', timestamp: Date.now(), date: toDateString(new Date()), note: 'Gave cash' };
-          await database.ref('families/' + familyId + '/payments').push().set(entry);
+          const balance = await writePayment(kidId, result.amount, 'cash', 'Gave cash');
           addMessage('system', 'Gave ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + ' cash. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
@@ -1645,9 +1650,7 @@
             return;
           }
           const kidId = result.kids[0];
-          const balance = await adjustBalance(kidId, -result.amount);
-          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'owed', timestamp: Date.now(), date: toDateString(new Date()), note: 'Owes parent' };
-          await database.ref('families/' + familyId + '/payments').push().set(entry);
+          const balance = await writePayment(kidId, result.amount, 'owed', 'Owes parent');
           addMessage('system', currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
@@ -1746,10 +1749,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
-        if (!response.ok) return null;
+        if (!response.ok) {
+          console.warn('Gemini API returned status ' + response.status);
+          return null;
+        }
         const data = await response.json();
         const raw = ((data.candidates || [])[0] || {}).content;
-        const resultText = ((raw || {}).parts || [])[0].text || '';
+        const resultText = (((raw || {}).parts || [])[0] || {}).text || '';
+        if (!resultText) return null;
         const cleaned = resultText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
         return JSON.parse(cleaned);
       }
@@ -1762,15 +1769,23 @@
         let result = parseIntent(text);
         var shouldTryGemini = result.intent === 'no_match' || result.intent === 'missing_kid' ||
           (result.intent === 'check_status' && parsePoints(text) !== null);
+        var geminiTriedAndFailed = false;
         if (shouldTryGemini) {
           try {
             const geminiResult = await askGemini(text);
             if (geminiResult && geminiResult.intent && geminiResult.intent !== 'no_match') {
               result = geminiResult;
+            } else {
+              geminiTriedAndFailed = true;
             }
           } catch (e) {
             console.error('Gemini fallback failed:', e);
+            geminiTriedAndFailed = true;
           }
+        }
+        if (result.intent === 'no_match' && geminiTriedAndFailed) {
+          addMessage('system', "I didn't understand that (AI helper couldn't parse it either). Try rephrasing?");
+          return;
         }
         await executeIntent(result);
       }
@@ -1920,6 +1935,7 @@
         get pendingAction() { return pendingAction; },
         set pendingAction(value) { pendingAction = value; },
         getAllLogEntries,
+        getAllPayments,
         getBalances,
         saveLogEntries,
         writePayment,
@@ -2368,6 +2384,23 @@
         return '<div class="history-list">' + filtered.map((entry) => '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[entry.kid] || {}).name || entry.kid) + '</strong> - ' + safeName(entry.choreLabel) + ' (' + entry.points + 'pts)<div class="settings-note">' + safeName(entry.date) + '</div></div><button type="button" data-setting-action="delete-log" data-log-id="' + entry.id + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>').join('') + '</div>';
       }
 
+      async function renderTransactions() {
+        const app = phase();
+        if (!app || !app.familyId || !app.configLoaded) {
+          return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
+        }
+        const payments = (await app.getAllPayments()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+        const filtered = payments.filter((p) => (historyState.kid === 'all' || p.kid === historyState.kid) && (!historyState.date || p.date === historyState.date)).slice(0, 40);
+        if (!filtered.length) {
+          return '<div class="history-list"><div class="history-item">No transactions yet.</div></div>';
+        }
+        return '<div class="history-list">' + filtered.map(function (p) {
+          var label = p.type === 'spend' ? 'Purchase' : p.type === 'cash' ? 'Cash given' : p.type === 'weekly' ? 'Weekly pay' : p.type === 'owed' ? 'Owes parent' : 'Payment';
+          var note = p.note && p.note !== label ? ': ' + safeName(p.note) : '';
+          return '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[p.kid] || {}).name || p.kid) + '</strong> - ' + label + note + ' (' + app.dollars(p.amount) + ')<div class="settings-note">' + safeName(p.date || '') + '</div></div><button type="button" data-setting-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>';
+        }).join('') + '</div>';
+      }
+
       window.renderSettingsPanel = renderSettingsPanel;
       async function renderSettingsPanel() {
         var app = phase();
@@ -2384,6 +2417,7 @@
         const kids = app.currentConfig.kids || KIDS;
         const chores = app.currentConfig.chores || CHORES;
         const historyMarkup = await renderHistory();
+        const txnMarkup = await renderTransactions();
         elements.settingsDrawer.innerHTML = [
           '<div class="settings-grid">',
           '<article class="stat-card"><h3>Family</h3><p class="settings-note">Family code: ' + safeName(app.familyId) + '</p><button type="button" class="settings-btn" data-setting-action="copy-family">Copy link</button></article>',
@@ -2392,6 +2426,7 @@
           '</div><button type="button" class="settings-btn" data-setting-action="add-chore">Add chore</button></article>',
           Object.entries(kids).map(([kidId, kid]) => renderPayTierEditor(kidId, kid)).join(''),
           '<article class="stat-card"><h3>History</h3><div class="settings-chip-row"><button type="button" class="settings-chip ' + (historyState.kid === 'all' ? 'active' : '') + '" data-history-kid="all">All</button><button type="button" class="settings-chip ' + (historyState.kid === 'alex' ? 'active' : '') + '" data-history-kid="alex">Alex</button><button type="button" class="settings-chip ' + (historyState.kid === 'louisa' ? 'active' : '') + '" data-history-kid="louisa">Louisa</button></div><div class="settings-row"><span>Date</span><input type="date" value="' + safeName(historyState.date) + '" data-setting="history-date"><span class="settings-note">Filter</span></div>' + historyMarkup + '</article>',
+          '<article class="stat-card"><h3>Transactions</h3>' + txnMarkup + '</article>',
           '</div>'
         ].join('');
       }
@@ -2514,6 +2549,19 @@
             app.addMessage('system', 'Deleted log entry.');
             renderSettingsPanel().catch((error) => console.error(error));
           }).catch((error) => { console.error(error); app.addMessage('system', 'Failed to delete.', error.message); });
+        }
+        if (action === 'delete-payment') {
+          const app = phase();
+          const paymentId = button.dataset.paymentId;
+          const paymentKid = button.dataset.paymentKid;
+          const paymentAmount = Number(button.dataset.paymentAmount || 0);
+          if (!app || !paymentId) return;
+          app.database.ref('families/' + app.familyId + '/payments/' + paymentId).remove().then(() => {
+            return app.adjustBalance(paymentKid, paymentAmount);
+          }).then(() => {
+            app.addMessage('system', 'Deleted transaction and reversed ' + app.dollars(paymentAmount) + '.');
+            renderSettingsPanel().catch((error) => console.error(error));
+          }).catch((error) => { console.error(error); app.addMessage('system', 'Failed to delete transaction.', error.message); });
         }
       });
 
