@@ -1256,7 +1256,7 @@
         FILLER_WORDS.forEach((word) => {
           normalized = normalized.replace(new RegExp('\\b' + word + '\\b', 'g'), ' ');
         });
-        return normalized.replace(/[^a-z0-9$\s']/g, ' ').replace(/\s+/g, ' ').trim();
+        return normalized.replace(/[^a-z0-9$.\s']/g, ' ').replace(/\s+/g, ' ').trim();
       }
 
       function splitClauses(text) {
