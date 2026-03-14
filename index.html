@@ -2236,7 +2236,7 @@
         Object.values(phase.currentConfig.kids || KIDS).forEach((kid) => {
           const born = new Date(kid.born);
           if (born.getMonth() + 1 === month && born.getDate() === day) {
-            phase.addMessage('system', kid.name + ' has a birthday today. Want to update pay tiers in settings?');
+            phase.addMessage('system', kidName + ' has a birthday today. Want to update pay tiers in settings?');
           }
         });
       }
@@ -2263,7 +2263,8 @@
         try {
           ensurePhase4Styles();
           await maybeRunWeeklyPay();
-          const kid = phase.currentConfig.kids[kidId];
+          const kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
+          const kidName = kid.name || kidId;
           const balances = await phase.getBalances();
           const debts = await getDebts(phase);
           const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
@@ -2293,10 +2294,12 @@
           var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 120);
           var allTxns = [];
           recentLogs.forEach((e) => {
-            allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: e.points, date: e.date, timestamp: e.timestamp || 0 });
+            if (!e) return;
+            allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: Number(e.points || 0), date: e.date || '', timestamp: Number(e.timestamp || 0) });
           });
           txns.forEach((t) => {
-            allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: t.amount, date: t.date, timestamp: t.timestamp || 0, balanceDelta: paymentBalanceDelta(t) });
+            if (!t) return;
+            allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: Number(t.amount || 0), date: t.date || '', timestamp: Number(t.timestamp || 0), balanceDelta: paymentBalanceDelta(t) });
           });
           var explainedBalance = txns.reduce((sum, txn) => sum + paymentBalanceDelta(txn), 0);
           var openingBalance = Number((owed - explainedBalance).toFixed(2));
@@ -2310,8 +2313,8 @@
           var balanceDisplay = owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed));
           var debtMarkup = relatedDebts.length ? relatedDebts.map((debt) => {
             var otherKid = debt.from === kidId ? debt.to : debt.from;
-            var direction = debt.from === kidId ? 'owes ' + phase.currentConfig.kids[otherKid].name : 'is owed by ' + phase.currentConfig.kids[otherKid].name;
-            return '<div class="score-action"><span>' + kid.name + ' ' + direction + ' ' + phase.dollars(debt.amount) + '</span><button type="button" data-card-action="settle-debt" data-kid="' + kidId + '" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>';
+            var direction = debt.from === kidId ? 'owes ' + ((phase.currentConfig.kids && phase.currentConfig.kids[otherKid] && phase.currentConfig.kids[otherKid].name) || otherKid) : 'is owed by ' + ((phase.currentConfig.kids && phase.currentConfig.kids[otherKid] && phase.currentConfig.kids[otherKid].name) || otherKid);
+            return '<div class="score-action"><span>' + kidName + ' ' + direction + ' ' + phase.dollars(debt.amount) + '</span><button type="button" data-card-action="settle-debt" data-kid="' + kidId + '" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>';
           }).join('') : '<div class="score-empty">No active debts.</div>';
 
           var stmtRows = allTxns.map((t) => {
@@ -2339,7 +2342,7 @@
                 '<div class="card-balance-label">' + balanceLabel + '</div>' +
               '</div>' +
               '<div class="card-bottom">' +
-                '<div class="card-name">' + kid.name + '</div>' +
+                '<div class="card-name">' + kidName + '</div>' +
                 '<div class="card-pts">' + weeklyPoints + ' pts<br>this week</div>' +
               '</div>' +
             '</div>' +
@@ -2347,7 +2350,7 @@
               '<article class="stat-card">' +
                 '<h3>This Week (' + formatWeekRange(now) + ')</h3>' +
                 '<div class="score-row">' +
-                  '<div class="score-top"><div><div class="score-name">' + kid.name + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">next: ' + threshold.next.minPts + 'pts</div></div>' +
+                  '<div class="score-top"><div><div class="score-name">' + kidName + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">next: ' + threshold.next.minPts + 'pts</div></div>' +
                   '<div class="progress ' + kidId + '"><span style="width:' + threshold.width + '%"></span></div>' +
                   '<div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div>' +
                 '</div>' +
@@ -2355,7 +2358,7 @@
               '<article class="stat-card">' +
                 '<h3>Balance</h3>' +
                 '<div class="score-actions">' +
-                  '<div class="score-action"><span>' + (owed >= 0 ? 'You owe ' + kid.name + ' ' + phase.dollars(owed) : kid.name + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div>' +
+                  '<div class="score-action"><span>' + (owed >= 0 ? 'You owe ' + kidName + ' ' + phase.dollars(owed) : kidName + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div>' +
                 '</div>' +
               '</article>' +
               '<article class="stat-card">' +
@@ -2505,7 +2508,7 @@
       }
 
       function renderPayTierEditor(kidId, kid) {
-        return '<div class="stat-card"><h3>' + safeName(kid.name) + ' pay tiers</h3><div class="settings-list">' +
+        return '<div class="stat-card"><h3>' + safeName(kidName) + ' pay tiers</h3><div class="settings-list">' +
           (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><input type="number" min="1" value="' + tier.minPts + '" data-setting="pay-tier-pts" data-kid="' + kidId + '" data-index="' + index + '" style="width:60px"><span class="settings-note">pts =</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$</span></div>').join('') +
           '<div class="settings-row"><span>Bonus: $</span><input type="number" min="0" value="' + ((kid.weeklyBonus || { bonus: 2 }).bonus) + '" data-setting="bonus-pay" data-kid="' + kidId + '"><span class="settings-note">per every</span><input type="number" min="1" value="' + ((kid.weeklyBonus || { extraPts: 10 }).extraPts) + '" data-setting="bonus-pts" data-kid="' + kidId + '"><span class="settings-note">pts above goal</span></div>' +
           '</div></div>';
