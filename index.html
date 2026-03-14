@@ -1884,7 +1884,7 @@
 
       function renderPayTierEditor(kidId, kid) {
         return '<div class="stat-card"><h3>' + safeName(kid.name) + ' pay tiers</h3><div class="settings-list">' +
-          (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><span>' + tier.minPts + ' pts</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$ amount</span></div>').join('') +
+          (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><input type="number" min="1" value="' + tier.minPts + '" data-setting="pay-tier-pts" data-kid="' + kidId + '" data-index="' + index + '" style="width:60px"><span class="settings-note">pts =</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$</span></div>').join('') +
           '<div class="settings-row"><span>Bonus at ' + kid.monthlyBonus.threshold + ' pts</span><input type="number" min="0" value="' + kid.monthlyBonus.bonus + '" data-setting="bonus" data-kid="' + kidId + '"><span class="settings-note">$ bonus</span></div>' +
           '</div></div>';
       }
@@ -1929,6 +1929,14 @@
         app.currentConfig.kids[kidId].payTiers = payTiers;
       }
 
+      async function updatePayTierPts(kidId, index, minPts) {
+        const app = phase();
+        const payTiers = (app.currentConfig.kids[kidId].payTiers || []).slice();
+        payTiers[index] = { ...payTiers[index], minPts };
+        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/payTiers').set(payTiers);
+        app.currentConfig.kids[kidId].payTiers = payTiers;
+      }
+
       async function updateBonus(kidId, bonus) {
         const app = phase();
         await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/monthlyBonus/bonus').set(bonus);
@@ -1964,6 +1972,12 @@
           const points = Number(target.value);
           if (Number.isNaN(points)) return;
           app.updateChorePoints(target.dataset.chore, points).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+          return;
+        }
+        if (target.dataset.setting === 'pay-tier-pts') {
+          const minPts = Number(target.value);
+          if (Number.isNaN(minPts) || minPts < 1) return;
+          updatePayTierPts(target.dataset.kid, Number(target.dataset.index), minPts).then(() => renderSettingsPanel()).catch((error) => console.error(error));
           return;
         }
         if (target.dataset.setting === 'pay-tier') {
