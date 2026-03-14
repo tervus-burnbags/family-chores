@@ -1973,7 +1973,7 @@
       function renderPayTierEditor(kidId, kid) {
         return '<div class="stat-card"><h3>' + safeName(kid.name) + ' pay tiers</h3><div class="settings-list">' +
           (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><input type="number" min="1" value="' + tier.minPts + '" data-setting="pay-tier-pts" data-kid="' + kidId + '" data-index="' + index + '" style="width:60px"><span class="settings-note">pts =</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$</span></div>').join('') +
-          '<div class="settings-row"><span>Bonus at ' + kid.monthlyBonus.threshold + ' pts</span><input type="number" min="0" value="' + kid.monthlyBonus.bonus + '" data-setting="bonus" data-kid="' + kidId + '"><span class="settings-note">$ bonus</span></div>' +
+          '<div class="settings-row"><span>Bonus: $</span><input type="number" min="0" value="' + ((kid.weeklyBonus || { bonus: 2 }).bonus) + '" data-setting="bonus-pay" data-kid="' + kidId + '"><span class="settings-note">per every</span><input type="number" min="1" value="' + ((kid.weeklyBonus || { extraPts: 10 }).extraPts) + '" data-setting="bonus-pts" data-kid="' + kidId + '"><span class="settings-note">pts above goal</span></div>' +
           '</div></div>';
       }
 
@@ -2025,10 +2025,13 @@
         app.currentConfig.kids[kidId].payTiers = payTiers;
       }
 
-      async function updateBonus(kidId, bonus) {
+      async function updateWeeklyBonus(kidId, field, value) {
         const app = phase();
-        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/monthlyBonus/bonus').set(bonus);
-        app.currentConfig.kids[kidId].monthlyBonus.bonus = bonus;
+        if (!app.currentConfig.kids[kidId].weeklyBonus) {
+          app.currentConfig.kids[kidId].weeklyBonus = { extraPts: 10, bonus: 2 };
+        }
+        app.currentConfig.kids[kidId].weeklyBonus[field] = value;
+        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/weeklyBonus/' + field).set(value);
       }
 
       async function addChoreViaPrompt() {
@@ -2074,10 +2077,16 @@
           updatePayTier(target.dataset.kid, Number(target.dataset.index), pay).then(() => renderSettingsPanel()).catch((error) => console.error(error));
           return;
         }
-        if (target.dataset.setting === 'bonus') {
+        if (target.dataset.setting === 'bonus-pay') {
           const bonus = Number(target.value);
-          if (Number.isNaN(bonus)) return;
-          updateBonus(target.dataset.kid, bonus).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+          if (Number.isNaN(bonus) || bonus < 0) return;
+          updateWeeklyBonus(target.dataset.kid, 'bonus', bonus).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+          return;
+        }
+        if (target.dataset.setting === 'bonus-pts') {
+          const extraPts = Number(target.value);
+          if (Number.isNaN(extraPts) || extraPts < 1) return;
+          updateWeeklyBonus(target.dataset.kid, 'extraPts', extraPts).then(() => renderSettingsPanel()).catch((error) => console.error(error));
           return;
         }
         if (target.dataset.setting === 'history-date') {
