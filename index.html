@@ -1358,7 +1358,12 @@
         if (result.intent === 'freepoints') {
           const now = new Date();
           await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'freepoints', choreLabel: 'Free points', points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' })));
-          addMessage('system', 'Added free points for ' + result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ') + '.');
+          var fpNames = result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ');
+          if (result.points < 0) {
+            addMessage('system', 'Removed ' + Math.abs(result.points) + ' point' + (Math.abs(result.points) !== 1 ? 's' : '') + ' from ' + fpNames + '.');
+          } else {
+            addMessage('system', 'Added ' + result.points + ' point' + (result.points !== 1 ? 's' : '') + ' for ' + fpNames + '.');
+          }
           return;
         }
         if (result.intent === 'adhoc') {
