@@ -2186,6 +2186,16 @@
         return { next, width: Math.min(100, Math.round((points / Math.max(next.minPts, 1)) * 100)) };
       }
 
+      function paymentBalanceDelta(payment) {
+        if (payment && typeof payment.balanceDelta === 'number') {
+          return Number(payment.balanceDelta || 0);
+        }
+        const amount = Number((payment && payment.amount) || 0);
+        if (!payment) return 0;
+        if (payment.type === 'credit' || payment.type === 'weekly') return amount;
+        return -amount;
+      }
+
       async function getDebts(phase) {
         const snapshot = await phase.database.ref('families/' + phase.familyId + '/debts').get();
         return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
