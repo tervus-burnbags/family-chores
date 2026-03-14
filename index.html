@@ -1536,11 +1536,11 @@
       }
 
       async function writePayment(kidId, amount, type, note) {
-        const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type, timestamp: Date.now(), date: toDateString(new Date()), note: note || '' };
+        const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type, timestamp: Date.now(), date: toDateString(new Date()), note: note || '', balanceDelta: Number((-Number(amount.toFixed(2))).toFixed(2)) };
         const ref = database.ref('families/' + familyId + '/payments').push();
         await ref.set(entry);
-        const nextBalance = await adjustBalance(kidId, -entry.amount);
-        lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount };
+        const nextBalance = await adjustBalance(kidId, entry.balanceDelta);
+        lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
         return nextBalance;
       }
 
@@ -1581,7 +1581,8 @@
           addMessage('system', 'Removed the most recent log entry.');
         } else if (lastUndoAction.type === 'payment') {
           await database.ref('families/' + familyId + '/payments/' + lastUndoAction.paymentId).remove();
-          await adjustBalance(lastUndoAction.kidId, lastUndoAction.amount);
+          const undoDelta = Number((-(lastUndoAction.balanceDelta != null ? lastUndoAction.balanceDelta : lastUndoAction.amount)).toFixed(2));
+          await adjustBalance(lastUndoAction.kidId, undoDelta);
           addMessage('system', 'Removed the most recent payment.');
         } else if (lastUndoAction.type === 'debt') {
           await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId).remove();
@@ -1711,10 +1712,10 @@
             .replace(/\s+/g, ' ')
             .trim() || 'Owed from chat';
           const balance = await adjustBalance(kidId, result.amount);
-          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'credit', timestamp: Date.now(), date: toDateString(new Date()), note };
+          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'credit', timestamp: Date.now(), date: toDateString(new Date()), note, balanceDelta: Number(result.amount.toFixed(2)) };
           const ref = database.ref('families/' + familyId + '/payments').push();
           await ref.set(entry);
-          lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: -entry.amount };
+          lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
           addMessage('system', 'Recorded that you owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + (note && note !== 'Owed from chat' ? ' for ' + note : '') + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
           return;
         }
@@ -2302,7 +2303,7 @@
             if (t.type === 'chore') {
               return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + ' &middot; +' + t.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
             }
-            var label = t.type === 'spend' ? 'Purchase' : t.type === 'cash' ? 'Cash given' : t.type === 'weekly' ? 'Weekly pay' : 'Payment';
+            var label = t.type === 'spend' ? 'Purchase' : t.type === 'cash' ? 'Cash given' : t.type === 'weekly' ? 'Weekly pay' : t.type === 'credit' ? 'You owe them' : 'Payment';
             var note = t.label && t.label !== t.type ? ': ' + t.label : '';
             return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + note + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount debit">-' + phase.dollars(t.amount) + '</span></div>';
           }).join('');
@@ -2666,9 +2667,14 @@
           const paymentAmount = Number(button.dataset.paymentAmount || 0);
           const paymentType = button.dataset.paymentType || 'payment';
           if (!app || !paymentId) return;
-          app.database.ref('families/' + app.familyId + '/payments/' + paymentId).remove().then(() => {
-            const reverseDelta = paymentType === 'credit' ? -paymentAmount : paymentAmount;
-            return app.adjustBalance(paymentKid, reverseDelta);
+          app.database.ref('families/' + app.familyId + '/payments/' + paymentId).get().then((snap) => {
+            const payment = snap.exists() ? snap.val() : null;
+            return app.database.ref('families/' + app.familyId + '/payments/' + paymentId).remove().then(() => payment);
+          }).then((payment) => {
+            const originalDelta = payment && typeof payment.balanceDelta === 'number'
+              ? Number(payment.balanceDelta)
+              : (paymentType === 'credit' ? paymentAmount : -paymentAmount);
+            return app.adjustBalance(paymentKid, Number((-originalDelta).toFixed(2)));
           }).then(() => {
             app.addMessage('system', 'Deleted transaction and reversed ' + app.dollars(paymentAmount) + '.');
             renderSettingsPanel().catch((error) => console.error(error));
