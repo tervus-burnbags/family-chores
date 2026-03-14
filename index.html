@@ -2483,6 +2483,16 @@
         return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
 
+      function paymentBalanceDelta(payment) {
+        if (payment && typeof payment.balanceDelta === 'number') {
+          return Number(payment.balanceDelta || 0);
+        }
+        const amount = Number((payment && payment.amount) || 0);
+        if (!payment) return 0;
+        if (payment.type === 'credit' || payment.type === 'weekly') return amount;
+        return -amount;
+      }
+
       async function keepPathsSynced() {
         const app = phase();
         if (!app || !app.familyId || !app.database) return;
