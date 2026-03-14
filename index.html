@@ -2121,7 +2121,7 @@
       window.renderCardView = async function renderCardView(kidId) {
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) {
-          elements.cardContent.innerHTML = '<p style="color:var(--muted)">Loading...</p>';
+          document.getElementById('cardContent').innerHTML = '<p style="color:var(--muted)">Loading...</p>';
           await new Promise(function (resolve) {
             var poll = setInterval(function () {
               phase = runtime();
@@ -2132,6 +2132,7 @@
             }, 300);
           });
         }
+        try {
         const kid = phase.currentConfig.kids[kidId];
         const balances = await phase.getBalances();
         const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
@@ -2139,11 +2140,17 @@
         const now = new Date();
         const currentWeek = phase.toIsoWeek(now);
         const weeklyPoints = entries.filter((e) => e.kid === kidId && e.week === currentWeek).reduce((sum, e) => sum + Number(e.points || 0), 0);
-        const paySnap = await phase.database.ref('families/' + phase.familyId + '/payments').orderByChild('kid').equalTo(kidId).limitToLast(20).get();
         var txns = [];
-        if (paySnap.exists()) {
-          paySnap.forEach((child) => { txns.push(child.val()); });
-        }
+        try {
+          const paySnap = await phase.database.ref('families/' + phase.familyId + '/payments').get();
+          if (paySnap.exists()) {
+            paySnap.forEach((child) => {
+              var val = child.val();
+              if (val.kid === kidId) txns.push(val);
+            });
+          }
+        } catch (e) { console.error('Card payments fetch error:', e); }
+        txns = txns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
         // Also include chore log entries as credits
         var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
         // Merge and sort all transactions
@@ -2169,7 +2176,7 @@
           return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + (note ? ': ' + note : '') + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount debit">-' + phase.dollars(t.amount) + '</span></div>';
         }).join('');
 
-        elements.cardContent.innerHTML =
+        document.getElementById('cardContent').innerHTML =
           '<div class="kid-card ' + kidId + '">' +
             '<div class="card-top">' +
               '<div class="card-label">Family Chores Card</div>' +
@@ -2188,6 +2195,10 @@
             '<h3>Recent Activity</h3>' +
             (stmtRows || '<p class="stmt-empty">No activity yet.</p>') +
           '</div>';
+        } catch (err) {
+          console.error('Card render error:', err);
+          document.getElementById('cardContent').innerHTML = '<p style="color:var(--danger)">Error loading card. Check console.</p>';
+        }
       };
 
       elements.scoreboardDrawer.addEventListener('click', (event) => {
