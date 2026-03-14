@@ -2279,8 +2279,8 @@
               });
             }
           } catch (e) { console.error('Card payments fetch error:', e); }
-          txns = txns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
-          var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 20);
+          txns = txns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 120);
+          var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 120);
           var allTxns = [];
           recentLogs.forEach((e) => {
             allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: e.points, date: e.date, timestamp: e.timestamp || 0 });
@@ -2289,7 +2289,7 @@
             allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: t.amount, date: t.date, timestamp: t.timestamp || 0 });
           });
           allTxns.sort((a, b) => b.timestamp - a.timestamp);
-          allTxns = allTxns.slice(0, 25);
+          allTxns = allTxns.slice(0, 200);
 
           var balanceLabel = owed >= 0 ? 'Available Balance' : 'Amount Owed';
           var balanceDisplay = owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed));
@@ -2487,7 +2487,7 @@
           return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
         }
         const entries = (await app.getAllLogEntries()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-        const filtered = entries.filter((entry) => (historyState.kid === 'all' || entry.kid === historyState.kid) && (!historyState.date || entry.date === historyState.date)).slice(0, 40);
+        const filtered = entries.filter((entry) => (historyState.kid === 'all' || entry.kid === historyState.kid) && (!historyState.date || entry.date === historyState.date)).slice(0, 200);
         if (!filtered.length) {
           return '<div class="history-list"><div class="history-item">No matching history.</div></div>';
         }
@@ -2500,7 +2500,7 @@
           return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
         }
         const payments = (await app.getAllPayments()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-        const filtered = payments.filter((p) => (historyState.kid === 'all' || p.kid === historyState.kid) && (!historyState.date || p.date === historyState.date)).slice(0, 40);
+        const filtered = payments.filter((p) => (historyState.kid === 'all' || p.kid === historyState.kid) && (!historyState.date || p.date === historyState.date)).slice(0, 200);
         if (!filtered.length) {
           return '<div class="history-list"><div class="history-item">No transactions yet.</div></div>';
         }
