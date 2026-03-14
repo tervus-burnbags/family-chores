@@ -2236,7 +2236,7 @@
         Object.values(phase.currentConfig.kids || KIDS).forEach((kid) => {
           const born = new Date(kid.born);
           if (born.getMonth() + 1 === month && born.getDate() === day) {
-            phase.addMessage('system', kidName + ' has a birthday today. Want to update pay tiers in settings?');
+            phase.addMessage('system', kid.name + ' has a birthday today. Want to update pay tiers in settings?');
           }
         });
       }
@@ -2279,7 +2279,7 @@
           const extraPoints = Math.max(0, weeklyPoints - topMinPts);
           const weeklyBonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
           const threshold = thresholdInfo(phase, kidId, weeklyPoints);
-          const relatedDebts = debts.filter((debt) => !debt.settled && (debt.from === kidId || debt.to === kidId));
+          const relatedDebts = debts.filter((debt) => debt && !debt.settled && (debt.from === kidId || debt.to === kidId));
           var txns = [];
           try {
             const paySnap = await phase.database.ref('families/' + phase.familyId + '/payments').get();
