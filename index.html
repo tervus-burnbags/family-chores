@@ -1427,6 +1427,9 @@
         if (/\bundo\b|take that back/.test(normalized)) return { intent: 'undo' };
         if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) return { intent: 'settle_debt', kids };
         const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
+        if (/\b(i|we|me|us|parent|parents?)\b/.test(normalized) && /\bowe\b/.test(normalized) && kids.length === 1) {
+          return { intent: 'parent_owes_kid', kids: [kids[0]], amount: parseAmount(text), note: text };
+        }
         if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
         if (debtVerbMatch && kids.length === 1 && /\b(me|us|parents?)\b/.test(normalized)) return { intent: 'kid_owes_parent', kids, amount: parseAmount(text) };
         if (/\b(spent|bought|purchased)\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text), note: text };
