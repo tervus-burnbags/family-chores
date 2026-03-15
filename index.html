@@ -1972,18 +1972,20 @@
           setListeningState(true);
         };
         nextRecognition.onresult = (event) => {
+          let finalText = '';
           let interim = '';
           let sawFinal = false;
-          for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          for (let i = 0; i < event.results.length; i += 1) {
             const transcript = String(event.results[i][0].transcript || '').trim();
             if (!transcript) continue;
             if (event.results[i].isFinal) {
-              speechFinalText = [speechFinalText, transcript].filter(Boolean).join(' ').trim();
+              finalText += (finalText ? ' ' : '') + transcript;
               sawFinal = true;
             } else {
               interim += (interim ? ' ' : '') + transcript;
             }
           }
+          speechFinalText = finalText.trim();
           speechInterimText = interim.trim();
           const shown = getSpeechDraft();
           if (shown) {
@@ -1991,6 +1993,8 @@
           }
           if (sawFinal) {
             scheduleSpeechSubmit(1400);
+          } else {
+            clearSpeechSubmitTimer();
           }
         };
         nextRecognition.onerror = (event) => {
@@ -2790,6 +2794,7 @@
   </script>
 </body>
 </html>
+
 
 
 
