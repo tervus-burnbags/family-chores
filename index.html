@@ -1174,6 +1174,9 @@
             window.refreshPhase4().catch(function (e) { console.error(e); });
           }
         }
+        if (name === 'lists' && typeof window.renderListsHome === 'function') {
+          window.renderListsHome();
+        }
         if (name === 'settings' && typeof window.renderSettingsPanel === 'function') {
           window.renderSettingsPanel().catch(function (e) { console.error(e); });
         }
@@ -2920,6 +2923,349 @@
             greeted = true;
           }
           clearInterval(phase5Warmup);
+        }
+      }, 500);
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var currentListId = null;
+
+      function runtime() {
+        return window.phaseRuntime;
+      }
+
+      function listsRef() {
+        var r = runtime();
+        return r && r.database && r.familyId ? r.database.ref('families/' + r.familyId + '/lists') : null;
+      }
+
+      var TEMPLATES = [
+        { name: 'Grocery', icon: '\u{1F6D2}' },
+        { name: 'Costco', icon: '\u{1F4E6}' },
+        { name: 'Packing', icon: '\u{1F9F3}' },
+        { name: 'Lake House', icon: '\u{1F3E1}' },
+        { name: 'To Do', icon: '\u2705' }
+      ];
+
+      function ensureListStyles() {
+        if (document.getElementById('listStyles')) return;
+        var style = document.createElement('style');
+        style.id = 'listStyles';
+        style.textContent = [
+          '.list-grid{display:grid;gap:10px;padding:4px}',
+          '.list-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,244,255,0.9));border:1px solid var(--line);cursor:pointer;transition:transform 0.15s ease}',
+          '.list-card:active{transform:scale(0.98)}',
+          '.list-card-icon{font-size:1.5rem;flex-shrink:0}',
+          '.list-card-info{flex:1;min-width:0}',
+          '.list-card-name{font-weight:700;font-size:0.95rem}',
+          '.list-card-count{font-size:0.82rem;color:var(--muted)}',
+          '.list-card-archive{min-width:32px;min-height:32px;border:0;border-radius:10px;background:var(--panel-alt);color:var(--muted);cursor:pointer;font-size:0.8rem}',
+          '.list-header{display:flex;align-items:center;gap:10px;padding:4px}',
+          '.list-back{min-width:38px;min-height:38px;border:0;border-radius:12px;background:var(--panel-alt);cursor:pointer;font-size:1rem}',
+          '.list-title{flex:1;font-size:1.1rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+          '.list-clear{min-height:34px;padding:0 12px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:0.82rem}',
+          '.list-items{display:grid;gap:6px;padding:4px}',
+          '.list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}',
+          '.list-item.checked{opacity:0.5}',
+          '.list-item.checked .list-item-text{text-decoration:line-through}',
+          '.list-item-check{min-width:24px;min-height:24px;border:2px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s ease,border-color 0.15s ease}',
+          '.list-item.checked .list-item-check{background:var(--alex);border-color:var(--alex);color:#fff}',
+          '.list-item-text{flex:1;min-width:0;word-break:break-word}',
+          '.list-item-del{min-width:28px;min-height:28px;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.8rem;flex-shrink:0}',
+          '.list-item-del:hover{background:var(--danger);color:#fff}',
+          '.list-add{display:flex;gap:8px;padding:4px}',
+          '.list-add input{flex:1;min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;min-width:0}',
+          '.list-add button{min-width:42px;min-height:42px;border:0;border-radius:12px;background:var(--alex);color:#fff;cursor:pointer;font-size:1.1rem}',
+          '.list-empty{color:var(--muted);text-align:center;padding:24px 16px}',
+          '.list-templates{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:4px}',
+          '.list-tmpl{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:14px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:0.88rem;font-weight:600;transition:transform 0.12s ease}',
+          '.list-tmpl:active{transform:scale(0.95)}',
+          '.list-tmpl-icon{font-size:1.8rem}',
+          '.list-create-custom{grid-column:1/-1}'
+        ].join('');
+        document.head.appendChild(style);
+      }
+
+      function renderListsHome() {
+        ensureListStyles();
+        var ref = listsRef();
+        var el = document.getElementById('listsContent');
+        if (!ref) {
+          el.innerHTML = '<p class="list-empty">Connect to a family first.</p>';
+          return;
+        }
+        ref.once('value', function (snap) {
+          var lists = [];
+          if (snap.exists()) {
+            snap.forEach(function (child) {
+              var meta = child.child('meta').val() || {};
+              if (!meta.archived) {
+                var itemCount = 0;
+                var checkedCount = 0;
+                child.child('items').forEach(function (item) {
+                  itemCount++;
+                  if (item.val().checked) checkedCount++;
+                });
+                lists.push({ id: child.key, name: meta.name || 'Untitled', icon: meta.icon || '\u{1F4CB}', itemCount: itemCount, checkedCount: checkedCount, sortOrder: meta.sortOrder || 0 });
+              }
+            });
+          }
+          lists.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
+
+          var html = '<div class="list-grid">';
+          html += lists.map(function (list) {
+            return '<div class="list-card" data-list-open="' + list.id + '">' +
+              '<span class="list-card-icon">' + list.icon + '</span>' +
+              '<div class="list-card-info"><div class="list-card-name">' + safeName(list.name) + '</div>' +
+              '<div class="list-card-count">' + list.checkedCount + '/' + list.itemCount + ' done</div></div>' +
+              '<button type="button" class="list-card-archive" data-list-archive="' + list.id + '" title="Archive">&#128465;</button>' +
+              '</div>';
+          }).join('');
+          html += '</div>';
+          html += '<div style="padding:8px 4px"><button type="button" class="settings-btn" id="listNewBtn" style="width:100%">+ New List</button></div>';
+          el.innerHTML = html;
+        });
+      }
+
+      function renderNewListPicker() {
+        ensureListStyles();
+        var el = document.getElementById('listsContent');
+        var html = '<div class="list-header"><button type="button" class="list-back" id="listBackHome">&larr;</button><span class="list-title">New List</span></div>';
+        html += '<div class="list-templates">';
+        TEMPLATES.forEach(function (t) {
+          html += '<button type="button" class="list-tmpl" data-tmpl-name="' + t.name + '" data-tmpl-icon="' + t.icon + '"><span class="list-tmpl-icon">' + t.icon + '</span>' + t.name + '</button>';
+        });
+        html += '<button type="button" class="list-tmpl list-create-custom" data-tmpl-name="" data-tmpl-icon="\u{1F4CB}"><span class="list-tmpl-icon">\u{1F4CB}</span>Custom</button>';
+        html += '</div>';
+        el.innerHTML = html;
+      }
+
+      async function createList(name, icon) {
+        var ref = listsRef();
+        if (!ref) return;
+        if (!name) {
+          name = prompt('List name:');
+          if (!name) return;
+        }
+        var newRef = ref.push();
+        await newRef.child('meta').set({
+          name: name,
+          icon: icon || '\u{1F4CB}',
+          createdAt: Date.now(),
+          sortOrder: Date.now(),
+          archived: false
+        });
+        currentListId = newRef.key;
+        renderListDetail(currentListId);
+      }
+
+      function renderListDetail(listId) {
+        ensureListStyles();
+        currentListId = listId;
+        var ref = listsRef();
+        var el = document.getElementById('listsContent');
+        if (!ref) return;
+
+        ref.child(listId).once('value', function (snap) {
+          if (!snap.exists()) {
+            renderListsHome();
+            return;
+          }
+          var meta = snap.child('meta').val() || {};
+          var items = [];
+          snap.child('items').forEach(function (child) {
+            items.push({ id: child.key, ...child.val() });
+          });
+          items.sort(function (a, b) {
+            if (a.checked !== b.checked) return a.checked ? 1 : -1;
+            return (a.sortOrder || 0) - (b.sortOrder || 0);
+          });
+
+          var html = '<div class="list-header">' +
+            '<button type="button" class="list-back" id="listBackHome">&larr;</button>' +
+            '<span class="list-title">' + (meta.icon || '') + ' ' + safeName(meta.name || 'List') + '</span>' +
+            '<button type="button" class="list-clear" id="listClearChecked">Clear done</button>' +
+            '</div>';
+          html += '<div class="list-items">';
+          if (items.length === 0) {
+            html += '<p class="list-empty">No items yet. Add one below.</p>';
+          } else {
+            items.forEach(function (item) {
+              html += '<div class="list-item' + (item.checked ? ' checked' : '') + '" data-item-id="' + item.id + '">' +
+                '<button type="button" class="list-item-check" data-item-toggle="' + item.id + '">' + (item.checked ? '\u2713' : '') + '</button>' +
+                '<span class="list-item-text">' + safeName(item.text) + '</span>' +
+                '<button type="button" class="list-item-del" data-item-delete="' + item.id + '">X</button>' +
+                '</div>';
+            });
+          }
+          html += '</div>';
+          html += '<div class="list-add">' +
+            '<input type="text" id="listAddInput" placeholder="Add item..." autocomplete="off">' +
+            '<button type="button" id="listAddBtn">+</button>' +
+            '</div>';
+          el.innerHTML = html;
+
+          // Focus input
+          var input = document.getElementById('listAddInput');
+          if (input) {
+            input.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addItems(listId, input.value);
+                input.value = '';
+              }
+            });
+          }
+        });
+      }
+
+      async function addItems(listId, text) {
+        if (!text || !text.trim()) return;
+        var ref = listsRef();
+        if (!ref) return;
+        // Split on commas and "and" for multi-item add
+        var parts = text.split(/,|\band\b/).map(function (s) { return s.trim(); }).filter(Boolean);
+        for (var i = 0; i < parts.length; i++) {
+          await ref.child(listId + '/items').push().set({
+            text: parts[i],
+            checked: false,
+            addedAt: Date.now(),
+            sortOrder: Date.now() + i
+          });
+        }
+        renderListDetail(listId);
+      }
+
+      async function toggleItem(listId, itemId) {
+        var ref = listsRef();
+        if (!ref) return;
+        var snap = await ref.child(listId + '/items/' + itemId + '/checked').get();
+        var current = snap.exists() ? snap.val() : false;
+        await ref.child(listId + '/items/' + itemId).update({
+          checked: !current,
+          checkedAt: !current ? Date.now() : null
+        });
+        renderListDetail(listId);
+      }
+
+      async function deleteItem(listId, itemId) {
+        var ref = listsRef();
+        if (!ref) return;
+        await ref.child(listId + '/items/' + itemId).remove();
+        renderListDetail(listId);
+      }
+
+      async function clearChecked(listId) {
+        var ref = listsRef();
+        if (!ref) return;
+        var snap = await ref.child(listId + '/items').get();
+        if (!snap.exists()) return;
+        var updates = {};
+        snap.forEach(function (child) {
+          if (child.val().checked) {
+            updates[child.key] = null;
+          }
+        });
+        if (Object.keys(updates).length > 0) {
+          await ref.child(listId + '/items').update(updates);
+        }
+        renderListDetail(listId);
+      }
+
+      async function archiveList(listId) {
+        var ref = listsRef();
+        if (!ref) return;
+        await ref.child(listId + '/meta/archived').set(true);
+        renderListsHome();
+      }
+
+      function safeName(str) {
+        return String(str || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      // Event delegation
+      document.getElementById('listsContent').addEventListener('click', function (e) {
+        var target = e.target;
+
+        // Open list
+        var card = target.closest('[data-list-open]');
+        if (card && !target.closest('[data-list-archive]')) {
+          renderListDetail(card.dataset.listOpen);
+          return;
+        }
+
+        // Archive list
+        var archiveBtn = target.closest('[data-list-archive]');
+        if (archiveBtn) {
+          archiveList(archiveBtn.dataset.listArchive);
+          return;
+        }
+
+        // New list button
+        if (target.id === 'listNewBtn' || target.closest('#listNewBtn')) {
+          renderNewListPicker();
+          return;
+        }
+
+        // Back to list home
+        if (target.id === 'listBackHome' || target.closest('#listBackHome')) {
+          currentListId = null;
+          renderListsHome();
+          return;
+        }
+
+        // Template select
+        var tmpl = target.closest('[data-tmpl-name]');
+        if (tmpl) {
+          var name = tmpl.dataset.tmplName;
+          var icon = tmpl.dataset.tmplIcon;
+          createList(name, icon).catch(function (err) { console.error(err); });
+          return;
+        }
+
+        // Toggle item
+        var toggleBtn = target.closest('[data-item-toggle]');
+        if (toggleBtn && currentListId) {
+          toggleItem(currentListId, toggleBtn.dataset.itemToggle).catch(function (err) { console.error(err); });
+          return;
+        }
+
+        // Delete item
+        var delBtn = target.closest('[data-item-delete]');
+        if (delBtn && currentListId) {
+          deleteItem(currentListId, delBtn.dataset.itemDelete).catch(function (err) { console.error(err); });
+          return;
+        }
+
+        // Add button
+        if (target.id === 'listAddBtn' || target.closest('#listAddBtn')) {
+          var input = document.getElementById('listAddInput');
+          if (input && currentListId) {
+            addItems(currentListId, input.value).catch(function (err) { console.error(err); });
+            input.value = '';
+          }
+          return;
+        }
+
+        // Clear checked
+        if (target.id === 'listClearChecked' || target.closest('#listClearChecked')) {
+          if (currentListId) {
+            clearChecked(currentListId).catch(function (err) { console.error(err); });
+          }
+          return;
+        }
+      });
+
+      // Expose for router
+      window.renderListsHome = renderListsHome;
+
+      // Warmup
+      var listsWarmup = setInterval(function () {
+        var r = runtime();
+        if (r && r.database && r.familyId && r.configLoaded) {
+          clearInterval(listsWarmup);
         }
       }, 500);
     })();
