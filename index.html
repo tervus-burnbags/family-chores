@@ -1891,7 +1891,6 @@
       let isListening = false;
       let speechFinalText = '';
       let speechInterimText = '';
-      let speechResultSlots = [];
       let speechSubmitTimer = null;
       let speechManualStop = false;
 
@@ -1935,29 +1934,45 @@
             deduped.push(word);
           }
         }
-        const joined = deduped.join(' ');
-        return joined.replace(/\b(.+?)\s+\1\b/gi, '$1');
+        return deduped.join(' ');
       }
 
-      function rebuildSpeechDraftFromSlots() {
-        let finalText = '';
-        let interimText = '';
-        speechResultSlots.forEach((slot) => {
-          if (!slot || !slot.text) return;
-          if (slot.isFinal) {
-            finalText += (finalText ? ' ' : '') + slot.text;
-          } else {
-            interimText += (interimText ? ' ' : '') + slot.text;
+      function normalizeSpeechWords(text) {
+        return collapseRepeatedSpeech(String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim());
+      }
+
+      function mergeSpeechFinal(existingText, incomingText) {
+        const existing = collapseRepeatedSpeech(existingText);
+        const incoming = collapseRepeatedSpeech(incomingText);
+        if (!incoming) {
+          return existing;
+        }
+        if (!existing) {
+          return incoming;
+        }
+        const existingWords = normalizeSpeechWords(existing).split(/\s+/).filter(Boolean);
+        const incomingWords = normalizeSpeechWords(incoming).split(/\s+/).filter(Boolean);
+        let overlap = 0;
+        const limit = Math.min(existingWords.length, incomingWords.length);
+        for (let size = limit; size > 0; size -= 1) {
+          const existingTail = existingWords.slice(existingWords.length - size).join(' ');
+          const incomingHead = incomingWords.slice(0, size).join(' ');
+          if (existingTail === incomingHead) {
+            overlap = size;
+            break;
           }
-        });
-        speechFinalText = collapseRepeatedSpeech(finalText.trim());
-        speechInterimText = collapseRepeatedSpeech(interimText.trim());
+        }
+        if (!overlap && normalizeSpeechWords(existing).includes(normalizeSpeechWords(incoming))) {
+          return existing;
+        }
+        const incomingOriginalWords = incoming.split(/\s+/).filter(Boolean);
+        const suffix = incomingOriginalWords.slice(overlap).join(' ');
+        return collapseRepeatedSpeech([existing, suffix].filter(Boolean).join(' ').trim());
       }
 
       function resetSpeechDraft() {
         speechFinalText = '';
         speechInterimText = '';
-        speechResultSlots = [];
         clearSpeechSubmitTimer();
       }
 
@@ -2006,14 +2021,19 @@
         };
         nextRecognition.onresult = (event) => {
           let sawFinal = false;
+          let latestInterim = '';
           for (let i = event.resultIndex; i < event.results.length; i += 1) {
             const transcript = collapseRepeatedSpeech(String(event.results[i][0].transcript || '').trim());
-            speechResultSlots[i] = transcript ? { text: transcript, isFinal: !!event.results[i].isFinal } : null;
-            if (event.results[i].isFinal && transcript) {
+            if (!transcript) continue;
+            if (event.results[i].isFinal) {
+              speechFinalText = mergeSpeechFinal(speechFinalText, transcript);
               sawFinal = true;
+              latestInterim = '';
+            } else {
+              latestInterim = transcript;
             }
           }
-          rebuildSpeechDraftFromSlots();
+          speechInterimText = latestInterim;
           const shown = getSpeechDraft();
           if (shown) {
             elements.messageInput.value = shown;
