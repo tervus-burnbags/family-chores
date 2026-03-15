@@ -57,6 +57,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      padding-bottom: calc(134px + env(safe-area-inset-bottom));
       overflow-x: hidden;
     }
 
@@ -98,6 +99,13 @@
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
+    }
+
+    .header-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .header-actions {
@@ -161,14 +169,179 @@
 
     .tab-bar {
       display: flex;
-      position: sticky;
+      position: fixed;
+      left: 50%;
       bottom: 0;
+      width: calc(100% - 32px);
+      max-width: 720px;
+      transform: translateX(-50%);
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       border-top: 1px solid var(--line);
-      border-radius: 0 0 var(--radius) var(--radius);
       flex-shrink: 0;
-      z-index: 10;
+      z-index: 100;
+    }
+
+    .bulletin-shell {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bulletin-hero {
+      display: grid;
+      gap: 12px;
+      background: linear-gradient(135deg, #fdf6e9, #fffdf8);
+      border: 1px solid #f0d9ac;
+    }
+
+    .bulletin-hero h2,
+    .bulletin-hero p,
+    .bulletin-section-head h3,
+    .bulletin-section-head p,
+    .bulletin-empty h3,
+    .bulletin-empty p {
+      margin: 0;
+    }
+
+    .bulletin-hero p,
+    .bulletin-section-head p,
+    .bulletin-empty p,
+    .bulletin-calendar p,
+    .bulletin-note-meta {
+      color: var(--muted);
+    }
+
+    .bulletin-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bulletin-note-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bulletin-note-form textarea,
+    .bulletin-note-form select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      font: inherit;
+      color: var(--text);
+    }
+
+    .bulletin-note-form textarea {
+      min-height: 96px;
+      padding: 12px 14px;
+      resize: vertical;
+    }
+
+    .bulletin-note-form select {
+      min-height: 44px;
+      padding: 0 12px;
+    }
+
+    .bulletin-form-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bulletin-btn,
+    .bulletin-note-delete {
+      min-height: 42px;
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .bulletin-btn {
+      padding: 0 14px;
+      background: var(--alex);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .bulletin-btn.secondary {
+      background: var(--panel-alt);
+      color: var(--text);
+    }
+
+    .bulletin-notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .bulletin-note-card {
+      display: grid;
+      gap: 12px;
+      align-content: space-between;
+      min-height: 170px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      transform: rotate(-1deg);
+    }
+
+    .bulletin-note-card:nth-child(even) {
+      transform: rotate(1deg);
+    }
+
+    .bulletin-note-card.neutral {
+      background: linear-gradient(180deg, #fff8b8, #f7ec8a);
+    }
+
+    .bulletin-note-card.alex {
+      background: linear-gradient(180deg, #dff1ff, #bddfff);
+    }
+
+    .bulletin-note-card.louisa {
+      background: linear-gradient(180deg, #f3e5ff, #e1c9ff);
+    }
+
+    .bulletin-note-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .bulletin-note-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .bulletin-note-delete {
+      width: 34px;
+      min-width: 34px;
+      padding: 0;
+      background: rgba(255, 255, 255, 0.68);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .bulletin-empty {
+      display: grid;
+      gap: 8px;
+      padding: 24px 18px;
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      background: var(--panel-alt);
+    }
+
+    .bulletin-calendar {
+      display: grid;
+      gap: 8px;
     }
 
     .tab {
@@ -215,6 +388,146 @@
       gap: 12px;
     }
 
+    .chores-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 4px;
+    }
+
+    .chores-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .chores-progress-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .chores-progress-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .chores-progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .chores-progress-name {
+      font-weight: 700;
+    }
+
+    .chores-progress-meta,
+    .chores-progress-note,
+    .settings-note,
+    .history-item .settings-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .chores-settings[hidden] {
+      display: none;
+    }
+
+    .settings-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .settings-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .settings-row span:first-child {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .settings-row input,
+    .settings-row select {
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      width: 70px;
+      min-width: 0;
+      flex-shrink: 1;
+      font: inherit;
+    }
+
+    .settings-row button,
+    .settings-btn {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--alex);
+      color: #fff;
+      cursor: pointer;
+      flex-shrink: 1;
+      min-width: 0;
+      font: inherit;
+    }
+
+    .settings-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .settings-chip {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .settings-chip.active {
+      background: var(--alex);
+      border-color: var(--alex);
+      color: #fff;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      word-break: break-word;
+    }
+
+    .history-item > div {
+      min-width: 0;
+      overflow: hidden;
+    }
     .stat-card {
       padding: 14px;
       border-radius: 16px;
@@ -298,6 +611,16 @@
       gap: 10px;
       align-items: center;
       flex-shrink: 0;
+      position: fixed;
+      bottom: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 720px;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line);
     }
 
     .composer input {
@@ -735,6 +1058,70 @@
       color: var(--danger);
     }
 
+    .toast-container {
+      position: fixed;
+      top: calc(16px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2000;
+      width: calc(100% - 32px);
+      max-width: 400px;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 14px 18px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: toastIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+      pointer-events: auto;
+      border-left: 5px solid var(--muted);
+      line-height: 1.4;
+      font-size: 0.95rem;
+    }
+
+    .toast.alex { border-left-color: var(--alex); }
+    .toast.louisa { border-left-color: var(--louisa); }
+    .toast.system { border-left-color: var(--alex); }
+    .toast.error { border-left-color: var(--danger); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .toast.out {
+      animation: toastOut 0.3s ease-in forwards;
+    }
+
+    @keyframes toastOut {
+      to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    }
+
+    .toast-undo {
+      background: var(--panel-alt);
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .toast-undo:active {
+      transform: scale(0.95);
+    }
+
     @media (max-width: 480px) {
       body {
         padding: 6px;
@@ -742,6 +1129,11 @@
 
       .app {
         min-height: calc(100vh - 12px);
+        padding-bottom: calc(134px + env(safe-area-inset-bottom));
+      }
+
+      .tab-bar {
+        width: calc(100% - 12px);
       }
 
       .header {
@@ -758,6 +1150,7 @@
 
       .composer {
         gap: 8px;
+        width: calc(100% - 12px);
       }
 
       .composer input {
@@ -780,16 +1173,33 @@
   </style>
 </head>
 <body>
+  <div id="toastContainer" class="toast-container"></div>
   <main class="app">
     <section class="panel header" aria-label="App header">
-      <div class="brand">
-        <h1>Family Hub</h1>
-        <small id="familyLabel"></small>
+      <div class="header-summary">
+        <div class="brand">
+          <h1>Family Hub</h1>
+          <small id="familyLabel"></small>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Open settings">&#9881;</button>
+        </div>
       </div>
     </section>
 
+    <!-- Bulletin View -->
+    <div class="view active" id="viewBulletin">
+      <div id="bulletinContent" class="view-content"></div>
+    </div>
+
     <!-- Chores View -->
-    <div class="view active" id="viewChores">
+    <div class="view" id="viewChores">
+      <section class="panel">
+        <div class="chores-toolbar">
+          <div class="chores-title">Chores</div>
+          <button type="button" class="icon-btn" id="choresSettingsToggle" aria-label="Open chore settings">&#9881;</button>
+        </div>
+      </section>
       <div class="panel quick-points" id="quickPoints">
         <div class="qp-row">
           <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
@@ -803,13 +1213,9 @@
           <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
         </div>
       </div>
+      <section class="panel" id="choreProgress" aria-live="polite"></section>
+      <section class="panel chores-settings" id="choresSettings" hidden></section>
       <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
-      <form class="panel composer" id="composer">
-        <label class="visually-hidden" for="messageInput">Type a chore update</label>
-        <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
-        <button class="send-btn" type="submit">Send</button>
-        <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">Mic</button>
-      </form>
     </div>
 
     <!-- Lists View -->
@@ -836,9 +1242,20 @@
       <div id="settingsContent"></div>
     </div>
 
+    <form class="panel composer" id="composer">
+      <label class="visually-hidden" for="messageInput">Type a chore update</label>
+      <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
+      <button class="send-btn" type="submit">Send</button>
+      <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">Mic</button>
+    </form>
+
     <!-- Bottom Tab Bar -->
     <nav class="tab-bar" id="tabBar">
-      <a class="tab active" href="#chores" data-tab="chores">
+      <a class="tab active" href="#bulletin" data-tab="bulletin">
+        <span class="tab-icon">&#127968;</span>
+        <span class="tab-label">Bulletin</span>
+      </a>
+      <a class="tab" href="#chores" data-tab="chores">
         <span class="tab-icon">&#9998;</span>
         <span class="tab-label">Chores</span>
       </a>
@@ -849,10 +1266,6 @@
       <a class="tab" href="#bank" data-tab="bank">
         <span class="tab-icon">&#36;</span>
         <span class="tab-label">Bank</span>
-      </a>
-      <a class="tab" href="#settings" data-tab="settings">
-        <span class="tab-icon">&#9881;</span>
-        <span class="tab-label">Settings</span>
       </a>
     </nav>
   </main>
@@ -1007,6 +1420,7 @@
       familyLabel: document.getElementById('familyLabel'),
       familyModal: document.getElementById('familyModal'),
       familyModalStatus: document.getElementById('familyModalStatus'),
+      headerSettingsButton: document.getElementById('headerSettingsButton'),
       createFamilyButton: document.getElementById('createFamilyButton'),
       joinFamilyButton: document.getElementById('joinFamilyButton'),
       joinFamilyInput: document.getElementById('joinFamilyInput'),
@@ -1016,6 +1430,7 @@
       cardContent: document.getElementById('cardContent'),
       scoreboardPanel: document.getElementById('scoreboardPanel'),
       settingsContent: document.getElementById('settingsContent'),
+      bulletinContent: document.getElementById('bulletinContent'),
       listsContent: document.getElementById('listsContent'),
       tabBar: document.getElementById('tabBar')
     };
@@ -1147,16 +1562,17 @@
 
     function setupRouter() {
       var views = {
+        bulletin: document.getElementById('viewBulletin'),
         chores: document.getElementById('viewChores'),
         lists: document.getElementById('viewLists'),
         bank: document.getElementById('viewBank'),
         settings: document.getElementById('viewSettings')
       };
       var tabs = elements.tabBar.querySelectorAll('.tab');
-      var currentView = 'chores';
+      var currentView = 'bulletin';
 
       function switchView(name) {
-        if (!views[name]) name = 'chores';
+        if (!views[name]) name = 'bulletin';
         currentView = name;
         Object.keys(views).forEach(function (key) {
           views[key].classList.toggle('active', key === name);
@@ -1164,6 +1580,9 @@
         tabs.forEach(function (tab) {
           tab.classList.toggle('active', tab.dataset.tab === name);
         });
+        if (name === 'bulletin' && typeof window.renderBulletin === 'function') {
+          window.renderBulletin().catch(function (e) { console.error(e); });
+        }
         if (name === 'bank') {
           var selectedKid = document.getElementById('bankKidPicker').querySelector('.active');
           var kidId = selectedKid ? selectedKid.dataset.bankKid : 'alex';
@@ -1183,7 +1602,7 @@
       }
 
       window.addEventListener('hashchange', function () {
-        switchView(location.hash.replace('#', '') || 'chores');
+        switchView(location.hash.replace('#', '') || 'bulletin');
       });
 
       elements.tabBar.addEventListener('click', function (e) {
@@ -1192,6 +1611,10 @@
         e.preventDefault();
         var name = tab.dataset.tab;
         location.hash = '#' + name;
+      });
+
+      elements.headerSettingsButton.addEventListener('click', function () {
+        location.hash = '#settings';
       });
 
       // Bank kid picker
@@ -1207,27 +1630,10 @@
       });
 
       // Initialize from hash
-      var initial = location.hash.replace('#', '') || 'chores';
+      var initial = location.hash.replace('#', '') || 'bulletin';
       switchView(initial);
 
       window.switchView = switchView;
-    }
-
-    function setupComposer() {
-      elements.composer.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const text = elements.messageInput.value.trim();
-        if (!text) {
-          return;
-        }
-        addMessage('user', text);
-        addMessage('system', 'Phase 2 will parse and log this message.', 'Firebase is connected and ready.');
-        elements.messageInput.value = '';
-      });
-
-      elements.micButton.addEventListener('click', () => {
-        addMessage('system', 'Voice input arrives in Phase 3.', 'Use text entry for now.');
-      });
     }
 
     async function initFirebase() {
@@ -1308,7 +1714,6 @@
     }
 
     setupRouter();
-    setupComposer();
     bindFamilyActions();
     registerServiceWorker();
     initFirebase().catch((error) => {
@@ -1442,6 +1847,202 @@
       function dollars(value) {
         return '$' + Number(value || 0).toFixed(2);
       }
+
+      function showToast(text, options) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + ((options && (options.type || options.kid)) || 'system');
+
+        const content = document.createElement('div');
+        content.textContent = text;
+        toast.appendChild(content);
+
+        if (options && options.onUndo) {
+          const undoBtn = document.createElement('button');
+          undoBtn.type = 'button';
+          undoBtn.className = 'toast-undo';
+          undoBtn.textContent = 'Undo';
+          undoBtn.onclick = function (e) {
+            e.stopPropagation();
+            options.onUndo();
+            toast.classList.add('out');
+            setTimeout(() => toast.remove(), 300);
+          };
+          toast.appendChild(undoBtn);
+        }
+
+        container.appendChild(toast);
+
+        const duration = (options && options.duration) || 5000;
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.classList.add('out');
+            setTimeout(() => toast.remove(), 300);
+          }
+        }, duration);
+      }
+
+      const intentRegistry = [];
+
+      function registerIntent(config) {
+        intentRegistry.push(config);
+        intentRegistry.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      }
+
+      function routeIntent(text) {
+        const normalized = normalizeText(text);
+        const kids = extractKidIds(text);
+
+        for (const intentConfig of intentRegistry) {
+          const match = intentConfig.patterns(normalized, kids);
+          if (match && match.confidence > 0.5) {
+            return { intent: intentConfig.id, ...match, kids };
+          }
+        }
+        return null;
+      }
+
+      // REGISTER INTENTS
+      registerIntent({
+        id: 'undo',
+        priority: 100,
+        patterns: (text) => (/\bundo\b|take that back/.test(text) ? { confidence: 1 } : null)
+      });
+
+      registerIntent({
+        id: 'confirm_yes',
+        priority: 90,
+        patterns: (text) => (YES_WORDS.includes(text) ? { confidence: 1 } : null)
+      });
+
+      registerIntent({
+        id: 'confirm_no',
+        priority: 90,
+        patterns: (text) => (NO_WORDS.includes(text) ? { confidence: 1 } : null)
+      });
+
+      registerIntent({
+        id: 'check_status',
+        priority: 50,
+        patterns: (text) => (isQuestion(text) ? { confidence: 0.8 } : null)
+      });
+
+      registerIntent({
+        id: 'log_chore',
+        priority: 40,
+        patterns: (text, kids) => {
+          const match = inferChore(text);
+          if (match && match.score >= 0.5) {
+            return { confidence: match.score, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(text) };
+          }
+          return null;
+        }
+      });
+
+      registerIntent({
+        id: 'confirm_chore',
+        priority: 30,
+        patterns: (text, kids) => {
+          const match = inferChore(text);
+          if (match && match.score >= 0.3) {
+            return { confidence: 0.6, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(text) };
+          }
+          return null;
+        }
+      });
+
+      registerIntent({
+        id: 'freepoints',
+        priority: 45,
+        patterns: (text, kids) => {
+          const pts = parsePoints(text);
+          if (pts !== null && kids.length) {
+            const isLoss = /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(text);
+            return { confidence: 0.9, points: isLoss ? -pts : pts };
+          }
+          return null;
+        }
+      });
+
+      registerIntent({
+        id: 'adhoc',
+        priority: 35,
+        patterns: (text, kids) => {
+          const pts = parsePoints(text);
+          if (pts !== null && kids.length && /\b(new chore|something new|something extra)\b/.test(text)) {
+            return { confidence: 0.95, points: pts, choreLabel: extractAdhocLabel(text, kids) };
+          }
+          return null;
+        }
+      });
+
+      registerIntent({
+        id: 'create_list',
+        priority: 85,
+        patterns: (text) => {
+          const match = text.match(/\b(?:create|make|start)\s+(?:a\s+|new\s+)?list(?:\s+(?:called|named))?\s+(.+)$/i);
+          return match ? { confidence: 0.98, listName: match[1].trim() } : null;
+        }
+      });
+
+      registerIntent({
+        id: 'add_to_list',
+        priority: 80,
+        patterns: (text) => {
+          const match = text.match(/\b(?:add|put)\s+(.+?)\s+(?:to|on)\s+(.+?)\s+list\b/i);
+          return match ? { confidence: 0.95, itemText: match[1].trim(), listName: match[2].trim() } : null;
+        }
+      });
+
+      registerIntent({
+        id: 'check_off_list',
+        priority: 80,
+        patterns: (text) => {
+          const match = text.match(/\b(?:check(?:\s+off)?|mark(?:\s+off)?|cross\s+off)\s+(.+?)\s+(?:from|on)\s+(.+?)\s+list\b/i);
+          return match ? { confidence: 0.95, itemText: match[1].trim(), listName: match[2].trim() } : null;
+        }
+      });
+
+      registerIntent({
+        id: 'log_note',
+        priority: 72,
+        patterns: (text) => {
+          const match = text.match(/^(?:note|add note|post note|bulletin note|remember)\s+(.+)$/i);
+          if (!match) return null;
+          const noteText = match[1].trim();
+          if (!noteText) return null;
+          const color = /\balex\b/i.test(noteText) ? 'alex' : /\b(?:louisa|lou)\b/i.test(noteText) ? 'louisa' : 'neutral';
+          return { confidence: 0.96, noteText: noteText, color: color };
+        }
+      });
+
+      registerIntent({
+        id: 'remove_note',
+        priority: 72,
+        patterns: (text) => {
+          const match = text.match(/^(?:remove|delete|clear)\s+note\s+(.+)$/i);
+          return match ? { confidence: 0.96, noteText: match[1].trim() } : null;
+        }
+      });
+      registerIntent({
+        id: 'add_to_list',
+        priority: 80,
+        patterns: (text) => {
+          const match = text.match(/\b(?:add|put)\s+(.+?)\s+(?:to|on)\s+(.+?)\s+list\b/i);
+          return match ? { confidence: 0.95, itemText: match[1].trim(), listName: match[2].trim() } : null;
+        }
+      });
+
+      registerIntent({
+        id: 'check_off_list',
+        priority: 80,
+        patterns: (text) => {
+          const match = text.match(/\b(?:check(?:\s+off)?|mark(?:\s+off)?|cross\s+off)\s+(.+?)\s+(?:from|on)\s+(.+?)\s+list\b/i);
+          return match ? { confidence: 0.95, itemText: match[1].trim(), listName: match[2].trim() } : null;
+        }
+      });
 
       function calculateWeeklyPay(payTiers, weeklyPoints) {
         let earned = 0;
@@ -1674,6 +2275,7 @@
       async function undoLastAction() {
         if (!lastUndoAction) {
           addMessage('system', 'Nothing to undo yet.');
+          showToast('Nothing to undo yet.');
           return;
         }
         if (lastUndoAction.type === 'log') {
@@ -1681,21 +2283,26 @@
             await database.ref('families/' + familyId + '/log/' + entry.id).remove();
           }
           addMessage('system', 'Removed the most recent log entry.');
+          showToast('Removed the most recent log entry.');
         } else if (lastUndoAction.type === 'payment') {
           await database.ref('families/' + familyId + '/payments/' + lastUndoAction.paymentId).remove();
           const undoDelta = Number((-(lastUndoAction.balanceDelta != null ? lastUndoAction.balanceDelta : lastUndoAction.amount)).toFixed(2));
           await adjustBalance(lastUndoAction.kidId, undoDelta);
           addMessage('system', 'Removed the most recent payment.');
+          showToast('Removed the most recent payment.');
         } else if (lastUndoAction.type === 'debt') {
           await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId).remove();
           addMessage('system', 'Removed the most recent debt record.');
+          showToast('Removed the most recent debt record.');
         } else if (lastUndoAction.type === 'settle_debt') {
           await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId + '/settled').set(false);
           addMessage('system', 'Reopened the settled debt.');
+          showToast('Reopened the settled debt.');
         } else if (lastUndoAction.type === 'change_points') {
           await database.ref('families/' + familyId + '/config/chores/' + lastUndoAction.choreId + '/points').set(lastUndoAction.previous);
           currentConfig.chores[lastUndoAction.choreId].points = lastUndoAction.previous;
           addMessage('system', 'Restored the previous point value.');
+          showToast('Restored the previous point value.');
         }
         lastUndoAction = null;
       }
@@ -1711,7 +2318,9 @@
           const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
           return currentConfig.kids[kidId].name + ': ' + points + 'pts, ' + dollars(pay) + ' earned, ' + (owed >= 0 ? dollars(owed) + ' owed to them' : 'owes you ' + dollars(Math.abs(owed)));
         });
-        addMessage('system', lines.join(' | '));
+        const message = lines.join(' | ');
+        addMessage('system', message);
+        showToast(message, { duration: 7000 });
       }
 
       async function executeLogAction(action, options) {
@@ -1724,24 +2333,29 @@
             const duplicate = await findDuplicate(kidId, action.choreId, dateStr);
             if (duplicate) {
               pendingAction = { type: 'duplicate', action };
-              addMessage('system', currentConfig.kids[kidId].name + ' already logged ' + action.choreLabel + ' today. Log again?');
+              const prompt = currentConfig.kids[kidId].name + ' already logged ' + action.choreLabel + ' today. Log again?';
+              addMessage('system', prompt);
+              showToast(prompt, { duration: 10000 });
               return;
             }
           }
           entries.push({ kid: kidId, choreId: action.choreId, choreLabel: action.choreLabel, points: action.points, timestamp: Date.now(), date: dateStr, week, note: action.note || '' });
         }
         const saved = await saveLogEntries(entries);
-        addMessage('system', 'Got it! ' + saved.map((entry) => currentConfig.kids[entry.kid].name + ' - ' + entry.choreLabel + ' ' + entry.points + 'pt').join(' | ') + '. Use Undo if needed.');
+        const message = 'Got it! ' + saved.map((entry) => currentConfig.kids[entry.kid].name + ' - ' + entry.choreLabel + ' ' + entry.points + 'pt').join(' | ') + '. Use Undo if needed.';
+        addMessage('system', message);
+        showToast(message, { onUndo: () => undoLastAction() });
       }
 
       async function executeIntent(result) {
         if (!familyId || !configLoaded) {
-          addMessage('system', 'Finish connecting to a family before logging chores.');
+          showToast('Connect to a family first.', { type: 'error' });
           return;
         }
+
         if (result.intent === 'confirm_yes') {
           if (!pendingAction) {
-            addMessage('system', 'Nothing is waiting for confirmation.');
+            showToast('Nothing to confirm.');
             return;
           }
           const pending = pendingAction;
@@ -1751,131 +2365,221 @@
           }
           return;
         }
+
         if (result.intent === 'confirm_no') {
           pendingAction = null;
-          addMessage('system', 'Okay, I did not log that.');
+          showToast('Cancelled.');
           return;
         }
+
         if (result.intent === 'undo') return undoLastAction();
+
         if (result.intent === 'missing_kid') {
-          addMessage('system', 'Which kid?', '', [
-            { action: 'prefill', value: 'Alex ', label: 'Alex' },
-            { action: 'prefill', value: 'Louisa ', label: 'Louisa' },
-            { action: 'prefill', value: 'Both kids ', label: 'Both' }
-          ]);
+          showToast('Which kid? (Alex, Louisa, or both)', {
+            duration: 8000
+          });
           return;
         }
+
         if (result.intent === 'no_match') {
-          addMessage('system', "I didn't catch that. Try again or type it out?");
+          showToast("I didn't catch that. Try again?", { type: 'error' });
           return;
         }
+
         if (result.intent === 'check_status') return renderStatus(result.kids || []);
+
         if (result.intent === 'record_payment') {
           if (result.amount === null) {
-            addMessage('system', 'How much was the payment?');
+            showToast('How much was the payment?');
             return;
           }
           const kidId = result.kids[0];
           const balance = await writePayment(kidId, result.amount, 'manual', 'Recorded from chat');
-          addMessage('system', 'Recorded payment for ' + currentConfig.kids[kidId].name + ': ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          showToast('Paid ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + '. Balance: ' + dollars(balance), { kid: kidId, onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'kid_spent') {
           if (result.amount === null) {
-            addMessage('system', 'How much did they spend?');
+            showToast('How much did they spend?');
             return;
           }
           const kidId = result.kids[0];
-          var spendNote = (result.note || text || '').replace(/\b(alex|louisa|both kids?)\b/gi, '').replace(/\b(spent|bought|purchased)\b/gi, '').replace(/\$?\d+(\.\d+)?/g, '').replace(/\bfor\b/gi, '').replace(/\s+/g, ' ').trim() || 'Purchase';
+          const spendNote = (result.note || '').replace(/\b(spent|bought|purchased)\b/gi, '').replace(/\$?\d+(\.\d+)?/g, '').trim() || 'Purchase';
           const balance = await writePayment(kidId, result.amount, 'spend', spendNote);
-          addMessage('system', currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + ' on ' + spendNote + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          showToast(currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + ' on ' + spendNote, { kid: kidId, onUndo: () => undoLastAction() });
           return;
         }
-        if (result.intent === 'kid_owes_parent') {
+
+        if (result.intent === 'parent_owes_kid' || result.intent === 'kid_owes_parent') {
           if (result.amount === null) {
-            addMessage('system', 'How much do they owe?');
+            showToast('How much?');
             return;
           }
           const kidId = result.kids[0];
-          const balance = await writePayment(kidId, result.amount, 'owed', 'Owes parent');
-          addMessage('system', currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount) + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
-          return;
-        }
-        if (result.intent === 'parent_owes_kid') {
-          if (result.amount === null) {
-            addMessage('system', 'How much do you owe them?');
-            return;
-          }
-          const kidId = result.kids[0];
-          const note = (result.note || '')
-            .replace(/(i|we|me|us|parent|parents?|owe|owed|owes|alex|louisa)/gi, '')
-            .replace(/\$?\d+(\.\d+)?/g, '')
-            .replace(/for/gi, '')
-            .replace(/\s+/g, ' ')
-            .trim() || 'Owed from chat';
-          const balance = await adjustBalance(kidId, result.amount);
-          const entry = { kid: kidId, amount: Number(result.amount.toFixed(2)), type: 'credit', timestamp: Date.now(), date: toDateString(new Date()), note, balanceDelta: Number(result.amount.toFixed(2)) };
+          const isParentOwes = result.intent === 'parent_owes_kid';
+          const balance = await adjustBalance(kidId, isParentOwes ? result.amount : -result.amount);
+          const entry = {
+            kid: kidId,
+            amount: Number(result.amount.toFixed(2)),
+            type: isParentOwes ? 'credit' : 'owed',
+            timestamp: Date.now(),
+            date: toDateString(new Date()),
+            note: isParentOwes ? 'Parent owes' : 'Owes parent',
+            balanceDelta: isParentOwes ? result.amount : -result.amount
+          };
           const ref = database.ref('families/' + familyId + '/payments').push();
           await ref.set(entry);
           lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
-          addMessage('system', 'Recorded that you owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + (note && note !== 'Owed from chat' ? ' for ' + note : '') + '. Balance: ' + (balance >= 0 ? dollars(balance) + ' owed to them.' : 'they owe you ' + dollars(Math.abs(balance)) + '.'));
+          showToast(isParentOwes ? 'You now owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) : currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount), { kid: kidId, onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'record_debt') {
           if (result.amount === null) {
-            addMessage('system', 'How much is owed?');
+            showToast('How much is owed?');
             return;
           }
           const fromKid = result.verb === 'lent' ? result.kids[1] : result.kids[0];
           const toKid = result.verb === 'lent' ? result.kids[0] : result.kids[1];
           await writeDebt(fromKid, toKid, result.amount);
-          addMessage('system', currentConfig.kids[fromKid].name + ' now owes ' + currentConfig.kids[toKid].name + ' ' + dollars(result.amount) + '.');
+          showToast(currentConfig.kids[fromKid].name + ' owes ' + currentConfig.kids[toKid].name + ' ' + dollars(result.amount), { onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'settle_debt') {
           const debt = await settleDebt(result.kids);
           if (!debt) {
-            addMessage('system', 'I could not find an active debt between those kids.');
+            showToast('No active debt found between them.', { type: 'error' });
             return;
           }
-          addMessage('system', 'Settled debt: ' + currentConfig.kids[debt.from].name + ' to ' + currentConfig.kids[debt.to].name + ' for ' + dollars(debt.amount) + '.');
+          showToast('Settled debt: ' + dollars(debt.amount), { onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'change_points') {
           if (!result.choreId || result.points === null) {
-            addMessage('system', 'Tell me which chore and how many points to set.');
+            showToast('Which chore and how many points?');
             return;
           }
           await updateChorePoints(result.choreId, result.points);
-          addMessage('system', 'Updated ' + result.choreLabel + ' to ' + result.points + ' points.');
+          showToast('Updated ' + result.choreLabel + ' to ' + result.points + 'pts', { onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'freepoints') {
           const now = new Date();
-          await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'freepoints', choreLabel: 'Quick points', points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' })));
-          var fpNames = result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ');
-          if (result.points < 0) {
-            addMessage('system', 'Removed ' + Math.abs(result.points) + ' point' + (Math.abs(result.points) !== 1 ? 's' : '') + ' from ' + fpNames + '.');
-          } else {
-            addMessage('system', 'Added ' + result.points + ' point' + (result.points !== 1 ? 's' : '') + ' for ' + fpNames + '.');
-          }
+          await saveLogEntries(result.kids.map((kidId) => ({
+            kid: kidId,
+            choreId: 'freepoints',
+            choreLabel: 'Quick points',
+            points: result.points,
+            timestamp: Date.now(),
+            date: toDateString(now),
+            week: toIsoWeek(now),
+            note: ''
+          })));
+          const names = result.kids.map(id => currentConfig.kids[id].name).join(' & ');
+          showToast((result.points > 0 ? '+' : '') + result.points + 'pts for ' + names, { kid: result.kids.length === 1 ? result.kids[0] : null, onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'adhoc') {
           if (result.points === null) {
-            addMessage('system', 'How many points for that?');
+            showToast('How many points?');
             return;
           }
           const now = new Date();
-          await saveLogEntries(result.kids.map((kidId) => ({ kid: kidId, choreId: 'adhoc', choreLabel: result.choreLabel, points: result.points, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: result.choreLabel })));
-          addMessage('system', 'Logged ad-hoc chore: ' + result.choreLabel + ' for ' + result.kids.map((kidId) => currentConfig.kids[kidId].name).join(' and ') + '.');
+          await saveLogEntries(result.kids.map((kidId) => ({
+            kid: kidId,
+            choreId: 'adhoc',
+            choreLabel: result.choreLabel,
+            points: result.points,
+            timestamp: Date.now(),
+            date: toDateString(now),
+            week: toIsoWeek(now),
+            note: result.choreLabel
+          })));
+          showToast('Logged: ' + result.choreLabel + ' (' + result.points + 'pts)', { onUndo: () => undoLastAction() });
           return;
         }
+
         if (result.intent === 'confirm_chore') {
           pendingAction = { type: 'confirm_chore', action: result };
-          addMessage('system', 'Did you mean ' + result.choreLabel + '? Reply yes or no.');
+          showToast('Did you mean ' + result.choreLabel + '? (Yes/No)', { duration: 10000 });
           return;
         }
+
+        if (result.intent === 'create_list') {
+          if (!window.familyLists) {
+            showToast('Lists are not ready yet.', { type: 'error' });
+            return;
+          }
+          const created = await window.familyLists.createListNamed(result.listName);
+          if (!created) {
+            showToast('Could not create that list.', { type: 'error' });
+            return;
+          }
+          showToast('Created ' + created.meta.name + ' list.');
+          return;
+        }
+
+        if (result.intent === 'add_to_list') {
+          if (!window.familyLists) {
+            showToast('Lists are not ready yet.', { type: 'error' });
+            return;
+          }
+          const added = await window.familyLists.addItemsToNamedList(result.listName, result.itemText);
+          if (!added) {
+            showToast('Could not find the ' + result.listName + ' list.', { type: 'error' });
+            return;
+          }
+          showToast('Added ' + result.itemText + ' to ' + added.meta.name + '.');
+          return;
+        }
+
+        if (result.intent === 'check_off_list') {
+          if (!window.familyLists) {
+            showToast('Lists are not ready yet.', { type: 'error' });
+            return;
+          }
+          const checked = await window.familyLists.checkOffItemByText(result.listName, result.itemText);
+          if (!checked || checked.status === 'missing_list') {
+            showToast('Could not find the ' + result.listName + ' list.', { type: 'error' });
+            return;
+          }
+          if (checked.status === 'missing_item') {
+            showToast('Could not find ' + result.itemText + ' on ' + checked.list.meta.name + '.', { type: 'error' });
+            return;
+          }
+          showToast('Checked off ' + checked.item.text + ' from ' + checked.list.meta.name + '.');
+          return;
+        }
+
+        if (result.intent === 'log_note') {
+          if (!window.familyBulletin) {
+            showToast('Bulletin is not ready yet.', { type: 'error' });
+            return;
+          }
+          const note = await window.familyBulletin.addNote(result.noteText, result.color);
+          showToast('Pinned note: ' + note.text, { kid: note.color !== 'neutral' ? note.color : null });
+          return;
+        }
+
+        if (result.intent === 'remove_note') {
+          if (!window.familyBulletin) {
+            showToast('Bulletin is not ready yet.', { type: 'error' });
+            return;
+          }
+          const removed = await window.familyBulletin.removeNoteByText(result.noteText);
+          if (!removed) {
+            showToast('Could not find that note on the Bulletin.', { type: 'error' });
+            return;
+          }
+          showToast('Removed note: ' + removed.text);
+          return;
+        }
+
         if (result.intent === 'log_chore') {
           if (Array.isArray(result.multi)) {
             for (const action of result.multi) {
@@ -1935,11 +2639,23 @@
         if (familyId && !configLoaded) {
           await loadFamilyConfigV2();
         }
-        addMessage('user', text);
-        let result = parseIntent(text);
+        
+        // Show in Chores history if active
+        const router = elements.tabBar.querySelector('.active');
+        if (router && router.dataset.tab === 'chores') {
+          addMessage('user', text);
+        }
+
+        let result = routeIntent(text) || parseIntent(text);
+        
+        const GEMINI_KEY = typeof GEMINI_API_KEY === 'string' ? GEMINI_API_KEY.trim() : '';
+        const GEMINI_ENABLED = typeof AI_PARSER_ENABLED === 'boolean' ? AI_PARSER_ENABLED : false;
+        const GEMINI_URL = GEMINI_KEY ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY : '';
+
         var shouldTryGemini = GEMINI_ENABLED && GEMINI_URL && (result.intent === 'no_match' || result.intent === 'missing_kid' ||
           (result.intent === 'check_status' && parsePoints(text) !== null));
         var geminiTriedAndFailed = false;
+        
         if (shouldTryGemini) {
           try {
             const geminiResult = await askGemini(text);
@@ -1953,10 +2669,12 @@
             geminiTriedAndFailed = true;
           }
         }
+
         if (result.intent === 'no_match' && geminiTriedAndFailed) {
-          addMessage('system', "I didn't understand that (AI helper couldn't parse it either). Try rephrasing?");
+          showToast("I didn't understand that. Try rephrasing?", { type: 'error' });
           return;
         }
+
         await executeIntent(result);
       }
 
@@ -2246,7 +2964,8 @@
         toIsoWeek,
         toDateString,
         adjustBalance,
-        addMessage
+        addMessage,
+        showToast
       };
       bindPhase2Composer();
 
@@ -2289,43 +3008,1258 @@
   </script>
   <script>
     (function () {
+      var KID_JOKES = [
+  // Animals
+  { setup: "Why did the teddy bear say no to dessert?", punchline: "Because she was already stuffed!" },
+  { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore!" },
+  { setup: "What do you call a fish without eyes?", punchline: "A fsh!" },
+  { setup: "Why do cows wear bells?", punchline: "Because their horns don't work!" },
+  { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear!" },
+  { setup: "What do you call an alligator in a vest?", punchline: "An investi-gator!" },
+  { setup: "Why don't elephants use computers?", punchline: "Because they're afraid of the mouse!" },
+  { setup: "What do cats eat for breakfast?", punchline: "Mice Krispies!" },
+  { setup: "What do you call a dog that does magic?", punchline: "A Labra-cadabra-dor!" },
+  { setup: "Why do ducks have feathers?", punchline: "To cover their butt quacks!" },
+  { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato!" },
+  { setup: "Why did the spider go to the computer?", punchline: "To check his web-site!" },
+  { setup: "What animal is always at a baseball game?", punchline: "A bat!" },
+  { setup: "What do you call a pig that does karate?", punchline: "A pork chop!" },
+  { setup: "Why do fish live in salt water?", punchline: "Because pepper makes them sneeze!" },
+  { setup: "What do you call a snake wearing a hard hat?", punchline: "A boa constructor!" },
+  { setup: "What do frogs do with paper?", punchline: "Rip-it! Rip-it!" },
+  { setup: "What is a cat's favorite color?", punchline: "Purr-ple!" },
+  { setup: "Why are cats good at video games?", punchline: "Because they have nine lives!" },
+  { setup: "What do you call a cow with no legs?", punchline: "Ground beef!" },
+
+  // Food
+  { setup: "Why did the banana go to the doctor?", punchline: "Because it wasn't peeling well!" },
+  { setup: "What did the baby corn say to the mama corn?", punchline: "Where's pop corn?" },
+  { setup: "Why did the cookie go to the hospital?", punchline: "Because it felt crummy!" },
+  { setup: "What do you call a fake noodle?", punchline: "An impasta!" },
+  { setup: "What did the lettuce say to the celery?", punchline: "Quit stalking me!" },
+  { setup: "Why did the tomato turn red?", punchline: "Because it saw the salad dressing!" },
+  { setup: "What does a lemon say when it answers the phone?", punchline: "Yellow!" },
+  { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese!" },
+  { setup: "Why did the egg hide?", punchline: "Because it was a little chicken!" },
+  { setup: "What kind of key opens a banana?", punchline: "A mon-key!" },
+
+  // School & everyday
+  { setup: "Why did the kid bring a ladder to school?", punchline: "Because she wanted to go to high school!" },
+  { setup: "What did the paper say to the pencil?", punchline: "Write on!" },
+  { setup: "Why did the math book look so sad?", punchline: "Because it had too many problems!" },
+  { setup: "What did one wall say to the other?", punchline: "I'll meet you at the corner!" },
+  { setup: "Why is six afraid of seven?", punchline: "Because seven eight nine!" },
+  { setup: "What has hands but can't clap?", punchline: "A clock!" },
+  { setup: "What has ears but cannot hear?", punchline: "A cornfield!" },
+  { setup: "Why can't you give Elsa a balloon?", punchline: "Because she'll let it go!" },
+  { setup: "What did the stamp say to the envelope?", punchline: "Stick with me and we'll go places!" },
+  { setup: "Why did the picture go to jail?", punchline: "Because it was framed!" },
+
+  // Knock-knock style
+  { setup: "Knock knock! Who's there? Boo.", punchline: "Boo who? Don't cry, it's just a joke!" },
+  { setup: "Knock knock! Who's there? Lettuce.", punchline: "Lettuce who? Lettuce in, it's cold out here!" },
+  { setup: "Knock knock! Who's there? Cow says.", punchline: "Cow says who? No silly, cow says MOOO!" },
+  { setup: "Knock knock! Who's there? Interrupting cow.", punchline: "Interrupting cow whâ€” MOOO!" },
+  { setup: "Knock knock! Who's there? Banana. Banana who? Knock knock! Who's there? Orange.", punchline: "Orange who? Orange you glad I didn't say banana?" },
+  { setup: "Knock knock! Who's there? Tank.", punchline: "Tank who? You're welcome!" },
+  { setup: "Knock knock! Who's there? Atch.", punchline: "Atch who? Bless you!" },
+  { setup: "Knock knock! Who's there? Wooden shoe.", punchline: "Wooden shoe who? Wooden shoe like to hear another joke?" },
+  { setup: "Knock knock! Who's there? Ice cream.", punchline: "Ice cream who? Ice cream every time I see a spider!" },
+  { setup: "Knock knock! Who's there? Nobel.", punchline: "Nobel who? Nobel, that's why I knocked!" },
+
+  // Space & nature
+  { setup: "How does the moon cut his hair?", punchline: "Eclipse it!" },
+  { setup: "Why did the sun go to school?", punchline: "To get a little brighter!" },
+  { setup: "What kind of tree fits in your hand?", punchline: "A palm tree!" },
+  { setup: "What falls in winter but never gets hurt?", punchline: "Snow!" },
+  { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved!" },
+  { setup: "Why do mushrooms get invited to all the parties?", punchline: "Because they're such fungi!" },
+  { setup: "What did the flower say to the bike?", punchline: "Petal!" },
+  { setup: "What kind of water can't freeze?", punchline: "Hot water!" },
+  { setup: "Why is grass so dangerous?", punchline: "Because it's full of blades!" },
+  { setup: "What did one volcano say to the other?", punchline: "I lava you!" },
+
+  // Silly
+  { setup: "What do you call a boomerang that doesn't come back?", punchline: "A stick!" },
+  { setup: "What did one toilet say to the other?", punchline: "You look a bit flushed!" },
+  { setup: "Why did the kid cross the playground?", punchline: "To get to the other slide!" },
+  { setup: "What do you call a funny mountain?", punchline: "Hill-arious!" },
+  { setup: "What do you call a train that sneezes?", punchline: "Achoo-choo train!" },
+  { setup: "What do you call a dinosaur that crashes their car?", punchline: "Tyrannosaurus Wrecks!" },
+  { setup: "Why can't your nose be 12 inches long?", punchline: "Because then it would be a foot!" },
+  { setup: "What did the left eye say to the right eye?", punchline: "Between you and me, something smells!" },
+  { setup: "How do you make a tissue dance?", punchline: "Put a little boogie in it!" },
+  { setup: "What do you call a ghost's true love?", punchline: "A ghoul-friend!" },
+
+  // More animals
+  { setup: "What do you get when you cross a vampire and a snowman?", punchline: "Frostbite!" },
+  { setup: "Why do bees have sticky hair?", punchline: "Because they use honeycombs!" },
+  { setup: "What do you call a fly without wings?", punchline: "A walk!" },
+  { setup: "What do you give a sick bird?", punchline: "Tweetment!" },
+  { setup: "Why did the turtle cross the road?", punchline: "To get to the shell station!" },
+  { setup: "What do you call two birds in love?", punchline: "Tweethearts!" },
+  { setup: "What do you call a monkey at the North Pole?", punchline: "Lost!" },
+  { setup: "Why are frogs so happy?", punchline: "They eat whatever bugs them!" },
+  { setup: "What sound do porcupines make when they kiss?", punchline: "Ouch!" },
+  { setup: "What do you call a rabbit with fleas?", punchline: "Bugs Bunny!" },
+
+  // More silly
+  { setup: "What has four wheels and flies?", punchline: "A garbage truck!" },
+  { setup: "What gets wetter the more it dries?", punchline: "A towel!" },
+  { setup: "What invention lets you look right through a wall?", punchline: "A window!" },
+  { setup: "Why did the golfer bring two pairs of pants?", punchline: "In case he got a hole in one!" },
+  { setup: "What do you call a sleeping bull?", punchline: "A bulldozer!" },
+  { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field!" },
+  { setup: "What room can nobody enter?", punchline: "A mushroom!" },
+  { setup: "What can you catch but not throw?", punchline: "A cold!" },
+  { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired!" },
+  { setup: "What did the big flower say to the little flower?", punchline: "Hey there, bud!" },
+
+  // Bonus round
+  { setup: "What do dentists call their x-rays?", punchline: "Tooth pics!" },
+  { setup: "Why couldn't the pony sing?", punchline: "Because she was a little horse!" },
+  { setup: "What do you call a dog on the beach in summer?", punchline: "A hot dog!" },
+  { setup: "What did the dalmatian say after lunch?", punchline: "That hit the spot!" },
+  { setup: "Why do birds fly south in winter?", punchline: "Because it's too far to walk!" },
+  { setup: "What time do ducks wake up?", punchline: "At the quack of dawn!" },
+  { setup: "What did one hat say to the other?", punchline: "Stay here, I'm going on ahead!" },
+  { setup: "What do elves learn in school?", punchline: "The elf-abet!" },
+  { setup: "Why was the broom late?", punchline: "It over-swept!" },
+  { setup: "What did the zero say to the eight?", punchline: "Nice belt!" }
+];
+
+      var KID_MADLIBS = [
+  {
+    title: "The Silly Zoo Trip",
+    blanks: [
+      { label: "adjective", hint: "silly, sparkly, giant" },
+      { label: "animal", hint: "frog, elephant, unicorn" },
+      { label: "food", hint: "pizza, bananas, ice cream" },
+      { label: "verb_past", hint: "jumped, danced, flew" },
+      { label: "color", hint: "red, blue, purple" },
+      { label: "number", hint: "3, 100, 7" },
+      { label: "sound", hint: "BOOM, squish, ding" },
+      { label: "body_part", hint: "elbow, nose, toes" }
+    ],
+    story: "We went to the {0} zoo and saw a {1} eating {2}. It {3} over the fence and landed in a pool of {4} paint. Then {5} more animals came out and started making {6} sounds with their {7}. Best zoo trip ever!"
+  },
+  {
+    title: "My Pet Dragon",
+    blanks: [
+      { label: "name", hint: "a funny name" },
+      { label: "color", hint: "red, blue, purple" },
+      { label: "food", hint: "pizza, bananas, ice cream" },
+      { label: "adjective", hint: "tiny, enormous, fuzzy" },
+      { label: "verb", hint: "dance, fly, sneeze" },
+      { label: "noun", hint: "a thing, like shoe or tree" },
+      { label: "sound", hint: "ROAR, whoosh, pop" }
+    ],
+    story: "I found a baby dragon named {0}. It was {1} with {2}-scented breath. It was really {3} and loved to {4} on top of our {5}. Every time it hiccupped it went {6}!"
+  },
+  {
+    title: "The Magic School Bus Ride",
+    blanks: [
+      { label: "adjective", hint: "bumpy, magical, stinky" },
+      { label: "place", hint: "the moon, a jungle, school" },
+      { label: "animal", hint: "monkey, whale, penguin" },
+      { label: "food", hint: "tacos, cake, spaghetti" },
+      { label: "verb_past", hint: "zoomed, bounced, wiggled" },
+      { label: "color", hint: "green, orange, pink" },
+      { label: "number", hint: "5, 42, 1000" }
+    ],
+    story: "Our school bus turned {0} and drove all the way to {1}. We met a talking {2} who gave us {3} for lunch. The bus {4} through a {5} rainbow and we got back to school {6} hours late!"
+  },
+  {
+    title: "Superhero Morning",
+    blanks: [
+      { label: "adjective", hint: "super, invisible, slimy" },
+      { label: "clothing", hint: "cape, boots, hat" },
+      { label: "verb", hint: "fly, zoom, cartwheel" },
+      { label: "food", hint: "waffles, cookies, cheese" },
+      { label: "animal", hint: "cat, dragon, hamster" },
+      { label: "noun", hint: "a thing, like toaster or shoe" },
+      { label: "sound", hint: "WHOOSH, kaboom, zap" }
+    ],
+    story: "I woke up feeling {0}! I put on my special {1} and started to {2} around the kitchen. Mom made {3} for breakfast but a {4} stole them off the {5}. I yelled {6} and saved the day!"
+  },
+  {
+    title: "The Underwater Birthday Party",
+    blanks: [
+      { label: "name", hint: "a friend's name" },
+      { label: "number", hint: "5, 7, 100" },
+      { label: "animal", hint: "octopus, shark, seahorse" },
+      { label: "food", hint: "cake, jello, seaweed" },
+      { label: "adjective", hint: "sparkly, squishy, gigantic" },
+      { label: "verb_past", hint: "swam, splashed, giggled" },
+      { label: "color", hint: "blue, gold, silver" }
+    ],
+    story: "We threw a birthday party for {0} who was turning {1}. A friendly {2} brought a {3} cake. Everything was {4} and everyone {5} in the {6} water. Best party under the sea!"
+  },
+  {
+    title: "The Dinosaur at the Grocery Store",
+    blanks: [
+      { label: "adjective", hint: "huge, tiny, grumpy" },
+      { label: "food", hint: "broccoli, cookies, pickles" },
+      { label: "number", hint: "12, 50, 3" },
+      { label: "verb_past", hint: "stomped, ate, knocked over" },
+      { label: "noun", hint: "a thing, like cart or shelf" },
+      { label: "sound", hint: "CRASH, munch, beep" },
+      { label: "body_part", hint: "tail, head, foot" }
+    ],
+    story: "A {0} dinosaur walked into the grocery store and went straight for the {1}. It grabbed {2} of them and {3} the {4}. Everyone heard a loud {5}! The dinosaur wagged its {6} and walked out."
+  },
+  {
+    title: "The Backwards Day",
+    blanks: [
+      { label: "clothing", hint: "pajamas, socks, jacket" },
+      { label: "food", hint: "pancakes, pizza, soup" },
+      { label: "verb_past", hint: "walked, crawled, hopped" },
+      { label: "adjective", hint: "backwards, upside-down, inside-out" },
+      { label: "animal", hint: "dog, parrot, bunny" },
+      { label: "place", hint: "school, the park, bed" }
+    ],
+    story: "On Backwards Day, I wore my {0} on my head and ate {1} for dinner in the morning. I {2} to school {3}. Even our {4} was confused! The teacher said to go home but we all went to {5} instead."
+  },
+  {
+    title: "The Messy Chef",
+    blanks: [
+      { label: "food", hint: "chocolate, spaghetti, ketchup" },
+      { label: "noun", hint: "a thing, like blender or bathtub" },
+      { label: "number", hint: "2, 20, 99" },
+      { label: "adjective", hint: "gooey, crunchy, smelly" },
+      { label: "body_part", hint: "hair, ears, belly" },
+      { label: "verb_past", hint: "exploded, splattered, dripped" },
+      { label: "color", hint: "brown, green, yellow" }
+    ],
+    story: "I tried to cook {0} in the {1}. I added {2} cups of the {3} stuff. It got all over my {4} when it {5}! The whole kitchen turned {6}. Mom was NOT happy."
+  },
+  {
+    title: "The Alien Sleepover",
+    blanks: [
+      { label: "name", hint: "a silly alien name" },
+      { label: "color", hint: "green, purple, silver" },
+      { label: "number", hint: "4, 8, 17" },
+      { label: "food", hint: "popcorn, bugs, marshmallows" },
+      { label: "verb_past", hint: "floated, beeped, danced" },
+      { label: "adjective", hint: "glowing, wiggly, tiny" },
+      { label: "noun", hint: "a thing, like pillow or lamp" }
+    ],
+    story: "An alien named {0} came to our sleepover. It was {1} and had {2} eyes. We shared some {3} and it {4} around the room. It had a {5} {6} that it used as a blanket. Best sleepover guest ever!"
+  },
+  {
+    title: "The Talking Dog",
+    blanks: [
+      { label: "adjective", hint: "fluffy, loud, tiny" },
+      { label: "food", hint: "bones, pizza, broccoli" },
+      { label: "verb", hint: "sing, read, skateboard" },
+      { label: "place", hint: "the park, school, the store" },
+      { label: "noun", hint: "a thing, like newspaper or phone" },
+      { label: "name", hint: "a dog name" }
+    ],
+    story: "One day my {0} dog started talking! It asked for {1} and then tried to {2}. It wanted to go to {3} and bring its favorite {4}. I named it {5} and now it never stops chatting."
+  },
+  {
+    title: "The Silly Pirate Ship",
+    blanks: [
+      { label: "adjective", hint: "rusty, sparkly, bouncy" },
+      { label: "animal", hint: "parrot, crab, whale" },
+      { label: "food", hint: "cookies, fish sticks, candy" },
+      { label: "noun", hint: "a thing, like treasure or sock" },
+      { label: "verb_past", hint: "sailed, bounced, tumbled" },
+      { label: "color", hint: "black, gold, rainbow" },
+      { label: "number", hint: "3, 50, 1000" }
+    ],
+    story: "Captain me set sail on a {0} pirate ship with a {1} on my shoulder. We had {2} for every meal. We found a chest full of {3} and {4} across the {5} sea. We found {6} gold coins!"
+  },
+  {
+    title: "The Robot Butler",
+    blanks: [
+      { label: "name", hint: "a robot name" },
+      { label: "adjective", hint: "shiny, clumsy, tiny" },
+      { label: "food", hint: "pancakes, sandwiches, soup" },
+      { label: "verb_past", hint: "beeped, crashed, spun" },
+      { label: "noun", hint: "a thing, like plate or chair" },
+      { label: "sound", hint: "BEEP, clang, whoosh" }
+    ],
+    story: "We got a robot butler named {0}. It was very {1} and tried to make {2} for breakfast. It {3} into the {4} and made a loud {5}! We love our robot even though it breaks everything."
+  },
+  {
+    title: "The Enchanted Treehouse",
+    blanks: [
+      { label: "adjective", hint: "magical, huge, wobbly" },
+      { label: "animal", hint: "owl, squirrel, fairy" },
+      { label: "color", hint: "golden, silver, rainbow" },
+      { label: "food", hint: "berries, honey, chocolate" },
+      { label: "noun", hint: "a thing, like ladder or door" },
+      { label: "verb_past", hint: "climbed, flew, whispered" }
+    ],
+    story: "We found a {0} treehouse in the backyard. A {1} lived inside. The walls were {2} and there was {3} everywhere! We opened a secret {4} and {5} all the way to the top. It felt like a dream."
+  },
+  {
+    title: "The Snowman Who Came Alive",
+    blanks: [
+      { label: "name", hint: "a snowman name" },
+      { label: "clothing", hint: "scarf, top hat, mittens" },
+      { label: "food", hint: "hot cocoa, carrots, cookies" },
+      { label: "verb_past", hint: "danced, slid, melted" },
+      { label: "adjective", hint: "freezing, silly, jolly" },
+      { label: "place", hint: "the kitchen, the mall, school" }
+    ],
+    story: "Our snowman {0} came alive! It put on a {1} and asked for {2}. Then it {3} around the yard. It was so {4}! It wanted to go to {5} but we said it would melt. It didn't care!"
+  },
+  {
+    title: "The Monster Under the Bed",
+    blanks: [
+      { label: "adjective", hint: "fuzzy, friendly, purple" },
+      { label: "sound", hint: "snore, giggle, ROAR" },
+      { label: "food", hint: "cookies, socks, dust bunnies" },
+      { label: "verb", hint: "sleep, play, read" },
+      { label: "noun", hint: "a thing, like teddy bear or book" },
+      { label: "name", hint: "a monster name" }
+    ],
+    story: "The monster under my bed is actually really {0}. At night it makes a {1} sound. It eats {2} and likes to {3}. I share my {4} with it. Its name is {5} and we're best friends now."
+  },
+  {
+    title: "The Crazy Hair Day",
+    blanks: [
+      { label: "color", hint: "pink, green, rainbow" },
+      { label: "food", hint: "spaghetti, gummy bears, syrup" },
+      { label: "animal", hint: "bird, cat, lizard" },
+      { label: "adjective", hint: "spiky, curly, enormous" },
+      { label: "number", hint: "3, 10, 50" },
+      { label: "verb_past", hint: "laughed, stared, cheered" }
+    ],
+    story: "For Crazy Hair Day I made my hair {0} and put {1} in it. A {2} tried to nest in it! My hair was so {3} that {4} people could see it from far away. Everyone {5}!"
+  },
+  {
+    title: "The Magic Paintbrush",
+    blanks: [
+      { label: "color", hint: "gold, rainbow, invisible" },
+      { label: "animal", hint: "horse, butterfly, dragon" },
+      { label: "food", hint: "cake, ice cream, fruit" },
+      { label: "place", hint: "the beach, a castle, space" },
+      { label: "adjective", hint: "beautiful, giant, flying" },
+      { label: "verb_past", hint: "appeared, sparkled, came alive" }
+    ],
+    story: "I found a {0} paintbrush. Everything I painted became real! I painted a {1}, then some {2}, then a picture of {3}. It all became {4} and {5}. I was the greatest artist in the world!"
+  },
+  {
+    title: "The Princess and the Frog... Again",
+    blanks: [
+      { label: "adjective", hint: "grumpy, sparkly, smelly" },
+      { label: "animal", hint: "frog, toad, gecko" },
+      { label: "verb_past", hint: "kissed, poked, high-fived" },
+      { label: "noun", hint: "a thing, like crown or sandwich" },
+      { label: "food", hint: "flies, cupcakes, worms" },
+      { label: "adjective", hint: "happy, confused, hungry" }
+    ],
+    story: "Once upon a time a {0} {1} wanted to be a prince. A princess {2} it but it turned into a {3}! So they just ate {4} together and were {5} forever. The end!"
+  },
+  {
+    title: "Grandma's Secret Recipe",
+    blanks: [
+      { label: "food", hint: "peanut butter, pickles, cheese" },
+      { label: "number", hint: "2, 15, 99" },
+      { label: "noun", hint: "a thing, like shoe or leaf" },
+      { label: "adjective", hint: "bubbly, smelly, rainbow" },
+      { label: "verb", hint: "stir, shake, throw" },
+      { label: "sound", hint: "POP, sizzle, bang" }
+    ],
+    story: "Grandma's secret recipe: take {0}, add {1} cups of crushed {2}, mix until {3}, then {4} it three times. It'll go {5}! Grandma says it's delicious. We're not so sure."
+  },
+  {
+    title: "The Day I Shrunk",
+    blanks: [
+      { label: "adjective", hint: "tiny, microscopic, ant-sized" },
+      { label: "noun", hint: "a thing, like crumb or leaf" },
+      { label: "animal", hint: "ant, ladybug, spider" },
+      { label: "verb_past", hint: "rode, climbed, bounced" },
+      { label: "food", hint: "a grape, a breadcrumb, a sprinkle" },
+      { label: "body_part", hint: "finger, toe, ear" }
+    ],
+    story: "I woke up {0}! A {1} was as big as a house. I met a friendly {2} and {3} on its back. Lunch was {4}, which was now the size of my {5}. I hope I grow back tomorrow!"
+  },
+  {
+    title: "The Cloud Factory",
+    blanks: [
+      { label: "adjective", hint: "fluffy, cotton candy, enormous" },
+      { label: "color", hint: "white, pink, blue" },
+      { label: "animal", hint: "sheep, bunny, bird" },
+      { label: "food", hint: "marshmallows, whipped cream, cotton candy" },
+      { label: "verb_past", hint: "floated, bounced, dissolved" },
+      { label: "noun", hint: "a thing, like pillow or bubble" }
+    ],
+    story: "We visited the cloud factory. The clouds were {0} and {1}. A {2} was in charge of making them out of {3}. One cloud {4} away and turned into a giant {5} in the sky!"
+  },
+  {
+    title: "The Invisible Homework",
+    blanks: [
+      { label: "adjective", hint: "invisible, vanishing, see-through" },
+      { label: "noun", hint: "a thing, like pencil or crayon" },
+      { label: "verb_past", hint: "disappeared, faded, flew away" },
+      { label: "name", hint: "your teacher's name" },
+      { label: "food", hint: "something you eat" },
+      { label: "adjective", hint: "confused, suspicious, amazed" }
+    ],
+    story: "I did my homework but it turned {0}! I swear I used a real {1} but the words just {2}! My teacher {3} was very {5}. I said the dog ate it but actually I traded it for {4}."
+  },
+  {
+    title: "The Circus in My Backyard",
+    blanks: [
+      { label: "number", hint: "3, 10, 25" },
+      { label: "animal", hint: "elephant, poodle, monkey" },
+      { label: "verb_past", hint: "juggled, flipped, balanced" },
+      { label: "food", hint: "popcorn, cotton candy, peanuts" },
+      { label: "adjective", hint: "amazing, wobbly, hilarious" },
+      { label: "noun", hint: "a thing, like ball or chair" },
+      { label: "clothing", hint: "tutu, top hat, clown nose" }
+    ],
+    story: "I woke up and there were {0} circus tents in my backyard! A {1} {2} while eating {3}. The show was {4}! I balanced a {5} on my head and wore a {6}. Mom said they have to leave by dinner."
+  },
+  {
+    title: "The Opposite Day Pet Store",
+    blanks: [
+      { label: "animal", hint: "goldfish, hamster, snake" },
+      { label: "adjective", hint: "loud, giant, invisible" },
+      { label: "verb", hint: "bark, meow, sing" },
+      { label: "food", hint: "steak, salad, gummy worms" },
+      { label: "noun", hint: "a thing, like leash or cage" },
+      { label: "sound", hint: "MOO, tweet, ROAR" }
+    ],
+    story: "On Opposite Day, the pet store was wild. The {0} was {1} and tried to {2}. It only ate {3} and refused to stay in its {4}. When we left it said {5}. We're keeping it."
+  },
+  {
+    title: "The Pillow Fort Kingdom",
+    blanks: [
+      { label: "adjective", hint: "mighty, cozy, enormous" },
+      { label: "noun", hint: "a thing, like blanket or cushion" },
+      { label: "name", hint: "a royal name" },
+      { label: "food", hint: "cookies, grapes, goldfish crackers" },
+      { label: "animal", hint: "cat, teddy bear, dragon" },
+      { label: "verb_past", hint: "defended, guarded, snuggled" }
+    ],
+    story: "We built the most {0} pillow fort ever. The walls were made of {1}. I was King {2} and we feasted on {3}. A {4} tried to attack but we {5} our kingdom! No grown-ups allowed."
+  },
+  {
+    title: "The Upside-Down House",
+    blanks: [
+      { label: "verb_past", hint: "walked, floated, slid" },
+      { label: "noun", hint: "a thing, like chair or lamp" },
+      { label: "food", hint: "cereal, soup, juice" },
+      { label: "adjective", hint: "dizzy, confused, giggly" },
+      { label: "body_part", hint: "feet, head, hands" },
+      { label: "animal", hint: "cat, fish, bird" }
+    ],
+    story: "Our house flipped upside-down! We {0} on the ceiling. The {1} hung from the floor. I tried to eat {2} but it fell up! Everyone felt {3}. We used our {4} to hang on. Even the {5} was confused."
+  },
+  {
+    title: "The Time Machine Lunchbox",
+    blanks: [
+      { label: "noun", hint: "a thing, like lunchbox or backpack" },
+      { label: "place", hint: "ancient Egypt, the future, dinosaur times" },
+      { label: "animal", hint: "T-Rex, woolly mammoth, robot dog" },
+      { label: "food", hint: "a sandwich, berries, space food" },
+      { label: "verb_past", hint: "zoomed, teleported, stumbled" },
+      { label: "adjective", hint: "amazing, scary, weird" }
+    ],
+    story: "My {0} turned into a time machine! I went to {1} and met a {2}. I shared my {3} with it. Then I {4} back home. The whole trip was {5}. I can't wait to go again tomorrow!"
+  },
+  {
+    title: "The Singing Vegetables",
+    blanks: [
+      { label: "food", hint: "a vegetable, like carrot or broccoli" },
+      { label: "verb_past", hint: "sang, rapped, yodeled" },
+      { label: "adjective", hint: "loud, beautiful, terrible" },
+      { label: "food", hint: "another vegetable" },
+      { label: "noun", hint: "a thing, like microphone or stage" },
+      { label: "number", hint: "5, 100, a million" }
+    ],
+    story: "The {0} in our fridge {1} a song! It was {2}. Then the {3} joined in. They used a {4} made of celery. They had {5} fans. I still didn't want to eat them though."
+  },
+  {
+    title: "The World's Worst Babysitter",
+    blanks: [
+      { label: "animal", hint: "gorilla, penguin, cat" },
+      { label: "verb_past", hint: "ate, threw, juggled" },
+      { label: "food", hint: "the crayons, the furniture, pizza" },
+      { label: "adjective", hint: "wild, hilarious, messy" },
+      { label: "noun", hint: "a thing, like TV remote or plant" },
+      { label: "verb", hint: "hide, clean up, cry" }
+    ],
+    story: "Mom hired a {0} to babysit us. It {1} all the {2}. The house got really {3}. It tried to use the {4} but couldn't figure it out. When Mom came home we had to {5}. She was so surprised!"
+  },
+  {
+    title: "Beach Day Disaster",
+    blanks: [
+      { label: "adjective", hint: "sunny, windy, freezing" },
+      { label: "noun", hint: "a thing, like sandcastle or bucket" },
+      { label: "animal", hint: "crab, seagull, jellyfish" },
+      { label: "verb_past", hint: "grabbed, stole, sat on" },
+      { label: "food", hint: "ice cream, hot dogs, watermelon" },
+      { label: "body_part", hint: "foot, nose, belly button" },
+      { label: "number", hint: "3, 10, 50" }
+    ],
+    story: "It was a {0} beach day. I built a huge {1} but a {2} {3} it! Then a wave washed away our {4}. Sand got in my {5}. We went home after {6} minutes. Beach days are hard."
+  },
+  {
+    title: "The New Kid at School Is a...",
+    blanks: [
+      { label: "animal", hint: "bear, alien, mermaid" },
+      { label: "adjective", hint: "friendly, shy, sparkly" },
+      { label: "verb_past", hint: "sat, flew, teleported" },
+      { label: "food", hint: "something for lunch" },
+      { label: "noun", hint: "a school thing, like desk or pencil" },
+      { label: "adjective", hint: "cool, weird, awesome" }
+    ],
+    story: "The new kid at school was actually a {0}! It was really {1} and {2} right next to me. At lunch it ate {3} with a {4}. Everyone thought it was pretty {5}. I hope it comes back tomorrow."
+  },
+  {
+    title: "The Fastest Race Ever",
+    blanks: [
+      { label: "animal", hint: "turtle, cheetah, snail" },
+      { label: "noun", hint: "a vehicle, like scooter or wagon" },
+      { label: "verb_past", hint: "zoomed, crawled, bounced" },
+      { label: "adjective", hint: "fast, wobbly, backwards" },
+      { label: "food", hint: "something for a prize" },
+      { label: "number", hint: "1, 10, 100" }
+    ],
+    story: "I raced a {0} on my {1}. It {2} so {3} that I couldn't keep up! The winner got {4}. I came in {5}th place. Next time I'm bringing rocket boots."
+  },
+  {
+    title: "The Day It Rained...",
+    blanks: [
+      { label: "food", hint: "gummy bears, meatballs, pickles" },
+      { label: "adjective", hint: "sticky, bouncy, delicious" },
+      { label: "verb_past", hint: "caught, dodged, ate" },
+      { label: "noun", hint: "a thing, like umbrella or bucket" },
+      { label: "number", hint: "5, 100, a billion" },
+      { label: "animal", hint: "dog, duck, squirrel" }
+    ],
+    story: "Instead of rain, {0} fell from the sky! They were {1}. Everyone {2} them with a {3}. We collected {4} of them. Even the {5} next door was excited. Best weather day ever!"
+  },
+  {
+    title: "The Haunted Playground",
+    blanks: [
+      { label: "adjective", hint: "spooky, giggly, friendly" },
+      { label: "noun", hint: "a playground thing, like swing or slide" },
+      { label: "verb_past", hint: "squeaked, glowed, giggled" },
+      { label: "color", hint: "ghostly white, neon green, purple" },
+      { label: "sound", hint: "BOO, hehe, whooo" },
+      { label: "food", hint: "candy, cookies, gummy worms" }
+    ],
+    story: "The playground was {0} at night. The {1} {2} all by itself. Everything turned {3}. We heard a voice say {4}! But it was just a friendly ghost who wanted to share {5}. Not scary at all!"
+  },
+  {
+    title: "My Brother/Sister Is Actually a...",
+    blanks: [
+      { label: "animal", hint: "monkey, alien, robot" },
+      { label: "adjective", hint: "sneaky, loud, smelly" },
+      { label: "verb", hint: "eat, steal, build" },
+      { label: "food", hint: "something you eat" },
+      { label: "noun", hint: "a thing, like toy or blanket" },
+      { label: "sound", hint: "a sound they make" }
+    ],
+    story: "I'm pretty sure my sibling is secretly a {0}. They are always {1} and they love to {2} all the {3}. They hoard {4} in their room. And at night they make a weird {5} sound. I have proof!"
+  },
+  {
+    title: "The School Play Goes Wrong",
+    blanks: [
+      { label: "adjective", hint: "silly, dramatic, fancy" },
+      { label: "animal", hint: "a character, like lion or mouse" },
+      { label: "clothing", hint: "costume, like crown or cape" },
+      { label: "verb_past", hint: "tripped, forgot, sneezed" },
+      { label: "noun", hint: "a prop, like sword or flower" },
+      { label: "sound", hint: "CRASH, oops, ta-da" },
+      { label: "adjective", hint: "hilarious, embarrassing, amazing" }
+    ],
+    story: "Our school play was supposed to be {0}. I played a {1} wearing a {2}. But I {3} and dropped the {4}. There was a huge {5}! The audience thought it was {6}. Standing ovation!"
+  },
+  {
+    title: "The World's Biggest Sandwich",
+    blanks: [
+      { label: "food", hint: "peanut butter, pickles, cheese" },
+      { label: "food", hint: "another ingredient" },
+      { label: "number", hint: "5, 100, 1000" },
+      { label: "adjective", hint: "enormous, wobbly, delicious" },
+      { label: "noun", hint: "a thing, like ladder or crane" },
+      { label: "verb_past", hint: "toppled, exploded, squished" }
+    ],
+    story: "We made the world's biggest sandwich! It had {0} and {1} and was {2} layers tall. It was so {3} we needed a {4} to reach the top. Then it {5} and everyone got covered. Worth it."
+  },
+  {
+    title: "The Bedtime Escape",
+    blanks: [
+      { label: "verb_past", hint: "tiptoed, crawled, rolled" },
+      { label: "noun", hint: "a thing, like flashlight or teddy bear" },
+      { label: "adjective", hint: "dark, quiet, creaky" },
+      { label: "food", hint: "a midnight snack" },
+      { label: "animal", hint: "cat, owl, hamster" },
+      { label: "sound", hint: "CREAK, whisper, thud" }
+    ],
+    story: "After bedtime, I {0} out of bed with my {1}. The hallway was {2}. I snuck to the kitchen for some {3}. A {4} was already there! We both froze. Then we heard {5} and ran back to bed!"
+  },
+  {
+    title: "The Wish Machine",
+    blanks: [
+      { label: "noun", hint: "a thing, like button or lever" },
+      { label: "adjective", hint: "shiny, magical, sparkly" },
+      { label: "food", hint: "your favorite food" },
+      { label: "animal", hint: "your dream pet" },
+      { label: "place", hint: "your dream place" },
+      { label: "number", hint: "3, 10, infinite" }
+    ],
+    story: "I found a wish machine! You press the {0} and it glows {1}. I wished for unlimited {2}, a pet {3}, and a trip to {4}. But it only grants {5} wishes so I had to choose. Hardest decision ever!"
+  },
+  {
+    title: "The Toy That Came Alive",
+    blanks: [
+      { label: "noun", hint: "a toy, like teddy bear or action figure" },
+      { label: "verb_past", hint: "talked, walked, danced" },
+      { label: "food", hint: "something they wanted to eat" },
+      { label: "adjective", hint: "bossy, funny, shy" },
+      { label: "place", hint: "somewhere they wanted to go" },
+      { label: "verb", hint: "play, explore, cause trouble" }
+    ],
+    story: "My {0} came alive at midnight! It {1} and asked for {2}. It was really {3} and wanted to go to {4}. We stayed up all night trying to {5}. By morning it was a toy again. Or WAS it?"
+  },
+  {
+    title: "The Substitute Teacher",
+    blanks: [
+      { label: "animal", hint: "bear, parrot, octopus" },
+      { label: "adjective", hint: "strict, goofy, confused" },
+      { label: "verb_past", hint: "gave, threw, juggled" },
+      { label: "food", hint: "something instead of homework" },
+      { label: "noun", hint: "a school subject, like math or art" },
+      { label: "adjective", hint: "the best, the weirdest, the funniest" }
+    ],
+    story: "Our substitute teacher was a {0}! It was really {1}. Instead of a test, it {2} us {3}. For {4} class we just played outside. It was {5} school day of the whole year!"
+  },
+  {
+    title: "The Birthday Cake Catastrophe",
+    blanks: [
+      { label: "number", hint: "an age, like 5 or 7" },
+      { label: "food", hint: "a cake flavor" },
+      { label: "adjective", hint: "lopsided, exploding, melting" },
+      { label: "verb_past", hint: "collapsed, flew, oozed" },
+      { label: "color", hint: "a frosting color" },
+      { label: "noun", hint: "a thing on top, like candle or toy" },
+      { label: "adjective", hint: "delicious, terrible, legendary" }
+    ],
+    story: "For my {0}th birthday, Mom made a {1} cake. It was a little {2} and it {3} when we tried to cut it. {4} frosting got everywhere. The {5} on top went flying. It was {6} but we ate it anyway!"
+  },
+  {
+    title: "The Secret Clubhouse",
+    blanks: [
+      { label: "adjective", hint: "secret, magical, invisible" },
+      { label: "noun", hint: "where it's hidden, like tree or closet" },
+      { label: "food", hint: "club snack" },
+      { label: "name", hint: "club name" },
+      { label: "noun", hint: "a password thing, like knock or dance" },
+      { label: "number", hint: "how many members" }
+    ],
+    story: "We built a {0} clubhouse inside a {1}. The official snack is {2}. We call ourselves The {3} Club. To get in you need a secret {4}. There are only {5} members. No parents allowed, obviously."
+  },
+  {
+    title: "The Magical Shoes",
+    blanks: [
+      { label: "color", hint: "gold, rainbow, glowing" },
+      { label: "verb", hint: "fly, dance, run super fast" },
+      { label: "place", hint: "the moon, a castle, the ocean" },
+      { label: "adjective", hint: "amazing, tingly, wobbly" },
+      { label: "animal", hint: "an animal you met" },
+      { label: "noun", hint: "what you brought back" }
+    ],
+    story: "I put on the {0} shoes and could suddenly {1}! They took me to {2}. My feet felt {3}. I met a {4} who gave me a magical {5} to take home. I wear those shoes every day now."
+  },
+  {
+    title: "The Family Road Trip",
+    blanks: [
+      { label: "place", hint: "a silly destination" },
+      { label: "food", hint: "a car snack" },
+      { label: "number", hint: "how many hours" },
+      { label: "verb_past", hint: "sang, argued, napped" },
+      { label: "animal", hint: "an animal you saw" },
+      { label: "adjective", hint: "boring, hilarious, endless" },
+      { label: "noun", hint: "a thing you forgot" }
+    ],
+    story: "We drove to {0}. We ate {1} the whole time. It took {2} hours and we {3} the entire way. We saw a {4} on the road. The trip was {5}. Dad forgot the {6} and had to go back."
+  },
+  {
+    title: "The Tooth Fairy Mix-Up",
+    blanks: [
+      { label: "noun", hint: "what the fairy left, like sock or rock" },
+      { label: "adjective", hint: "confused, sleepy, sparkly" },
+      { label: "food", hint: "what was under the pillow instead" },
+      { label: "number", hint: "how much money" },
+      { label: "animal", hint: "what you saw flying away" },
+      { label: "sound", hint: "a sound in the night" }
+    ],
+    story: "I put my tooth under my pillow but the tooth fairy left a {0}! She must have been {1}. There was also a {2} there. I was supposed to get {3} dollars! I looked up and saw a {4} flying away going {5}."
+  },
+  {
+    title: "The Camping Trip",
+    blanks: [
+      { label: "adjective", hint: "dark, spooky, exciting" },
+      { label: "animal", hint: "bear, raccoon, owl" },
+      { label: "food", hint: "s'mores, hot dogs, trail mix" },
+      { label: "verb_past", hint: "howled, rustled, glowed" },
+      { label: "noun", hint: "a thing, like tent or sleeping bag" },
+      { label: "sound", hint: "HOOT, crack, splash" }
+    ],
+    story: "We went camping and it was {0}. A {1} came to our campsite looking for {2}. Something {3} in the bushes. We hid in the {4} and heard a loud {5}. We went home early. Nature is intense."
+  }
+];
+
       function runtime() {
         return window.phaseRuntime;
       }
 
-      function ensurePhase4Styles() {
-        if (document.getElementById('phase4Styles')) {
-          return;
-        }
-        const style = document.createElement('style');
-        style.id = 'phase4Styles';
-        style.textContent = '.score-row{display:grid;gap:8px;margin-top:10px}.score-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.score-name{font-weight:700}.score-pay{color:var(--muted);font-size:.9rem}.progress{height:12px;border-radius:999px;background:#e7eef8;overflow:hidden}.progress>span{display:block;height:100%;border-radius:999px;transition:width 0.6s ease-out}.progress.alex>span{background:linear-gradient(90deg,var(--alex),#7cb9f0)}.progress.louisa>span{background:linear-gradient(90deg,var(--louisa),#b08ae6)}.score-next{font-size:.82rem;color:var(--muted)}.score-actions{display:grid;gap:10px}.score-action{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:transform 0.15s ease}.score-action>span{flex:1;min-width:0;width:100%}.score-action:active{transform:scale(0.98)}.score-action button{flex:1;min-height:40px;padding:0 12px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--alex),#3a7bc8);color:#fff;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.2s ease;box-shadow:0 2px 8px rgba(74,144,217,0.25)}.score-action button:active{transform:scale(0.95)}.score-section-title{font-size:.95rem;font-weight:700;margin:0 0 8px}.score-empty{color:var(--muted)}';
+      var state = {
+        composeOpen: false,
+        draftText: '',
+        draftColor: 'neutral',
+        funLoadedFor: null,
+        jokeIndex: 0,
+        jokeRevealed: false,
+        madLibIndex: 0,
+        madLibProgress: null
+      };
+
+      function ensureKidFunStyles() {
+        if (document.getElementById('kidFunStyles')) return;
+        var style = document.createElement('style');
+        style.id = 'kidFunStyles';
+        style.textContent = '.fun-section{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fun-card{padding:16px;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f9fbff);border:1px solid var(--line);box-shadow:0 10px 24px rgba(15,23,42,0.06);display:grid;gap:12px;align-content:start}.fun-card h3,.fun-card p,.fun-card h4{margin:0}.fun-card p{color:var(--muted)}.fun-joke-setup{font-size:1.08rem;font-weight:700;line-height:1.45}.joke-punchline{font-weight:700;color:var(--alex);animation:jokeBounce .3s ease-out}.fun-actions{display:flex;gap:10px;flex-wrap:wrap}.fun-btn{min-height:42px;padding:0 14px;border:0;border-radius:12px;background:var(--alex);color:#fff;font:inherit;font-weight:700;cursor:pointer}.fun-btn.secondary{background:var(--panel-alt);color:var(--text)}.fun-meta{font-size:.84rem;color:var(--muted)}.fun-input{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:var(--text)}.fun-story{line-height:1.65;font-size:1rem}.madlib-highlight{font-weight:700;padding:1px 4px;border-radius:4px}.madlib-highlight.alex{background:rgba(74,144,217,.15);color:var(--alex)}.madlib-highlight.louisa{background:rgba(138,91,209,.15);color:var(--louisa)}.fun-progress{font-size:.88rem;color:var(--muted)}@keyframes jokeBounce{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}@media (max-width: 560px){.fun-section{grid-template-columns:1fr}}';
         document.head.appendChild(style);
       }
 
-      function previousWeek(date, phase) {
-        const prior = new Date(date);
-        prior.setDate(prior.getDate() - 7);
-        return phase.toIsoWeek(prior);
+      function escapeBulletinHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
       }
 
-      function formatWeekRange(date) {
-        const base = new Date(date);
-        const day = base.getDay();
-        const diffToMonday = (day + 6) % 7;
-        const monday = new Date(base);
-        monday.setDate(base.getDate() - diffToMonday);
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        const fmt = (value) => value.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        return fmt(monday) + ' - ' + fmt(sunday);
+      function normalizeNoteText(value) {
+        return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
       }
 
-      function thresholdInfo(phase, kidId, points) {
-        const kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || {};
-        const tiers = (kid.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
-        const topTier = tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
-        const nextTier = tiers.find((tier) => points < tier.minPts);
+      function bulletinNotesRef(phase) {
+        if (!phase || !phase.database || !phase.familyId) return null;
+        return phase.database.ref('families/' + phase.familyId + '/bulletin/notes');
+      }
+
+      function funStorageKey(name) {
+        var phase = runtime();
+        var familyPart = phase && phase.familyId ? phase.familyId : 'global';
+        return 'familyChores.fun.' + familyPart + '.' + name;
+      }
+
+      function readFunState(name, fallback) {
+        try {
+          var raw = localStorage.getItem(funStorageKey(name));
+          if (!raw) return fallback;
+          var parsed = JSON.parse(raw);
+          return parsed == null ? fallback : parsed;
+        } catch (error) {
+          return fallback;
+        }
+      }
+
+      function writeFunState(name, value) {
+        try {
+          localStorage.setItem(funStorageKey(name), JSON.stringify(value));
+        } catch (error) {
+          console.error('Kid Fun storage write failed:', error);
+        }
+      }
+
+      function validateMadLibProgress(progress) {
+        if (!progress || typeof progress !== 'object') return null;
+        var templateIndex = Number(progress.templateIndex);
+        if (!Number.isInteger(templateIndex) || templateIndex < 0 || templateIndex >= KID_MADLIBS.length) return null;
+        var template = KID_MADLIBS[templateIndex];
+        var answers = Array.isArray(progress.answers) ? progress.answers.slice(0, template.blanks.length) : [];
+        while (answers.length < template.blanks.length) answers.push('');
+        var currentBlank = Number(progress.currentBlank);
+        if (!Number.isInteger(currentBlank) || currentBlank < 0) currentBlank = 0;
+        if (currentBlank > template.blanks.length) currentBlank = template.blanks.length;
+        return {
+          templateIndex: templateIndex,
+          currentBlank: currentBlank,
+          answers: answers,
+          started: Boolean(progress.started),
+          completed: Boolean(progress.completed)
+        };
+      }
+
+      function loadFunState() {
+        var phase = runtime();
+        var familyId = phase && phase.familyId ? phase.familyId : 'global';
+        if (state.funLoadedFor === familyId) return;
+        state.funLoadedFor = familyId;
+        state.jokeIndex = Number(readFunState('jokeIndex', 0)) || 0;
+        if (state.jokeIndex < 0) state.jokeIndex = 0;
+        state.jokeIndex = state.jokeIndex % KID_JOKES.length;
+        state.jokeRevealed = Boolean(readFunState('jokeRevealed', false));
+        state.madLibIndex = Number(readFunState('madLibIndex', 0)) || 0;
+        if (state.madLibIndex < 0) state.madLibIndex = 0;
+        state.madLibIndex = state.madLibIndex % KID_MADLIBS.length;
+        var savedProgress = validateMadLibProgress(readFunState('madLibProgress', null));
+        if (savedProgress && savedProgress.templateIndex === state.madLibIndex) {
+          state.madLibProgress = savedProgress;
+        } else {
+          state.madLibProgress = null;
+        }
+      }
+
+      function saveJokeState() {
+        writeFunState('jokeIndex', state.jokeIndex);
+        writeFunState('jokeRevealed', state.jokeRevealed);
+      }
+
+      function saveMadLibState() {
+        writeFunState('madLibIndex', state.madLibIndex);
+        writeFunState('madLibProgress', state.madLibProgress);
+      }
+
+      function getCurrentJoke() {
+        return KID_JOKES[state.jokeIndex % KID_JOKES.length] || { setup: 'No joke loaded.', punchline: 'Try again.' };
+      }
+
+      function getCurrentMadLibTemplate() {
+        return KID_MADLIBS[state.madLibIndex % KID_MADLIBS.length] || { title: 'Mad Lib', blanks: [], story: '' };
+      }
+
+      function ensureMadLibProgress() {
+        var template = getCurrentMadLibTemplate();
+        if (!state.madLibProgress || state.madLibProgress.templateIndex !== state.madLibIndex) {
+          state.madLibProgress = {
+            templateIndex: state.madLibIndex,
+            currentBlank: 0,
+            answers: template.blanks.map(function () { return ''; }),
+            started: false,
+            completed: false
+          };
+        }
+        return state.madLibProgress;
+      }
+
+      function startMadLib() {
+        var template = getCurrentMadLibTemplate();
+        state.madLibProgress = {
+          templateIndex: state.madLibIndex,
+          currentBlank: 0,
+          answers: template.blanks.map(function () { return ''; }),
+          started: true,
+          completed: false
+        };
+        saveMadLibState();
+      }
+
+      function restartMadLib() {
+        startMadLib();
+      }
+
+      function nextMadLibTemplate() {
+        state.madLibIndex = (state.madLibIndex + 1) % KID_MADLIBS.length;
+        state.madLibProgress = null;
+        saveMadLibState();
+      }
+
+      function updateMadLibAnswer(value) {
+        var progress = ensureMadLibProgress();
+        progress.started = true;
+        progress.answers[progress.currentBlank] = String(value || '');
+        saveMadLibState();
+      }
+
+      function advanceMadLib() {
+        var progress = ensureMadLibProgress();
+        var answer = String(progress.answers[progress.currentBlank] || '').trim();
+        if (!answer) return false;
+        progress.answers[progress.currentBlank] = answer;
+        if (progress.currentBlank >= progress.answers.length - 1) {
+          progress.currentBlank = progress.answers.length;
+          progress.completed = true;
+        } else {
+          progress.currentBlank += 1;
+        }
+        progress.started = true;
+        saveMadLibState();
+        return true;
+      }
+
+      function explainBlank(blank) {
+        var map = {
+          noun: 'A noun (a person, place, or thing)',
+          adjective: 'An adjective (a describing word)',
+          verb: 'A verb (an action word)',
+          verb_past: 'A past-tense verb (something already done)',
+          animal: 'An animal',
+          color: 'A color',
+          number: 'A number',
+          food: 'A food',
+          name: 'A name',
+          place: 'A place',
+          body_part: 'A body part',
+          sound: 'A sound',
+          clothing: 'A clothing item'
+        };
+        return map[blank.label] || blank.label;
+      }
+
+      function renderMadLibStory(template, answers) {
+        return template.story.replace(/\{(\d+)\}/g, function (_, indexText) {
+          var index = Number(indexText);
+          var value = escapeBulletinHtml(answers[index] || '');
+          var accent = index % 2 === 0 ? 'alex' : 'louisa';
+          return '<span class="madlib-highlight ' + accent + '">' + value + '</span>';
+        });
+      }
+
+      async function getNotes() {
+        var phase = runtime();
+        var ref = bulletinNotesRef(phase);
+        if (!ref) return [];
+        var snapshot = await ref.get();
+        if (!snapshot.exists()) return [];
+        return Object.entries(snapshot.val()).map(function (entry) {
+          var value = entry[1] || {};
+          return {
+            id: entry[0],
+            text: String(value.text || '').trim(),
+            timestamp: Number(value.timestamp || 0),
+            color: value.color || 'neutral'
+          };
+        }).filter(function (note) {
+          return Boolean(note.text);
+        }).sort(function (a, b) {
+          return b.timestamp - a.timestamp;
+        });
+      }
+
+      function formatTimestamp(timestamp) {
+        if (!timestamp) return 'Just now';
+        return new Date(timestamp).toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      }
+
+      async function addNote(text, color) {
+        var phase = runtime();
+        var ref = bulletinNotesRef(phase);
+        if (!ref) throw new Error('Bulletin is not ready.');
+        var note = {
+          text: String(text || '').trim(),
+          timestamp: Date.now(),
+          color: color || 'neutral'
+        };
+        if (!note.text) throw new Error('Note text is required.');
+        if (note.text.length > 240) {
+          note.text = note.text.slice(0, 240).trim();
+        }
+        var pushed = ref.push();
+        await pushed.set(note);
+        state.composeOpen = false;
+        state.draftText = '';
+        await renderBulletin();
+        return { id: pushed.key, text: note.text, color: note.color, timestamp: note.timestamp };
+      }
+
+      async function removeNoteById(noteId) {
+        var phase = runtime();
+        var ref = bulletinNotesRef(phase);
+        if (!ref || !noteId) return null;
+        var noteList = await getNotes();
+        var match = noteList.find(function (note) { return note.id === noteId; }) || null;
+        await ref.child(noteId).remove();
+        await renderBulletin();
+        return match;
+      }
+
+      async function removeNoteByText(text) {
+        var target = normalizeNoteText(text);
+        if (!target) return null;
+        var noteList = await getNotes();
+        var match = noteList.find(function (note) {
+          var normalized = normalizeNoteText(note.text);
+          return normalized === target || normalized.indexOf(target) !== -1 || target.indexOf(normalized) !== -1;
+        });
+        if (!match) return null;
+        await removeNoteById(match.id);
+        return match;
+      }
+
+      function renderJokeCard() {
+        var joke = getCurrentJoke();
+        return '<article class="fun-card">' +
+          '<div><h3>Kid Fun</h3><p class="fun-meta">Joke ' + (state.jokeIndex + 1) + ' of ' + KID_JOKES.length + '</p></div>' +
+          '<div class="fun-joke-setup">' + escapeBulletinHtml(joke.setup) + '</div>' +
+          (state.jokeRevealed ? '<div class="joke-punchline">' + escapeBulletinHtml(joke.punchline) + '</div>' : '<button type="button" class="fun-btn secondary" id="funRevealJokeBtn">Tap to reveal!</button>') +
+          '<div class="fun-actions"><button type="button" class="fun-btn" id="funNextJokeBtn">Next Joke</button></div>' +
+        '</article>';
+      }
+
+      function renderMadLibCard() {
+        var template = getCurrentMadLibTemplate();
+        var progress = ensureMadLibProgress();
+        if (!progress.started) {
+          return '<article class="fun-card">' +
+            '<div><h3>Mad Libs</h3><p class="fun-meta">Story ' + (state.madLibIndex + 1) + ' of ' + KID_MADLIBS.length + '</p></div>' +
+            '<div><h4>' + escapeBulletinHtml(template.title) + '</h4><p>Fill in the blanks one at a time, then read the silly story together.</p></div>' +
+            '<div class="fun-actions"><button type="button" class="fun-btn" id="funMadLibStartBtn">Start</button><button type="button" class="fun-btn secondary" id="funMadLibCycleBtn">New Mad Lib</button></div>' +
+          '</article>';
+        }
+        if (progress.completed) {
+          return '<article class="fun-card">' +
+            '<div><h3>Mad Libs</h3><p class="fun-meta">Finished story</p></div>' +
+            '<div><h4>' + escapeBulletinHtml(template.title) + '</h4><div class="fun-story">' + renderMadLibStory(template, progress.answers) + '</div></div>' +
+            '<div class="fun-actions"><button type="button" class="fun-btn" id="funMadLibCycleBtn">New Mad Lib</button><button type="button" class="fun-btn secondary" id="funMadLibRestartBtn">Play Again</button></div>' +
+          '</article>';
+        }
+        var blank = template.blanks[progress.currentBlank] || { label: 'word', hint: 'anything silly' };
+        var buttonLabel = progress.currentBlank >= template.blanks.length - 1 ? 'Finish Story' : 'Next';
+        return '<article class="fun-card">' +
+          '<div><h3>Mad Libs</h3><p class="fun-meta">' + escapeBulletinHtml(template.title) + '</p></div>' +
+          '<div class="fun-progress">Blank ' + (progress.currentBlank + 1) + ' of ' + template.blanks.length + '</div>' +
+          '<div><h4>' + escapeBulletinHtml(explainBlank(blank)) + '</h4><p>' + escapeBulletinHtml(blank.hint || 'Pick a fun word') + '</p></div>' +
+          '<input type="text" id="funMadLibAnswer" class="fun-input" autocomplete="off" value="' + escapeBulletinHtml(progress.answers[progress.currentBlank] || '') + '" placeholder="Type a word or short phrase">' +
+          '<div class="fun-actions"><button type="button" class="fun-btn" id="funMadLibNextBtn">' + buttonLabel + '</button><button type="button" class="fun-btn secondary" id="funMadLibCycleBtn">New Mad Lib</button></div>' +
+        '</article>';
+      }
+
+      async function renderBulletin() {
+        var phase = runtime();
+        var container = document.getElementById('bulletinContent');
+        if (!container) return;
+        ensureKidFunStyles();
+        if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
+          container.innerHTML = '<div class="bulletin-shell"><section class="panel bulletin-hero"><h2>Bulletin</h2><p>Connect to a family to load notes and the shared home view.</p></section></div>';
+          return;
+        }
+
+        loadFunState();
+        var notes = await getNotes();
+        var visibleNotes = notes.slice(0, 10);
+        var extraCount = Math.max(0, notes.length - visibleNotes.length);
+        var notesMarkup = visibleNotes.length ? '<div class="bulletin-notes-grid">' + visibleNotes.map(function (note) {
+          return '<article class="bulletin-note-card ' + escapeBulletinHtml(note.color || 'neutral') + '">' +
+            '<div class="bulletin-note-top">' +
+            '<div class="bulletin-note-meta">Pinned ' + escapeBulletinHtml(formatTimestamp(note.timestamp)) + '</div>' +
+            '<button type="button" class="bulletin-note-delete" data-note-delete="' + escapeBulletinHtml(note.id) + '" aria-label="Delete note">X</button>' +
+            '</div>' +
+            '<div class="bulletin-note-text">' + escapeBulletinHtml(note.text) + '</div>' +
+            '</article>';
+        }).join('') + '</div>' : '<div class="bulletin-empty"><h3>No notes yet</h3><p>Pin reminders, school updates, or anything the whole family should see.</p></div>';
+
+        var composeMarkup = state.composeOpen ?
+          '<section class="panel"><div class="bulletin-section-head"><div><h3>New note</h3><p>Use neutral for family-wide reminders or pick a kid color.</p></div></div><form id="bulletinNoteForm" class="bulletin-note-form"><textarea id="bulletinNoteInput" placeholder="Picture day Tuesday. Return library books. Alex needs cleats." maxlength="240">' + escapeBulletinHtml(state.draftText) + '</textarea><select id="bulletinNoteColor"><option value="neutral"' + (state.draftColor === 'neutral' ? ' selected' : '') + '>Family</option><option value="alex"' + (state.draftColor === 'alex' ? ' selected' : '') + '>Alex</option><option value="louisa"' + (state.draftColor === 'louisa' ? ' selected' : '') + '>Louisa</option></select><div class="bulletin-form-actions"><button type="submit" class="bulletin-btn">Pin note</button><button type="button" class="bulletin-btn secondary" id="bulletinCancelNoteBtn">Cancel</button></div></form></section>' : '';
+
+        container.innerHTML =
+          '<div class="bulletin-shell">' +
+            '<section class="panel bulletin-hero">' +
+              '<div class="bulletin-section-head"><div><h2>Bulletin</h2><p>The family landing page for notes now, calendar next.</p></div><button type="button" class="bulletin-btn" id="bulletinNewNoteBtn">New note</button></div>' +
+              '<p>Use the global input for commands like <strong>note picture day Tuesday</strong> or pin notes directly here.</p>' +
+            '</section>' +
+            composeMarkup +
+            '<section class="panel">' +
+              '<div class="bulletin-section-head"><div><h3>Sticky Notes</h3><p>' + notes.length + ' total note' + (notes.length === 1 ? '' : 's') + (extraCount ? ' · showing newest 10' : '') + '</p></div></div>' +
+              notesMarkup +
+            '</section>' +
+            '<section class="panel">' +
+              '<div class="bulletin-section-head"><div><h3>Kid Fun</h3><p>Jokes and Mad Libs the kids can come back to.</p></div></div>' +
+              '<div class="fun-section">' + renderJokeCard() + renderMadLibCard() + '</div>' +
+            '</section>' +
+            '<section class="panel bulletin-calendar">' +
+              '<div class="bulletin-section-head"><div><h3>Calendar</h3><p>Google Calendar integration is still queued for Phase 7.</p></div></div>' +
+              '<p>Once that lands, upcoming kid-filtered events will render here.</p>' +
+            '</section>' +
+          '</div>';
+
+        var noteInput = document.getElementById('bulletinNoteInput');
+        if (noteInput && state.composeOpen) {
+          noteInput.focus();
+          noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
+          return;
+        }
+        var madLibInput = document.getElementById('funMadLibAnswer');
+        if (madLibInput) {
+          madLibInput.focus();
+          madLibInput.setSelectionRange(madLibInput.value.length, madLibInput.value.length);
+        }
+      }
+
+      document.addEventListener('click', function (event) {
+        var newBtn = event.target.closest('#bulletinNewNoteBtn');
+        if (newBtn) {
+          state.composeOpen = true;
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var cancelBtn = event.target.closest('#bulletinCancelNoteBtn');
+        if (cancelBtn) {
+          state.composeOpen = false;
+          state.draftText = '';
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var deleteBtn = event.target.closest('[data-note-delete]');
+        if (deleteBtn) {
+          removeNoteById(deleteBtn.dataset.noteDelete).then(function (removed) {
+            var phase = runtime();
+            if (phase && phase.showToast && removed) {
+              phase.showToast('Removed note: ' + removed.text);
+            }
+          }).catch(function (error) {
+            console.error(error);
+            var phase = runtime();
+            if (phase && phase.showToast) {
+              phase.showToast('Could not remove that note.', { type: 'error' });
+            }
+          });
+          return;
+        }
+
+        if (event.target.closest('#funRevealJokeBtn')) {
+          state.jokeRevealed = true;
+          saveJokeState();
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funNextJokeBtn')) {
+          state.jokeIndex = (state.jokeIndex + 1) % KID_JOKES.length;
+          state.jokeRevealed = false;
+          saveJokeState();
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funMadLibStartBtn')) {
+          startMadLib();
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funMadLibNextBtn')) {
+          if (!advanceMadLib()) {
+            var phase = runtime();
+            if (phase && phase.showToast) {
+              phase.showToast('Add a word before moving on.', { type: 'error' });
+            }
+            return;
+          }
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funMadLibCycleBtn')) {
+          nextMadLibTemplate();
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funMadLibRestartBtn')) {
+          restartMadLib();
+          renderBulletin().catch(function (error) { console.error(error); });
+        }
+      });
+
+      document.addEventListener('submit', function (event) {
+        if (event.target.id !== 'bulletinNoteForm') return;
+        event.preventDefault();
+        var textInput = document.getElementById('bulletinNoteInput');
+        var colorInput = document.getElementById('bulletinNoteColor');
+        var text = textInput ? textInput.value.trim() : '';
+        var color = colorInput ? colorInput.value : 'neutral';
+        state.draftText = text;
+        state.draftColor = color;
+        addNote(text, color).then(function (note) {
+          var phase = runtime();
+          if (phase && phase.showToast) {
+            phase.showToast('Pinned note: ' + note.text, { kid: note.color !== 'neutral' ? note.color : null });
+          }
+        }).catch(function (error) {
+          console.error(error);
+          var phase = runtime();
+          if (phase && phase.showToast) {
+            phase.showToast(error.message || 'Could not add that note.', { type: 'error' });
+          }
+        });
+      });
+
+      document.addEventListener('change', function (event) {
+        if (event.target.id === 'bulletinNoteColor') {
+          state.draftColor = event.target.value || 'neutral';
+          return;
+        }
+        if (event.target.id === 'funMadLibAnswer') {
+          updateMadLibAnswer(event.target.value || '');
+        }
+      });
+
+      document.addEventListener('input', function (event) {
+        if (event.target.id === 'bulletinNoteInput') {
+          state.draftText = event.target.value || '';
+          return;
+        }
+        if (event.target.id === 'funMadLibAnswer') {
+          updateMadLibAnswer(event.target.value || '');
+        }
+      });
+
+      window.renderBulletin = renderBulletin;
+      window.familyBulletin = {
+        addNote: addNote,
+        removeNoteById: removeNoteById,
+        removeNoteByText: removeNoteByText,
+        getNotes: getNotes,
+        renderBulletin: renderBulletin
+      };
+
+      var bulletinWarmup = setInterval(function () {
+        var phase = runtime();
+        if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
+          return;
+        }
+        clearInterval(bulletinWarmup);
+        renderBulletin().catch(function (error) { console.error(error); });
+      }, 400);
+    })();
+  </script>
+  <script>
+    (function () {
+      var phase4State = {
+        choresSettingsOpen: false
+      };
+
+      function runtime() {
+        return window.phaseRuntime;
+      }
+
+      function isChoresViewActive() {
+        return location.hash.replace('#', '') === 'chores';
+      }
+
+      function selectedChoreKids() {
+        var active = document.querySelector('#quickPoints [data-qp-kid].active');
+        var kid = active ? active.dataset.qpKid : 'alex';
+        return kid === 'both' ? ['alex', 'louisa'] : [kid];
+      }
+
+      function thresholdInfoLocal(phase, kidId, points) {
+        var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || {};
+        var tiers = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
+        var topTier = tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
+        var nextTier = tiers.find(function (tier) { return points < tier.minPts; });
         if (nextTier) {
           return {
             mode: 'tier',
@@ -2334,11 +4268,11 @@
             width: Math.min(100, Math.round((points / Math.max(nextTier.minPts, 1)) * 100))
           };
         }
-        const weeklyBonus = kid.weeklyBonus || {};
-        const extraPts = Math.max(1, Number(weeklyBonus.extraPts || 10));
-        const bonusPoints = Math.max(0, points - Number(topTier.minPts || 0));
-        const completedBonusSteps = Math.floor(bonusPoints / extraPts);
-        const targetBonusPoints = (completedBonusSteps + 1) * extraPts;
+        var weeklyBonus = kid.weeklyBonus || {};
+        var extraPts = Math.max(1, Number(weeklyBonus.extraPts || 10));
+        var bonusPoints = Math.max(0, points - Number(topTier.minPts || 0));
+        var completedBonusSteps = Math.floor(bonusPoints / extraPts);
+        var targetBonusPoints = (completedBonusSteps + 1) * extraPts;
         return {
           mode: 'bonus',
           next: { minPts: Number(topTier.minPts || 0) + targetBonusPoints, pay: topTier.pay || 0 },
@@ -2348,928 +4282,187 @@
         };
       }
 
-      function paymentBalanceDelta(payment) {
-        if (payment && typeof payment.balanceDelta === 'number') {
-          return Number(payment.balanceDelta || 0);
-        }
-        const amount = Number((payment && payment.amount) || 0);
-        if (!payment) return 0;
-        if (payment.type === 'credit' || payment.type === 'weekly') return amount;
-        return -amount;
-      }
-
-      async function getDebts(phase) {
-        const snapshot = await phase.database.ref('families/' + phase.familyId + '/debts').get();
-        return snapshot.exists() ? Object.entries(snapshot.val()).map(([id, value]) => ({ id, ...value })) : [];
-      }
-
-      async function maybeRunWeeklyPay() {
-        const phase = runtime();
-        if (!phase || !phase.familyId || !phase.configLoaded) {
-          return;
-        }
-        const now = new Date();
-        const currentWeek = phase.toIsoWeek(now);
-        const previous = previousWeek(now, phase);
-        const metaRef = phase.database.ref('families/' + phase.familyId + '/meta/lastWeeklyPayWeek');
-        const metaSnap = await metaRef.get();
-        const lastWeek = metaSnap.exists() ? metaSnap.val() : null;
-        if (lastWeek === currentWeek) {
-          return;
-        }
-        const paymentsSnap = await phase.database.ref('families/' + phase.familyId + '/payments').orderByChild('type').equalTo('weekly').get();
-        const existingPayments = paymentsSnap.exists() ? Object.values(paymentsSnap.val()) : [];
-        const entries = await phase.getAllLogEntries();
-        for (const kidId of Object.keys(phase.currentConfig.kids || KIDS)) {
-          const alreadyPaid = existingPayments.some((payment) => payment.kid === kidId && payment.note === ('Auto weekly pay for ' + previous));
-          if (alreadyPaid) {
-            continue;
-          }
-          const weeklyPoints = entries.filter((entry) => entry.kid === kidId && entry.week === previous).reduce((sum, entry) => sum + Number(entry.points || 0), 0);
-          const amount = phase.calculateWeeklyPay(phase.currentConfig.kids[kidId].payTiers, weeklyPoints);
-          if (amount > 0) {
-            const paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: 'Auto weekly pay for ' + previous };
-            const ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
-            await ref.set(paymentEntry);
-            await phase.adjustBalance(kidId, amount);
-          }
-        }
-        await metaRef.set(currentWeek);
-      }
-
-      function maybeShowBirthdayPrompt() {
-        const phase = runtime();
-        if (!phase || !phase.familyId || !phase.configLoaded) {
-          return;
-        }
-        const today = new Date();
-        const month = today.getMonth() + 1;
-        const day = today.getDate();
-        Object.values(phase.currentConfig.kids || KIDS).forEach((kid) => {
-          const born = new Date(kid.born);
-          if (born.getMonth() + 1 === month && born.getDate() === day) {
-            phase.addMessage('system', kid.name + ' has a birthday today. Want to update pay tiers in settings?');
-          }
-        });
-      }
-
-      window.openCardForKid = function openCardForKid(kidId) {
-        if (typeof window.renderCardView === 'function') {
-          window.renderCardView(kidId).catch((error) => console.error(error));
-        }
-      };
-
-      window.renderCardView = async function renderCardView(kidId) {
+      async function renderChoreProgress() {
         var phase = runtime();
+        var container = document.getElementById('choreProgress');
+        if (!container) return;
         if (!phase || !phase.familyId || !phase.configLoaded) {
-          document.getElementById('cardContent').innerHTML = '<p style="color:var(--muted)">Loading...</p>';
-          try {
-            phase = await waitForRuntimeReady(runtime, 5000);
-          } catch (error) {
-            document.getElementById('cardContent').innerHTML = '<p style="color:var(--danger)">Unable to load card right now.</p>';
-            return;
-          }
-        }
-        try {
-          ensurePhase4Styles();
-          await maybeRunWeeklyPay();
-          const kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
-          const kidName = kid.name || kidId;
-          const balances = await phase.getBalances();
-          const debts = await getDebts(phase);
-          const owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
-          const entries = await phase.getAllLogEntries();
-          const now = new Date();
-          const currentWeek = phase.toIsoWeek(now);
-          const weeklyPoints = entries.filter((e) => e.kid === kidId && e.week === currentWeek).reduce((sum, e) => sum + Number(e.points || 0), 0);
-          const weeklyPay = phase.calculateWeeklyPay(kid.payTiers || [], weeklyPoints);
-          const topTier = (kid.payTiers || []).slice().sort((a, b) => a.minPts - b.minPts);
-          const topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
-          const wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
-          const extraPoints = Math.max(0, weeklyPoints - topMinPts);
-          const weeklyBonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
-          const threshold = thresholdInfo(phase, kidId, weeklyPoints);
-          const progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
-          const progressLabel = threshold.mode === 'bonus'
-            ? 'bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts'
-            : 'next: ' + threshold.next.minPts + 'pts';
-          const progressStyle = threshold.mode === 'bonus'
-            ? 'background:linear-gradient(90deg,#22c55e,#15803d)'
-            : '';
-          const relatedDebts = debts.filter((debt) => debt && !debt.settled && (debt.from === kidId || debt.to === kidId));
-          var txns = [];
-          try {
-            const paySnap = await phase.database.ref('families/' + phase.familyId + '/payments').get();
-            if (paySnap.exists()) {
-              paySnap.forEach((child) => {
-                var val = child.val();
-                if (val.kid === kidId) txns.push(val);
-              });
-            }
-          } catch (e) { console.error('Card payments fetch error:', e); }
-          txns = txns.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 120);
-          var recentLogs = entries.filter((e) => e.kid === kidId).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 120);
-          var allTxns = [];
-          recentLogs.forEach((e) => {
-            if (!e) return;
-            allTxns.push({ type: 'chore', label: e.choreLabel || 'Chore', points: Number(e.points || 0), date: e.date || '', timestamp: Number(e.timestamp || 0) });
-          });
-          txns.forEach((t) => {
-            if (!t) return;
-            allTxns.push({ type: t.type || 'payment', label: t.note || t.type || 'Payment', amount: Number(t.amount || 0), date: t.date || '', timestamp: Number(t.timestamp || 0), balanceDelta: paymentBalanceDelta(t) });
-          });
-          var explainedBalance = txns.reduce((sum, txn) => sum + paymentBalanceDelta(txn), 0);
-          var openingBalance = Number((owed - explainedBalance).toFixed(2));
-          if (Math.abs(openingBalance) >= 0.01) {
-            allTxns.push({ type: 'opening_balance', label: 'Starting balance carried forward', amount: Math.abs(openingBalance), date: 'Earlier', timestamp: -1, balanceDelta: openingBalance });
-          }
-          allTxns.sort((a, b) => b.timestamp - a.timestamp);
-          allTxns = allTxns.slice(0, 200);
-
-          var balanceLabel = owed >= 0 ? 'Available Balance' : 'Amount Owed';
-          var balanceDisplay = owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed));
-          var debtMarkup = relatedDebts.length ? relatedDebts.map((debt) => {
-            var otherKid = debt.from === kidId ? debt.to : debt.from;
-            var direction = debt.from === kidId ? 'owes ' + ((phase.currentConfig.kids && phase.currentConfig.kids[otherKid] && phase.currentConfig.kids[otherKid].name) || otherKid) : 'is owed by ' + ((phase.currentConfig.kids && phase.currentConfig.kids[otherKid] && phase.currentConfig.kids[otherKid].name) || otherKid);
-            return '<div class="score-action"><span>' + kidName + ' ' + direction + ' ' + phase.dollars(debt.amount) + '</span><button type="button" data-card-action="settle-debt" data-kid="' + kidId + '" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>';
-          }).join('') : '<div class="score-empty">No active debts.</div>';
-
-          var stmtRows = allTxns.map((t) => {
-            if (t.type === 'chore') {
-              return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + ' &middot; +' + t.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
-            }
-            if (t.type === 'opening_balance') {
-              return '<div class="stmt-row"><div class="stmt-desc"><span>' + t.label + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount ' + (t.balanceDelta >= 0 ? 'credit' : 'debit') + '">' + (t.balanceDelta >= 0 ? '+' : '-') + phase.dollars(Math.abs(t.balanceDelta)) + '</span></div>';
-            }
-            var label = t.type === 'spend' ? 'Purchase' : t.type === 'cash' ? 'Cash given' : t.type === 'weekly' ? 'Weekly pay' : t.type === 'credit' ? 'You owe them' : 'Payment';
-            var note = t.label && t.label !== t.type ? ': ' + t.label : '';
-            var sign = (t.balanceDelta || 0) >= 0 ? '+' : '-';
-            var cls = (t.balanceDelta || 0) >= 0 ? 'credit' : 'debit';
-            return '<div class="stmt-row"><div class="stmt-desc"><span>' + label + note + '</span><span class="stmt-note">' + (t.date || '') + '</span></div><span class="stmt-amount ' + cls + '">' + sign + phase.dollars(Math.abs(Number(t.amount || 0))) + '</span></div>';
-          }).join('');
-
-          document.getElementById('cardContent').innerHTML =
-            '<div class="kid-card ' + kidId + '">' +
-              '<div class="card-top">' +
-                '<div class="card-label">Family Chores Card</div>' +
-                '<div class="card-chip"></div>' +
-              '</div>' +
-              '<div class="card-balance">' +
-                '<div class="card-balance-amount">' + balanceDisplay + '</div>' +
-                '<div class="card-balance-label">' + balanceLabel + '</div>' +
-              '</div>' +
-              '<div class="card-bottom">' +
-                '<div class="card-name">' + kidName + '</div>' +
-                '<div class="card-pts">' + weeklyPoints + ' pts<br>this week</div>' +
-              '</div>' +
-            '</div>' +
-            '<div class="drawer-grid">' +
-              '<article class="stat-card">' +
-                '<h3>This Week (' + formatWeekRange(now) + ')</h3>' +
-                '<div class="score-row">' +
-                  '<div class="score-top"><div><div class="score-name">' + kidName + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div>' +
-                  '<div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div>' +
-                  '<div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div>' +
-                '</div>' +
-              '</article>' +
-              '<article class="stat-card">' +
-                '<h3>Balance</h3>' +
-                '<div class="score-actions">' +
-                  '<div class="score-action"><span>' + (owed >= 0 ? 'You owe ' + kidName + ' ' + phase.dollars(owed) : kidName + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div>' +
-                '</div>' +
-              '</article>' +
-              '<article class="stat-card">' +
-                '<h3>Debts</h3>' +
-                '<div class="score-actions">' + debtMarkup + '</div>' +
-              '</article>' +
-              '<div class="card-statement">' +
-                '<h3>Recent Activity</h3>' +
-                (stmtRows || '<p class="stmt-empty">No activity yet.</p>') +
-              '</div>' +
-            '</div>';
-        } catch (err) {
-          console.error('Card render error:', err);
-          document.getElementById('cardContent').innerHTML = '<p style="color:var(--danger)">Error loading card. Check console.</p>';
-        }
-      };
-
-      function handleCardAction(button) {
-        const phase = runtime();
-        if (!button || !phase) {
+          container.innerHTML = '<p class="chores-progress-note">Loading weekly progress...</p>';
           return;
         }
-        const action = button.dataset.cardAction || button.dataset.scoreAction;
-        if (action === 'pay-balance') {
-          const kidId = button.dataset.kid;
-          const amountText = window.prompt('Payment amount for ' + phase.currentConfig.kids[kidId].name + '?');
-          const amount = amountText === null ? null : Number(amountText);
-          if (!amount || Number.isNaN(amount) || amount <= 0) {
-            return;
-          }
-          phase.writePayment(kidId, amount, 'manual', 'Manual pay from card').then((balance) => {
-            phase.addMessage('system', 'Recorded payment for ' + phase.currentConfig.kids[kidId].name + ': ' + phase.dollars(amount) + '. Balance is now ' + phase.dollars(balance) + '.');
-            openCardForKid(kidId);
-          }).catch((error) => {
-            console.error(error);
-            phase.addMessage('system', 'Payment failed.', error.message);
-          });
-          return;
-        }
-        if (action === 'kid-spent') {
-          const kidId = button.dataset.kid;
-          const amountText = window.prompt(phase.currentConfig.kids[kidId].name + ' spent how much?');
-          const amount = amountText === null ? null : Number(amountText);
-          if (!amount || Number.isNaN(amount) || amount <= 0) return;
-          const noteText = window.prompt('What was it for?', '') || '';
-          phase.adjustBalance(kidId, -amount).then((balance) => {
-            const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'spend', timestamp: Date.now(), date: phase.toDateString(new Date()), note: noteText };
-            phase.database.ref('families/' + phase.familyId + '/payments').push().set(entry);
-            phase.addMessage('system', phase.currentConfig.kids[kidId].name + ' spent ' + phase.dollars(amount) + (noteText ? ' on ' + noteText : '') + '. Balance: ' + (balance >= 0 ? phase.dollars(balance) + ' owed to them.' : 'they owe you ' + phase.dollars(Math.abs(balance)) + '.'));
-            openCardForKid(kidId);
-          }).catch((error) => { console.error(error); phase.addMessage('system', 'Failed to record spend.', error.message); });
-          return;
-        }
-        if (action === 'settle-debt') {
-          const from = button.dataset.from;
-          const to = button.dataset.to;
-          phase.settleDebt([from, to]).then((debt) => {
-            if (debt) {
-              phase.addMessage('system', 'Settled debt: ' + phase.currentConfig.kids[from].name + ' to ' + phase.currentConfig.kids[to].name + ' for ' + phase.dollars(debt.amount) + '.');
-              openCardForKid(button.dataset.kid || from);
-            }
-          }).catch((error) => {
-            console.error(error);
-            phase.addMessage('system', 'Debt settlement failed.', error.message);
-          });
-        }
-      }
-
-      document.getElementById('viewBank').addEventListener('click', (event) => {
-        const button = event.target.closest('button[data-card-action], button[data-score-action]');
-        if (!button) {
-          return;
-        }
-        handleCardAction(button);
-      });
-
-      const phase4Warmup = setInterval(() => {
-        const phase = runtime();
-        if (phase && phase.database && phase.familyId && phase.configLoaded) {
-          maybeRunWeeklyPay().then(() => maybeShowBirthdayPrompt()).catch((error) => console.error(error));
-          clearInterval(phase4Warmup);
-        }
-      }, 500);
-    })();
-  </script>
-
-  <script>
-    (function () {
-      const historyState = { kid: 'all', date: '' };
-      let greeted = false;
-
-      function phase() {
-        return window.phaseRuntime;
-      }
-
-      function ensurePhase5Styles() {
-        if (document.getElementById('phase5Styles')) {
-          return;
-        }
-        const style = document.createElement('style');
-        style.id = 'phase5Styles';
-        style.textContent = '.status-dot{width:10px;height:10px;border-radius:999px;background:#94a3b8;display:inline-block}.status-dot.online{background:#22c55e}.settings-grid{display:grid;gap:12px}.settings-list{display:grid;gap:8px}.settings-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff}.settings-row span:first-child{flex:1;min-width:0}.settings-row input,.settings-row select{min-height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px;width:70px;min-width:0;flex-shrink:1}.settings-row button,.settings-btn{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer;flex-shrink:1;min-width:0}.settings-chip-row{display:flex;flex-wrap:wrap;gap:8px}.settings-chip{min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}.settings-chip.active{background:var(--alex);border-color:var(--alex);color:#fff}.history-list{display:grid;gap:8px;max-height:240px;overflow:auto}.history-item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;word-break:break-word}.history-item>div{min-width:0;overflow:hidden}.settings-note{font-size:.85rem;color:var(--muted)}';
-        document.head.appendChild(style);
-      }
-
-      function ensureOnlineIndicator() {
-        if (document.getElementById('onlineDot')) {
-          return;
-        }
-        const dot = document.createElement('span');
-        dot.id = 'onlineDot';
-        dot.className = 'status-dot';
-        elements.familyLabel.parentNode.insertBefore(dot, elements.familyLabel);
-        dot.style.marginRight = '8px';
-        updateOnlineIndicator();
-      }
-
-      function updateOnlineIndicator() {
-        const dot = document.getElementById('onlineDot');
-        if (!dot) return;
-        dot.classList.toggle('online', navigator.onLine);
-      }
-
-      function safeName(value) {
-        return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      }
-
-      function paymentBalanceDelta(payment) {
-        if (payment && typeof payment.balanceDelta === 'number') {
-          return Number(payment.balanceDelta || 0);
-        }
-        const amount = Number((payment && payment.amount) || 0);
-        if (!payment) return 0;
-        if (payment.type === 'credit' || payment.type === 'weekly') return amount;
-        return -amount;
-      }
-
-      async function keepPathsSynced() {
-        const app = phase();
-        if (!app || !app.familyId || !app.database) return;
-        ['config', 'log', 'payments', 'balances', 'debts', 'meta'].forEach((part) => {
-          const ref = app.database.ref('families/' + app.familyId + '/' + part);
-          if (typeof ref.keepSynced === 'function') {
-            ref.keepSynced(true);
-          }
-        });
-      }
-
-      function renderPayTierEditor(kidId, kid) {
-        return '<div class="stat-card"><h3>' + safeName(kid.name || kidId) + ' pay tiers</h3><div class="settings-list">' +
-          (kid.payTiers || []).map((tier, index) => '<div class="settings-row"><input type="number" min="1" value="' + tier.minPts + '" data-setting="pay-tier-pts" data-kid="' + kidId + '" data-index="' + index + '" style="width:60px"><span class="settings-note">pts =</span><input type="number" min="0" value="' + tier.pay + '" data-setting="pay-tier" data-kid="' + kidId + '" data-index="' + index + '"><span class="settings-note">$</span></div>').join('') +
-          '<div class="settings-row"><span>Bonus: $</span><input type="number" min="0" value="' + ((kid.weeklyBonus || { bonus: 2 }).bonus) + '" data-setting="bonus-pay" data-kid="' + kidId + '"><span class="settings-note">per every</span><input type="number" min="1" value="' + ((kid.weeklyBonus || { extraPts: 10 }).extraPts) + '" data-setting="bonus-pts" data-kid="' + kidId + '"><span class="settings-note">pts above goal</span></div>' +
-          '</div></div>';
-      }
-
-      async function renderHistory() {
-        const app = phase();
-        if (!app || !app.familyId || !app.configLoaded) {
-          return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
-        }
-        const entries = (await app.getAllLogEntries()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-        const filtered = entries.filter((entry) => (historyState.kid === 'all' || entry.kid === historyState.kid) && (!historyState.date || entry.date === historyState.date)).slice(0, 200);
-        if (!filtered.length) {
-          return '<div class="history-list"><div class="history-item">No matching history.</div></div>';
-        }
-        return '<div class="history-list">' + filtered.map((entry) => '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[entry.kid] || {}).name || entry.kid) + '</strong> - ' + safeName(entry.choreLabel) + ' (' + entry.points + 'pts)<div class="settings-note">' + safeName(entry.date) + '</div></div><button type="button" data-setting-action="delete-log" data-log-id="' + entry.id + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button></div>').join('') + '</div>';
-      }
-
-      async function renderTransactions() {
-        const app = phase();
-        if (!app || !app.familyId || !app.configLoaded) {
-          return '<div class="history-list"><div class="history-item">Connect to a family first.</div></div>';
-        }
-        const payments = (await app.getAllPayments()).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-        const balances = await app.getBalances();
-        const synthetic = [];
-        Object.keys(app.currentConfig.kids || KIDS).forEach((kidId) => {
-          const currentOwed = Number(((balances[kidId] && balances[kidId].owed) || 0));
-          const kidPayments = payments.filter((p) => p.kid === kidId);
-          const explained = kidPayments.reduce((sum, payment) => sum + paymentBalanceDelta(payment), 0);
-          const openingBalance = Number((currentOwed - explained).toFixed(2));
-          if (Math.abs(openingBalance) >= 0.01) {
-            synthetic.push({ id: 'opening-' + kidId, kid: kidId, type: 'opening_balance', amount: Math.abs(openingBalance), date: 'Earlier', note: 'Starting balance carried forward', timestamp: -1, balanceDelta: openingBalance, synthetic: true });
-          }
-        });
-        const combined = payments.concat(synthetic).sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-        const filtered = combined.filter((p) => (historyState.kid === 'all' || p.kid === historyState.kid) && (!historyState.date || p.date === historyState.date)).slice(0, 200);
-        if (!filtered.length) {
-          return '<div class="history-list"><div class="history-item">No transactions yet.</div></div>';
-        }
-        return '<div class="history-list">' + filtered.map(function (p) {
-          var label = p.type === 'spend' ? 'Purchase' : p.type === 'cash' ? 'Cash given' : p.type === 'weekly' ? 'Weekly pay' : p.type === 'owed' ? 'Owes parent' : p.type === 'credit' ? 'You owe them' : p.type === 'opening_balance' ? 'Starting balance' : 'Payment';
-          var note = p.note && p.note !== label ? ': ' + safeName(p.note) : '';
-          var deleteButton = p.synthetic ? '' : '<button type="button" data-setting-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" data-payment-type="' + (p.type || 'payment') + '" style="min-width:38px;min-height:38px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:.85rem">X</button>';
-          return '<div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><strong>' + safeName((app.currentConfig.kids[p.kid] || {}).name || p.kid) + '</strong> - ' + label + note + ' (' + app.dollars(p.amount) + ')<div class="settings-note">' + safeName(p.date || '') + '</div></div>' + deleteButton + '</div>';
+        var entries = await phase.getAllLogEntries();
+        var now = new Date();
+        var week = phase.toIsoWeek(now);
+        var kids = selectedChoreKids();
+        container.innerHTML = '<div class="chores-progress-grid">' + kids.map(function (kidId) {
+          var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
+          var points = entries.filter(function (entry) { return entry.kid === kidId && entry.week === week; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
+          var pay = phase.calculateWeeklyPay(kid.payTiers || [], points);
+          var threshold = thresholdInfoLocal(phase, kidId, points);
+          var wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
+          var topTier = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
+          var topMinPts = topTier.length ? Number(topTier[topTier.length - 1].minPts || 0) : 0;
+          var progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
+          var progressStyle = threshold.mode === 'bonus' ? 'background:linear-gradient(90deg,#22c55e,#15803d)' : '';
+          var progressLabel = threshold.mode === 'bonus' ? 'Bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts' : 'Next: ' + threshold.next.minPts + 'pts';
+          return '<article class="stat-card chores-progress-card">' +
+            '<div class="chores-progress-top"><div><div class="chores-progress-name">' + kid.name + '</div><div class="chores-progress-meta">' + points + 'pts this week · ' + phase.dollars(pay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div>' +
+            '<div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div>' +
+            '<div class="chores-progress-note">Bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + '</div>' +
+          '</article>';
         }).join('') + '</div>';
       }
 
-      window.renderSettingsPanel = renderSettingsPanel;
-      async function renderSettingsPanel() {
-        var app = phase();
-        if (!app || !app.familyId || !app.configLoaded) {
-          elements.settingsContent.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading...</p></article></div>';
-          try {
-            app = await waitForRuntimeReady(phase, 5000);
-          } catch (error) {
-            elements.settingsContent.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Unable to load settings right now.</p></article></div>';
-            return;
-          }
+      function renderChoreSettings() {
+        var phase = runtime();
+        var panel = document.getElementById('choresSettings');
+        if (!panel) return;
+        panel.hidden = !phase4State.choresSettingsOpen;
+        if (!phase4State.choresSettingsOpen) {
+          panel.innerHTML = '';
+          return;
         }
-        ensurePhase5Styles();
-        const kids = app.currentConfig.kids || KIDS;
-        const chores = app.currentConfig.chores || CHORES;
-        const historyMarkup = await renderHistory();
-        const txnMarkup = await renderTransactions();
-        elements.settingsContent.innerHTML = [
-          '<div class="settings-grid">',
-          '<article class="stat-card"><h3>Family</h3><p class="settings-note">Family code: ' + safeName(app.familyId) + '</p><button type="button" class="settings-btn" data-setting-action="copy-family">Copy link</button></article>',
-          '<article class="stat-card"><h3>Chores</h3><div class="settings-list">',
-          Object.entries(chores).map(([choreId, chore]) => '<div class="settings-row"><span>' + safeName(chore.label) + '</span><input type="number" min="0" value="' + Number(chore.points || 0) + '" data-setting="chore-points" data-chore="' + choreId + '"><button type="button" data-setting-action="remove-chore" data-chore="' + choreId + '">Remove</button></div>').join(''),
-          '</div><button type="button" class="settings-btn" data-setting-action="add-chore">Add chore</button></article>',
-          Object.entries(kids).map(([kidId, kid]) => renderPayTierEditor(kidId, kid)).join(''),
-          '<article class="stat-card"><h3>History</h3><div class="settings-chip-row"><button type="button" class="settings-chip ' + (historyState.kid === 'all' ? 'active' : '') + '" data-history-kid="all">All</button><button type="button" class="settings-chip ' + (historyState.kid === 'alex' ? 'active' : '') + '" data-history-kid="alex">Alex</button><button type="button" class="settings-chip ' + (historyState.kid === 'louisa' ? 'active' : '') + '" data-history-kid="louisa">Louisa</button></div><div class="settings-row"><span>Date</span><input type="date" value="' + safeName(historyState.date) + '" data-setting="history-date"><span class="settings-note">Filter</span></div>' + historyMarkup + '</article>',
-          '<article class="stat-card"><h3>Transactions</h3>' + txnMarkup + '</article>',
-          '</div>'
-        ].join('');
-      }
-
-      async function updatePayTier(kidId, index, pay) {
-        const app = phase();
-        const payTiers = (app.currentConfig.kids[kidId].payTiers || []).slice();
-        payTiers[index] = { ...payTiers[index], pay };
-        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/payTiers').set(payTiers);
-        app.currentConfig.kids[kidId].payTiers = payTiers;
-      }
-
-      async function updatePayTierPts(kidId, index, minPts) {
-        const app = phase();
-        const payTiers = (app.currentConfig.kids[kidId].payTiers || []).slice();
-        payTiers[index] = { ...payTiers[index], minPts };
-        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/payTiers').set(payTiers);
-        app.currentConfig.kids[kidId].payTiers = payTiers;
-      }
-
-      async function updateWeeklyBonus(kidId, field, value) {
-        const app = phase();
-        if (!app.currentConfig.kids[kidId].weeklyBonus) {
-          app.currentConfig.kids[kidId].weeklyBonus = { extraPts: 10, bonus: 2 };
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          panel.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading chore settings...</p></article></div>';
+          return;
         }
-        app.currentConfig.kids[kidId].weeklyBonus[field] = value;
-        await app.database.ref('families/' + app.familyId + '/config/kids/' + kidId + '/weeklyBonus/' + field).set(value);
+        var chores = phase.currentConfig.chores || {};
+        panel.innerHTML = '<div class="settings-grid">' +
+          '<article class="stat-card"><h3>Chore Settings</h3><div class="settings-list">' +
+          Object.keys(chores).map(function (choreId) {
+            var chore = chores[choreId] || {};
+            return '<div class="settings-row"><span>' + String(chore.label || choreId).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span><input type="number" min="0" value="' + Number(chore.points || 0) + '" data-chore-setting="points" data-chore="' + choreId + '"><button type="button" data-chore-action="remove" data-chore="' + choreId + '">Remove</button></div>';
+          }).join('') +
+          '</div><button type="button" class="settings-btn" data-chore-action="add">Add chore</button></article>' +
+        '</div>';
       }
 
       async function addChoreViaPrompt() {
-        const app = phase();
-        const label = window.prompt('New chore name?');
+        var phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded) return;
+        var label = window.prompt('New chore name?');
         if (!label) return;
-        const points = Number(window.prompt('Points for ' + label + '?', '1'));
+        var points = Number(window.prompt('Points for ' + label + '?', '1'));
         if (!points || Number.isNaN(points)) return;
-        const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('chore_' + Date.now());
-        const chore = { label, points, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
-        await app.database.ref('families/' + app.familyId + '/config/chores/' + key).set(chore);
-        app.currentConfig.chores[key] = chore;
-        await renderSettingsPanel();
+        var key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('chore_' + Date.now());
+        var chore = { label: label, points: points, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
+        await phase.database.ref('families/' + phase.familyId + '/config/chores/' + key).set(chore);
+        phase.currentConfig.chores[key] = chore;
+        renderChoreSettings();
       }
 
       async function removeChore(choreId) {
-        const app = phase();
+        var phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
         if (!window.confirm('Remove this chore?')) return;
-        await app.database.ref('families/' + app.familyId + '/config/chores/' + choreId).remove();
-        delete app.currentConfig.chores[choreId];
-        await renderSettingsPanel();
+        await phase.database.ref('families/' + phase.familyId + '/config/chores/' + choreId).remove();
+        delete phase.currentConfig.chores[choreId];
+        renderChoreSettings();
       }
 
-      elements.settingsContent.addEventListener('change', (event) => {
-        const target = event.target;
-        const app = phase();
-        if (!app) return;
-        if (target.dataset.setting === 'chore-points') {
-          const points = Number(target.value);
-          if (Number.isNaN(points)) return;
-          app.updateChorePoints(target.dataset.chore, points).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+      function stripWeeklyCard() {
+        var cardContent = document.getElementById('cardContent');
+        if (!cardContent) return;
+        Array.prototype.slice.call(cardContent.querySelectorAll('.stat-card')).forEach(function (card) {
+          var heading = card.querySelector('h3');
+          if (heading && /^This Week/.test(heading.textContent || '')) {
+            card.remove();
+          }
+        });
+      }
+
+      function patchBankRender() {
+        if (!window.renderCardView || window.renderCardView.__phase4Patched) return;
+        var original = window.renderCardView;
+        var wrapped = async function (kidId) {
+          var result = await original(kidId);
+          stripWeeklyCard();
+          return result;
+        };
+        wrapped.__phase4Patched = true;
+        window.renderCardView = wrapped;
+      }
+
+      function patchRuntimeHooks() {
+        var phase = runtime();
+        if (!phase || phase.__phase4Patched) return;
+        var originalSaveLogEntries = phase.saveLogEntries;
+        phase.saveLogEntries = async function (entries) {
+          var result = await originalSaveLogEntries(entries);
+          renderChoreProgress().catch(function (error) { console.error(error); });
+          return result;
+        };
+        var originalUpdateChorePoints = phase.updateChorePoints;
+        phase.updateChorePoints = async function (choreId, points) {
+          var result = await originalUpdateChorePoints(choreId, points);
+          renderChoreProgress().catch(function (error) { console.error(error); });
+          renderChoreSettings();
+          return result;
+        };
+        phase.__phase4Patched = true;
+      }
+
+      document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('#choresSettingsToggle');
+        if (toggle) {
+          phase4State.choresSettingsOpen = !phase4State.choresSettingsOpen;
+          renderChoreSettings();
           return;
         }
-        if (target.dataset.setting === 'pay-tier-pts') {
-          const minPts = Number(target.value);
-          if (Number.isNaN(minPts) || minPts < 1) return;
-          updatePayTierPts(target.dataset.kid, Number(target.dataset.index), minPts).then(() => renderSettingsPanel()).catch((error) => console.error(error));
+        var actionBtn = event.target.closest('[data-chore-action]');
+        if (!actionBtn) return;
+        if (actionBtn.dataset.choreAction === 'add') {
+          addChoreViaPrompt().catch(function (error) { console.error(error); });
           return;
         }
-        if (target.dataset.setting === 'pay-tier') {
-          const pay = Number(target.value);
-          if (Number.isNaN(pay)) return;
-          updatePayTier(target.dataset.kid, Number(target.dataset.index), pay).then(() => renderSettingsPanel()).catch((error) => console.error(error));
-          return;
-        }
-        if (target.dataset.setting === 'bonus-pay') {
-          const bonus = Number(target.value);
-          if (Number.isNaN(bonus) || bonus < 0) return;
-          updateWeeklyBonus(target.dataset.kid, 'bonus', bonus).then(() => renderSettingsPanel()).catch((error) => console.error(error));
-          return;
-        }
-        if (target.dataset.setting === 'bonus-pts') {
-          const extraPts = Number(target.value);
-          if (Number.isNaN(extraPts) || extraPts < 1) return;
-          updateWeeklyBonus(target.dataset.kid, 'extraPts', extraPts).then(() => renderSettingsPanel()).catch((error) => console.error(error));
-          return;
-        }
-        if (target.dataset.setting === 'history-date') {
-          historyState.date = target.value;
-          renderSettingsPanel().catch((error) => console.error(error));
+        if (actionBtn.dataset.choreAction === 'remove') {
+          removeChore(actionBtn.dataset.chore).catch(function (error) { console.error(error); });
         }
       });
 
-      elements.settingsContent.addEventListener('click', (event) => {
-        const button = event.target.closest('button');
-        if (!button) return;
-        const action = button.dataset.settingAction;
-        if (button.dataset.historyKid) {
-          historyState.kid = button.dataset.historyKid;
-          renderSettingsPanel().catch((error) => console.error(error));
-          return;
-        }
-        if (action === 'copy-family') {
-          const app = phase();
-          navigator.clipboard.writeText(location.href.replace(/#.*$/, '') + '?family=' + app.familyId).then(() => {
-            app.addMessage('system', 'Copied the family link.');
-          }).catch((error) => console.error(error));
-          return;
-        }
-        if (action === 'add-chore') {
-          addChoreViaPrompt().catch((error) => console.error(error));
-          return;
-        }
-        if (action === 'remove-chore') {
-          removeChore(button.dataset.chore).catch((error) => console.error(error));
-          return;
-        }
-        if (action === 'delete-log') {
-          const app = phase();
-          const logId = button.dataset.logId;
-          if (!app || !logId) return;
-          app.database.ref('families/' + app.familyId + '/log/' + logId).remove().then(() => {
-            app.addMessage('system', 'Deleted log entry.');
-            renderSettingsPanel().catch((error) => console.error(error));
-          }).catch((error) => { console.error(error); app.addMessage('system', 'Failed to delete.', error.message); });
-        }
-        if (action === 'delete-payment') {
-          const app = phase();
-          const paymentId = button.dataset.paymentId;
-          const paymentKid = button.dataset.paymentKid;
-          const paymentAmount = Number(button.dataset.paymentAmount || 0);
-          const paymentType = button.dataset.paymentType || 'payment';
-          if (!app || !paymentId) return;
-          app.database.ref('families/' + app.familyId + '/payments/' + paymentId).get().then((snap) => {
-            const payment = snap.exists() ? snap.val() : null;
-            return app.database.ref('families/' + app.familyId + '/payments/' + paymentId).remove().then(() => payment);
-          }).then((payment) => {
-            const originalDelta = payment && typeof payment.balanceDelta === 'number'
-              ? Number(payment.balanceDelta)
-              : (paymentType === 'credit' ? paymentAmount : -paymentAmount);
-            return app.adjustBalance(paymentKid, Number((-originalDelta).toFixed(2)));
-          }).then(() => {
-            app.addMessage('system', 'Deleted transaction and reversed ' + app.dollars(paymentAmount) + '.');
-            renderSettingsPanel().catch((error) => console.error(error));
-          }).catch((error) => { console.error(error); app.addMessage('system', 'Failed to delete transaction.', error.message); });
-        }
+      document.addEventListener('change', function (event) {
+        var target = event.target;
+        if (!target || target.dataset.choreSetting !== 'points') return;
+        var phase = runtime();
+        if (!phase) return;
+        var points = Number(target.value);
+        if (Number.isNaN(points)) return;
+        phase.updateChorePoints(target.dataset.chore, points).catch(function (error) { console.error(error); });
       });
 
-
-      window.addEventListener('online', updateOnlineIndicator);
-      window.addEventListener('offline', updateOnlineIndicator);
-
-      const phase5Warmup = setInterval(() => {
-        const app = phase();
-        if (app && app.database) {
-          ensureOnlineIndicator();
-          updateOnlineIndicator();
-        }
-        if (app && app.database && app.familyId && app.configLoaded) {
-          keepPathsSynced().catch((error) => console.error(error));
-          renderSettingsPanel().catch((error) => console.error(error));
-          if (!greeted) {
-            app.addMessage('system', 'Ready. Log a chore or use quick points.');
-            greeted = true;
-          }
-          clearInterval(phase5Warmup);
-        }
-      }, 500);
-    })();
-  </script>
-
-  <script>
-    (function () {
-      var currentListId = null;
-
-      function runtime() {
-        return window.phaseRuntime;
-      }
-
-      function listsRef() {
-        var r = runtime();
-        return r && r.database && r.familyId ? r.database.ref('families/' + r.familyId + '/lists') : null;
-      }
-
-      var TEMPLATES = [
-        { name: 'Grocery', icon: '\u{1F6D2}' },
-        { name: 'Costco', icon: '\u{1F4E6}' },
-        { name: 'Packing', icon: '\u{1F9F3}' },
-        { name: 'Lake House', icon: '\u{1F3E1}' },
-        { name: 'To Do', icon: '\u2705' }
-      ];
-
-      function ensureListStyles() {
-        if (document.getElementById('listStyles')) return;
-        var style = document.createElement('style');
-        style.id = 'listStyles';
-        style.textContent = [
-          '.list-grid{display:grid;gap:10px;padding:4px}',
-          '.list-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,244,255,0.9));border:1px solid var(--line);cursor:pointer;transition:transform 0.15s ease}',
-          '.list-card:active{transform:scale(0.98)}',
-          '.list-card-icon{font-size:1.5rem;flex-shrink:0}',
-          '.list-card-info{flex:1;min-width:0}',
-          '.list-card-name{font-weight:700;font-size:0.95rem}',
-          '.list-card-count{font-size:0.82rem;color:var(--muted)}',
-          '.list-card-archive{min-width:32px;min-height:32px;border:0;border-radius:10px;background:var(--panel-alt);color:var(--muted);cursor:pointer;font-size:0.8rem}',
-          '.list-header{display:flex;align-items:center;gap:10px;padding:4px}',
-          '.list-back{min-width:38px;min-height:38px;border:0;border-radius:12px;background:var(--panel-alt);cursor:pointer;font-size:1rem}',
-          '.list-title{flex:1;font-size:1.1rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-          '.list-clear{min-height:34px;padding:0 12px;border:0;border-radius:10px;background:var(--danger);color:#fff;cursor:pointer;font-size:0.82rem}',
-          '.list-items{display:grid;gap:6px;padding:4px}',
-          '.list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}',
-          '.list-item.checked{opacity:0.5}',
-          '.list-item.checked .list-item-text{text-decoration:line-through}',
-          '.list-item-check{min-width:24px;min-height:24px;border:2px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s ease,border-color 0.15s ease}',
-          '.list-item.checked .list-item-check{background:var(--alex);border-color:var(--alex);color:#fff}',
-          '.list-item-text{flex:1;min-width:0;word-break:break-word}',
-          '.list-item-del{min-width:28px;min-height:28px;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.8rem;flex-shrink:0}',
-          '.list-item-del:hover{background:var(--danger);color:#fff}',
-          '.list-add{display:flex;gap:8px;padding:4px}',
-          '.list-add input{flex:1;min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;min-width:0}',
-          '.list-add button{min-width:42px;min-height:42px;border:0;border-radius:12px;background:var(--alex);color:#fff;cursor:pointer;font-size:1.1rem}',
-          '.list-empty{color:var(--muted);text-align:center;padding:24px 16px}',
-          '.list-templates{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:4px}',
-          '.list-tmpl{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:14px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:0.88rem;font-weight:600;transition:transform 0.12s ease}',
-          '.list-tmpl:active{transform:scale(0.95)}',
-          '.list-tmpl-icon{font-size:1.8rem}',
-          '.list-create-custom{grid-column:1/-1}'
-        ].join('');
-        document.head.appendChild(style);
-      }
-
-      function renderListsHome() {
-        ensureListStyles();
-        var ref = listsRef();
-        var el = document.getElementById('listsContent');
-        if (!ref) {
-          el.innerHTML = '<p class="list-empty">Connect to a family first.</p>';
-          return;
-        }
-        ref.once('value', function (snap) {
-          var lists = [];
-          if (snap.exists()) {
-            snap.forEach(function (child) {
-              var meta = child.child('meta').val() || {};
-              if (!meta.archived) {
-                var itemCount = 0;
-                var checkedCount = 0;
-                child.child('items').forEach(function (item) {
-                  itemCount++;
-                  if (item.val().checked) checkedCount++;
-                });
-                lists.push({ id: child.key, name: meta.name || 'Untitled', icon: meta.icon || '\u{1F4CB}', itemCount: itemCount, checkedCount: checkedCount, sortOrder: meta.sortOrder || 0 });
-              }
-            });
-          }
-          lists.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
-
-          var html = '<div class="list-grid">';
-          html += lists.map(function (list) {
-            return '<div class="list-card" data-list-open="' + list.id + '">' +
-              '<span class="list-card-icon">' + list.icon + '</span>' +
-              '<div class="list-card-info"><div class="list-card-name">' + safeName(list.name) + '</div>' +
-              '<div class="list-card-count">' + list.checkedCount + '/' + list.itemCount + ' done</div></div>' +
-              '<button type="button" class="list-card-archive" data-list-archive="' + list.id + '" title="Archive">&#128465;</button>' +
-              '</div>';
-          }).join('');
-          html += '</div>';
-          html += '<div style="padding:8px 4px"><button type="button" class="settings-btn" id="listNewBtn" style="width:100%">+ New List</button></div>';
-          el.innerHTML = html;
-        });
-      }
-
-      function renderNewListPicker() {
-        ensureListStyles();
-        var el = document.getElementById('listsContent');
-        var html = '<div class="list-header"><button type="button" class="list-back" id="listBackHome">&larr;</button><span class="list-title">New List</span></div>';
-        html += '<div class="list-templates">';
-        TEMPLATES.forEach(function (t) {
-          html += '<button type="button" class="list-tmpl" data-tmpl-name="' + t.name + '" data-tmpl-icon="' + t.icon + '"><span class="list-tmpl-icon">' + t.icon + '</span>' + t.name + '</button>';
-        });
-        html += '<button type="button" class="list-tmpl list-create-custom" data-tmpl-name="" data-tmpl-icon="\u{1F4CB}"><span class="list-tmpl-icon">\u{1F4CB}</span>Custom</button>';
-        html += '</div>';
-        el.innerHTML = html;
-      }
-
-      async function createList(name, icon) {
-        var ref = listsRef();
-        if (!ref) return;
-        if (!name) {
-          name = prompt('List name:');
-          if (!name) return;
-        }
-        var newRef = ref.push();
-        await newRef.child('meta').set({
-          name: name,
-          icon: icon || '\u{1F4CB}',
-          createdAt: Date.now(),
-          sortOrder: Date.now(),
-          archived: false
-        });
-        currentListId = newRef.key;
-        renderListDetail(currentListId);
-      }
-
-      function renderListDetail(listId) {
-        ensureListStyles();
-        currentListId = listId;
-        var ref = listsRef();
-        var el = document.getElementById('listsContent');
-        if (!ref) return;
-
-        ref.child(listId).once('value', function (snap) {
-          if (!snap.exists()) {
-            renderListsHome();
-            return;
-          }
-          var meta = snap.child('meta').val() || {};
-          var items = [];
-          snap.child('items').forEach(function (child) {
-            items.push({ id: child.key, ...child.val() });
-          });
-          items.sort(function (a, b) {
-            if (a.checked !== b.checked) return a.checked ? 1 : -1;
-            return (a.sortOrder || 0) - (b.sortOrder || 0);
-          });
-
-          var html = '<div class="list-header">' +
-            '<button type="button" class="list-back" id="listBackHome">&larr;</button>' +
-            '<span class="list-title">' + (meta.icon || '') + ' ' + safeName(meta.name || 'List') + '</span>' +
-            '<button type="button" class="list-clear" id="listClearChecked">Clear done</button>' +
-            '</div>';
-          html += '<div class="list-items">';
-          if (items.length === 0) {
-            html += '<p class="list-empty">No items yet. Add one below.</p>';
-          } else {
-            items.forEach(function (item) {
-              html += '<div class="list-item' + (item.checked ? ' checked' : '') + '" data-item-id="' + item.id + '">' +
-                '<button type="button" class="list-item-check" data-item-toggle="' + item.id + '">' + (item.checked ? '\u2713' : '') + '</button>' +
-                '<span class="list-item-text">' + safeName(item.text) + '</span>' +
-                '<button type="button" class="list-item-del" data-item-delete="' + item.id + '">X</button>' +
-                '</div>';
-            });
-          }
-          html += '</div>';
-          html += '<div class="list-add">' +
-            '<input type="text" id="listAddInput" placeholder="Add item..." autocomplete="off">' +
-            '<button type="button" id="listAddBtn">+</button>' +
-            '</div>';
-          el.innerHTML = html;
-
-          // Focus input
-          var input = document.getElementById('listAddInput');
-          if (input) {
-            input.addEventListener('keydown', function (e) {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addItems(listId, input.value);
-                input.value = '';
-              }
-            });
-          }
-        });
-      }
-
-      async function addItems(listId, text) {
-        if (!text || !text.trim()) return;
-        var ref = listsRef();
-        if (!ref) return;
-        // Split on commas and "and" for multi-item add
-        var parts = text.split(/,|\band\b/).map(function (s) { return s.trim(); }).filter(Boolean);
-        for (var i = 0; i < parts.length; i++) {
-          await ref.child(listId + '/items').push().set({
-            text: parts[i],
-            checked: false,
-            addedAt: Date.now(),
-            sortOrder: Date.now() + i
-          });
-        }
-        renderListDetail(listId);
-      }
-
-      async function toggleItem(listId, itemId) {
-        var ref = listsRef();
-        if (!ref) return;
-        var snap = await ref.child(listId + '/items/' + itemId + '/checked').get();
-        var current = snap.exists() ? snap.val() : false;
-        await ref.child(listId + '/items/' + itemId).update({
-          checked: !current,
-          checkedAt: !current ? Date.now() : null
-        });
-        renderListDetail(listId);
-      }
-
-      async function deleteItem(listId, itemId) {
-        var ref = listsRef();
-        if (!ref) return;
-        await ref.child(listId + '/items/' + itemId).remove();
-        renderListDetail(listId);
-      }
-
-      async function clearChecked(listId) {
-        var ref = listsRef();
-        if (!ref) return;
-        var snap = await ref.child(listId + '/items').get();
-        if (!snap.exists()) return;
-        var updates = {};
-        snap.forEach(function (child) {
-          if (child.val().checked) {
-            updates[child.key] = null;
-          }
-        });
-        if (Object.keys(updates).length > 0) {
-          await ref.child(listId + '/items').update(updates);
-        }
-        renderListDetail(listId);
-      }
-
-      async function archiveList(listId) {
-        var ref = listsRef();
-        if (!ref) return;
-        await ref.child(listId + '/meta/archived').set(true);
-        renderListsHome();
-      }
-
-      function safeName(str) {
-        return String(str || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      }
-
-      // Event delegation
-      document.getElementById('listsContent').addEventListener('click', function (e) {
-        var target = e.target;
-
-        // Open list
-        var card = target.closest('[data-list-open]');
-        if (card && !target.closest('[data-list-archive]')) {
-          renderListDetail(card.dataset.listOpen);
-          return;
-        }
-
-        // Archive list
-        var archiveBtn = target.closest('[data-list-archive]');
-        if (archiveBtn) {
-          archiveList(archiveBtn.dataset.listArchive);
-          return;
-        }
-
-        // New list button
-        if (target.id === 'listNewBtn' || target.closest('#listNewBtn')) {
-          renderNewListPicker();
-          return;
-        }
-
-        // Back to list home
-        if (target.id === 'listBackHome' || target.closest('#listBackHome')) {
-          currentListId = null;
-          renderListsHome();
-          return;
-        }
-
-        // Template select
-        var tmpl = target.closest('[data-tmpl-name]');
-        if (tmpl) {
-          var name = tmpl.dataset.tmplName;
-          var icon = tmpl.dataset.tmplIcon;
-          createList(name, icon).catch(function (err) { console.error(err); });
-          return;
-        }
-
-        // Toggle item
-        var toggleBtn = target.closest('[data-item-toggle]');
-        if (toggleBtn && currentListId) {
-          toggleItem(currentListId, toggleBtn.dataset.itemToggle).catch(function (err) { console.error(err); });
-          return;
-        }
-
-        // Delete item
-        var delBtn = target.closest('[data-item-delete]');
-        if (delBtn && currentListId) {
-          deleteItem(currentListId, delBtn.dataset.itemDelete).catch(function (err) { console.error(err); });
-          return;
-        }
-
-        // Add button
-        if (target.id === 'listAddBtn' || target.closest('#listAddBtn')) {
-          var input = document.getElementById('listAddInput');
-          if (input && currentListId) {
-            addItems(currentListId, input.value).catch(function (err) { console.error(err); });
-            input.value = '';
-          }
-          return;
-        }
-
-        // Clear checked
-        if (target.id === 'listClearChecked' || target.closest('#listClearChecked')) {
-          if (currentListId) {
-            clearChecked(currentListId).catch(function (err) { console.error(err); });
-          }
-          return;
-        }
+      document.getElementById('quickPoints').addEventListener('click', function () {
+        setTimeout(function () {
+          renderChoreProgress().catch(function (error) { console.error(error); });
+        }, 150);
       });
 
-      // Expose for router
-      window.renderListsHome = renderListsHome;
+      window.addEventListener('hashchange', function () {
+        setTimeout(function () {
+          if (isChoresViewActive()) {
+            renderChoreProgress().catch(function (error) { console.error(error); });
+            renderChoreSettings();
+          }
+        }, 50);
+      });
 
-      // Warmup
-      var listsWarmup = setInterval(function () {
-        var r = runtime();
-        if (r && r.database && r.familyId && r.configLoaded) {
-          clearInterval(listsWarmup);
+      var phase4Warmup = setInterval(function () {
+        var phase = runtime();
+        if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
+          return;
         }
-      }, 500);
+        patchRuntimeHooks();
+        patchBankRender();
+        clearInterval(phase4Warmup);
+        stripWeeklyCard();
+        renderChoreProgress().catch(function (error) { console.error(error); });
+        renderChoreSettings();
+      }, 400);
     })();
   </script>
 </body>
 </html>
+
+
+
+
 
