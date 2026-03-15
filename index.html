@@ -7,6 +7,8 @@
   <meta name="theme-color" content="#4a90d9">
   <meta name="description" content="Voice-first family chore tracker PWA.">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
     :root {
       --bg: #f4f7fb;
@@ -1889,6 +1891,7 @@
       let isListening = false;
       let speechFinalText = '';
       let speechInterimText = '';
+      let speechResultSlots = [];
       let speechSubmitTimer = null;
       let speechManualStop = false;
 
@@ -1922,9 +1925,39 @@
         return [speechFinalText.trim(), speechInterimText.trim()].filter(Boolean).join(' ').trim();
       }
 
+      function collapseRepeatedSpeech(text) {
+        const parts = String(text || '').split(/\s+/).filter(Boolean);
+        if (!parts.length) return '';
+        const deduped = [];
+        for (let i = 0; i < parts.length; i += 1) {
+          const word = parts[i];
+          if (!deduped.length || deduped[deduped.length - 1].toLowerCase() !== word.toLowerCase()) {
+            deduped.push(word);
+          }
+        }
+        const joined = deduped.join(' ');
+        return joined.replace(/\b(.+?)\s+\1\b/gi, '$1');
+      }
+
+      function rebuildSpeechDraftFromSlots() {
+        let finalText = '';
+        let interimText = '';
+        speechResultSlots.forEach((slot) => {
+          if (!slot || !slot.text) return;
+          if (slot.isFinal) {
+            finalText += (finalText ? ' ' : '') + slot.text;
+          } else {
+            interimText += (interimText ? ' ' : '') + slot.text;
+          }
+        });
+        speechFinalText = collapseRepeatedSpeech(finalText.trim());
+        speechInterimText = collapseRepeatedSpeech(interimText.trim());
+      }
+
       function resetSpeechDraft() {
         speechFinalText = '';
         speechInterimText = '';
+        speechResultSlots = [];
         clearSpeechSubmitTimer();
       }
 
@@ -1972,21 +2005,15 @@
           setListeningState(true);
         };
         nextRecognition.onresult = (event) => {
-          let finalText = '';
-          let interim = '';
           let sawFinal = false;
-          for (let i = 0; i < event.results.length; i += 1) {
-            const transcript = String(event.results[i][0].transcript || '').trim();
-            if (!transcript) continue;
-            if (event.results[i].isFinal) {
-              finalText += (finalText ? ' ' : '') + transcript;
+          for (let i = event.resultIndex; i < event.results.length; i += 1) {
+            const transcript = collapseRepeatedSpeech(String(event.results[i][0].transcript || '').trim());
+            speechResultSlots[i] = transcript ? { text: transcript, isFinal: !!event.results[i].isFinal } : null;
+            if (event.results[i].isFinal && transcript) {
               sawFinal = true;
-            } else {
-              interim += (interim ? ' ' : '') + transcript;
             }
           }
-          speechFinalText = finalText.trim();
-          speechInterimText = interim.trim();
+          rebuildSpeechDraftFromSlots();
           const shown = getSpeechDraft();
           if (shown) {
             elements.messageInput.value = shown;
@@ -2794,8 +2821,4 @@
   </script>
 </body>
 </html>
-
-
-
-
 

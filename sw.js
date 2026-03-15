@@ -1,9 +1,13 @@
-const CACHE_NAME = 'chores-v2';
+const CACHE_NAME = 'chores-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './firebase-config.js'
+  './firebase-config.js',
+  './favicon-32.png',
+  './icons/apple-touch-icon.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -32,3 +36,4 @@ self.addEventListener('fetch', (event) => {
     }).catch(() => caches.match(event.request))
   );
 });
+
