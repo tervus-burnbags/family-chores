@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chores-v3';
+const CACHE_NAME = 'hub-v1';
 const ASSETS = [
   './',
   './index.html',

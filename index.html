@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Family Chores</title>
+  <title>Family Hub</title>
   <meta name="theme-color" content="#4a90d9">
-  <meta name="description" content="Voice-first family chore tracker PWA.">
+  <meta name="description" content="Family hub for chores, lists, and finances.">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -54,16 +54,8 @@
     .app {
       width: min(100%, 720px);
       min-height: calc(100vh - 32px);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        "header"
-        "card"
-        "settings"
-        "quick"
-        "composer"
-        "messages";
-      grid-template-rows: auto auto auto auto auto minmax(320px, 1fr);
+      display: flex;
+      flex-direction: column;
       gap: 12px;
       overflow-x: hidden;
     }
@@ -77,12 +69,12 @@
     }
 
     .header {
-      grid-area: header;
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 12px;
-      padding: 16px 18px;
+      gap: 4px;
+      padding: 14px 18px;
+      flex-shrink: 0;
     }
 
     .brand {
@@ -144,28 +136,78 @@
       transition: transform 0.15s ease, background 0.2s ease;
     }
 
-    .drawer {
+    .view {
       display: none;
-      padding: 14px 16px;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
       min-width: 0;
+      gap: 12px;
     }
 
-    #cardDrawer {
-      grid-area: card;
+    .view.active {
+      display: flex;
+      animation: viewIn 0.2s ease-out;
     }
 
-    #settingsDrawer {
-      grid-area: settings;
+    @keyframes viewIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    .drawer.open {
-      display: block;
-      animation: drawerIn 0.25s ease-out;
+    .view-content {
+      padding: 0 4px;
     }
 
-    @keyframes drawerIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+    .tab-bar {
+      display: flex;
+      position: sticky;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line);
+      border-radius: 0 0 var(--radius) var(--radius);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      min-height: 56px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      transition: color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tab.active {
+      color: var(--alex);
+    }
+
+    .tab-icon {
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .tab-label {
+      line-height: 1;
+    }
+
+    .bank-kid-picker {
+      display: flex;
+      gap: 8px;
+      padding: 0 4px;
+    }
+
+    .bank-kid-picker button {
+      flex: 1;
     }
 
     .drawer-grid {
@@ -206,13 +248,13 @@
     }
 
     .messages {
-      grid-area: messages;
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
       overflow-y: auto;
-      min-height: 320px;
+      flex: 1;
+      min-height: 200px;
     }
 
     @keyframes msgIn {
@@ -250,12 +292,12 @@
     }
 
     .composer {
-      grid-area: composer;
       padding: 12px;
       display: grid;
       grid-template-columns: 1fr auto auto;
       gap: 10px;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .composer input {
@@ -512,11 +554,11 @@
     }
 
     .quick-points {
-      grid-area: quick;
       padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      flex-shrink: 0;
     }
 
     .qp-row {
@@ -695,53 +737,26 @@
 
     @media (max-width: 480px) {
       body {
-        padding: 10px;
+        padding: 6px;
       }
 
       .app {
-        min-height: calc(100vh - 20px);
+        min-height: calc(100vh - 12px);
       }
 
-      .brand {
-        flex: 1 1 100%;
+      .header {
+        padding: 10px 14px;
       }
 
       .brand small {
-        max-width: 100%;
         font-size: 0.84rem;
-        line-height: 1.3;
-      }
-
-      .header-actions {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
-      }
-
-      .header-actions .icon-btn {
-        min-width: 0;
-        width: 100%;
-        padding: 0 8px;
-        font-size: 0.92rem;
       }
 
       .quick-points {
-        padding: 10px;
-      }
-
-      .qp-row {
-        flex-wrap: wrap;
-      }
-
-      .qp-kid,
-      .qp-pts {
-        flex: 1 1 calc(50% - 6px);
-        min-width: 0;
+        padding: 8px 10px;
       }
 
       .composer {
-        grid-template-columns: 1fr auto auto;
         gap: 8px;
       }
 
@@ -752,6 +767,15 @@
       .message {
         max-width: 94%;
       }
+
+      .tab {
+        min-height: 52px;
+        font-size: 0.68rem;
+      }
+
+      .tab-icon {
+        font-size: 1.1rem;
+      }
     }
   </style>
 </head>
@@ -759,46 +783,78 @@
   <main class="app">
     <section class="panel header" aria-label="App header">
       <div class="brand">
-        <h1>Family Chores</h1>
+        <h1>Family Hub</h1>
         <small id="familyLabel"></small>
       </div>
-      <div class="header-actions">
-        <button class="icon-btn card-btn alex" id="cardAlex" type="button" data-card-kid="alex" aria-label="Alex's card">A</button>
-        <button class="icon-btn card-btn louisa" id="cardLouisa" type="button" data-card-kid="louisa" aria-label="Louisa's card">L</button>
-        <button class="icon-btn" id="settingsToggle" type="button" aria-label="Open settings">&#9881;</button>
+    </section>
+
+    <!-- Chores View -->
+    <div class="view active" id="viewChores">
+      <div class="panel quick-points" id="quickPoints">
+        <div class="qp-row">
+          <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
+          <button type="button" class="qp-kid louisa" data-qp-kid="louisa">Louisa</button>
+          <button type="button" class="qp-kid both" data-qp-kid="both">Both</button>
+        </div>
+        <div class="qp-row">
+          <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
+          <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
+          <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
+          <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
+        </div>
       </div>
-    </section>
+      <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
+      <form class="panel composer" id="composer">
+        <label class="visually-hidden" for="messageInput">Type a chore update</label>
+        <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
+        <button class="send-btn" type="submit">Send</button>
+        <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">Mic</button>
+      </form>
+    </div>
 
-    <section class="panel drawer" id="cardDrawer" aria-label="Kid card view">
-      <div id="cardContent"></div>
-    </section>
-
-    <section class="panel drawer" id="settingsDrawer" aria-label="Settings panel">
-      <div class="drawer-grid"></div>
-    </section>
-
-    <div class="panel quick-points" id="quickPoints">
-      <div class="qp-row">
-        <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
-        <button type="button" class="qp-kid louisa" data-qp-kid="louisa">Louisa</button>
-        <button type="button" class="qp-kid both" data-qp-kid="both">Both</button>
-      </div>
-      <div class="qp-row">
-        <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
-        <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
-        <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
-        <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
+    <!-- Lists View -->
+    <div class="view" id="viewLists">
+      <div id="listsContent" class="view-content">
+        <p style="color:var(--muted);text-align:center;padding:40px 16px">Lists coming soon</p>
       </div>
     </div>
 
-    <form class="panel composer" id="composer">
-      <label class="visually-hidden" for="messageInput">Type a chore update</label>
-      <input id="messageInput" type="text" placeholder="Type or speak..." autocomplete="off">
-      <button class="send-btn" type="submit">Send</button>
-      <button class="mic-btn" type="button" id="micButton" aria-label="Voice input">Mic</button>
-    </form>
+    <!-- Bank View -->
+    <div class="view" id="viewBank">
+      <div class="bank-kid-picker" id="bankKidPicker">
+        <button type="button" class="qp-kid alex active" data-bank-kid="alex">Alex</button>
+        <button type="button" class="qp-kid louisa" data-bank-kid="louisa">Louisa</button>
+      </div>
+      <div id="cardContent"></div>
+      <section id="scoreboardPanel" aria-label="Scoreboard">
+        <div class="drawer-grid"></div>
+      </section>
+    </div>
 
-    <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
+    <!-- Settings View -->
+    <div class="view" id="viewSettings">
+      <div id="settingsContent"></div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <nav class="tab-bar" id="tabBar">
+      <a class="tab active" href="#chores" data-tab="chores">
+        <span class="tab-icon">&#9998;</span>
+        <span class="tab-label">Chores</span>
+      </a>
+      <a class="tab" href="#lists" data-tab="lists">
+        <span class="tab-icon">&#9776;</span>
+        <span class="tab-label">Lists</span>
+      </a>
+      <a class="tab" href="#bank" data-tab="bank">
+        <span class="tab-icon">&#36;</span>
+        <span class="tab-label">Bank</span>
+      </a>
+      <a class="tab" href="#settings" data-tab="settings">
+        <span class="tab-icon">&#9881;</span>
+        <span class="tab-label">Settings</span>
+      </a>
+    </nav>
   </main>
 
   <div class="overlay" id="familyModal" role="dialog" aria-modal="true" aria-labelledby="familyModalTitle">
@@ -957,10 +1013,11 @@
       composer: document.getElementById('composer'),
       messageInput: document.getElementById('messageInput'),
       micButton: document.getElementById('micButton'),
-      settingsToggle: document.getElementById('settingsToggle'),
-      settingsDrawer: document.getElementById('settingsDrawer'),
-      cardDrawer: document.getElementById('cardDrawer'),
-      cardContent: document.getElementById('cardContent')
+      cardContent: document.getElementById('cardContent'),
+      scoreboardPanel: document.getElementById('scoreboardPanel'),
+      settingsContent: document.getElementById('settingsContent'),
+      listsContent: document.getElementById('listsContent'),
+      tabBar: document.getElementById('tabBar')
     };
 
     let auth;
@@ -1088,40 +1145,69 @@
       elements.familyLabel.textContent = 'Family code: ' + familyId + ' | Sync ready';
     }
 
-    function setupDrawers() {
-      function closeAllDrawers() {
-        elements.settingsDrawer.classList.remove('open');
-        elements.cardDrawer.classList.remove('open');
+    function setupRouter() {
+      var views = {
+        chores: document.getElementById('viewChores'),
+        lists: document.getElementById('viewLists'),
+        bank: document.getElementById('viewBank'),
+        settings: document.getElementById('viewSettings')
+      };
+      var tabs = elements.tabBar.querySelectorAll('.tab');
+      var currentView = 'chores';
+
+      function switchView(name) {
+        if (!views[name]) name = 'chores';
+        currentView = name;
+        Object.keys(views).forEach(function (key) {
+          views[key].classList.toggle('active', key === name);
+        });
+        tabs.forEach(function (tab) {
+          tab.classList.toggle('active', tab.dataset.tab === name);
+        });
+        if (name === 'bank') {
+          var selectedKid = document.getElementById('bankKidPicker').querySelector('.active');
+          var kidId = selectedKid ? selectedKid.dataset.bankKid : 'alex';
+          if (typeof window.renderCardView === 'function') {
+            window.renderCardView(kidId).catch(function (e) { console.error(e); });
+          }
+          if (typeof window.refreshPhase4 === 'function') {
+            window.refreshPhase4().catch(function (e) { console.error(e); });
+          }
+        }
+        if (name === 'settings' && typeof window.renderSettingsPanel === 'function') {
+          window.renderSettingsPanel().catch(function (e) { console.error(e); });
+        }
       }
 
-      elements.settingsToggle.addEventListener('click', () => {
-        const opening = !elements.settingsDrawer.classList.contains('open');
-        closeAllDrawers();
-        if (opening) {
-          elements.settingsDrawer.classList.add('open');
-          if (typeof window.renderSettingsPanel === 'function') {
-            window.renderSettingsPanel().catch((error) => console.error(error));
-          }
+      window.addEventListener('hashchange', function () {
+        switchView(location.hash.replace('#', '') || 'chores');
+      });
+
+      elements.tabBar.addEventListener('click', function (e) {
+        var tab = e.target.closest('.tab');
+        if (!tab) return;
+        e.preventDefault();
+        var name = tab.dataset.tab;
+        location.hash = '#' + name;
+      });
+
+      // Bank kid picker
+      document.getElementById('bankKidPicker').addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-bank-kid]');
+        if (!btn) return;
+        document.getElementById('bankKidPicker').querySelectorAll('.qp-kid').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var kidId = btn.dataset.bankKid;
+        if (typeof window.renderCardView === 'function') {
+          window.renderCardView(kidId).catch(function (e) { console.error(e); });
         }
       });
 
-      document.querySelectorAll('[data-card-kid]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const kidId = btn.dataset.cardKid;
-          const wasOpen = elements.cardDrawer.classList.contains('open');
-          const wasSameKid = elements.cardDrawer.dataset.kid === kidId;
-          closeAllDrawers();
-          if (!wasOpen || !wasSameKid) {
-            elements.cardDrawer.classList.add('open');
-            elements.cardDrawer.dataset.kid = kidId;
-            if (typeof window.openCardForKid === 'function') {
-              window.openCardForKid(kidId);
-            } else if (typeof window.renderCardView === 'function') {
-              window.renderCardView(kidId).catch((error) => console.error(error));
-            }
-          }
-        });
-      });
+      // Initialize from hash
+      var initial = location.hash.replace('#', '') || 'chores';
+      switchView(initial);
+
+      window.switchView = switchView;
     }
 
     function setupComposer() {
@@ -1218,7 +1304,7 @@
       });
     }
 
-    setupDrawers();
+    setupRouter();
     setupComposer();
     bindFamilyActions();
     registerServiceWorker();
@@ -2325,8 +2411,6 @@
       }
 
       window.openCardForKid = function openCardForKid(kidId) {
-        elements.cardDrawer.classList.add('open');
-        elements.cardDrawer.dataset.kid = kidId;
         if (typeof window.renderCardView === 'function') {
           window.renderCardView(kidId).catch((error) => console.error(error));
         }
@@ -2517,7 +2601,7 @@
         }
       }
 
-      elements.cardDrawer.addEventListener('click', (event) => {
+      document.getElementById('viewBank').addEventListener('click', (event) => {
         const button = event.target.closest('button[data-card-action], button[data-score-action]');
         if (!button) {
           return;
@@ -2651,11 +2735,11 @@
       async function renderSettingsPanel() {
         var app = phase();
         if (!app || !app.familyId || !app.configLoaded) {
-          elements.settingsDrawer.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading...</p></article></div>';
+          elements.settingsContent.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading...</p></article></div>';
           try {
             app = await waitForRuntimeReady(phase, 5000);
           } catch (error) {
-            elements.settingsDrawer.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Unable to load settings right now.</p></article></div>';
+            elements.settingsContent.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Unable to load settings right now.</p></article></div>';
             return;
           }
         }
@@ -2664,7 +2748,7 @@
         const chores = app.currentConfig.chores || CHORES;
         const historyMarkup = await renderHistory();
         const txnMarkup = await renderTransactions();
-        elements.settingsDrawer.innerHTML = [
+        elements.settingsContent.innerHTML = [
           '<div class="settings-grid">',
           '<article class="stat-card"><h3>Family</h3><p class="settings-note">Family code: ' + safeName(app.familyId) + '</p><button type="button" class="settings-btn" data-setting-action="copy-family">Copy link</button></article>',
           '<article class="stat-card"><h3>Chores</h3><div class="settings-list">',
@@ -2723,7 +2807,7 @@
         await renderSettingsPanel();
       }
 
-      elements.settingsDrawer.addEventListener('change', (event) => {
+      elements.settingsContent.addEventListener('change', (event) => {
         const target = event.target;
         const app = phase();
         if (!app) return;
@@ -2763,7 +2847,7 @@
         }
       });
 
-      elements.settingsDrawer.addEventListener('click', (event) => {
+      elements.settingsContent.addEventListener('click', (event) => {
         const button = event.target.closest('button');
         if (!button) return;
         const action = button.dataset.settingAction;
