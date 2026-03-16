@@ -1,23 +1,29 @@
-# Task State - Family Hub: Fix Remaining Tabs
+# Task State - Family Hub: Chores Redesign + Unified Settings
 
-**Task:** Fix Remaining Broken Tabs (Bank, Fun Trackers, Lists)
-**Current Phase:** Phase 7a-7c
-**Phase:** complete
-**Status:** Review complete
-**Next Agent:** gemini
-**Next Action:** Review Bank cards, Fun trackers, and Lists restoration
-**Last Updated:** 2026-03-15
+**Task:** Chores Redesign + Unified Settings
+**Current Phase:** Phase 8a
+**Phase:** plan-review
+**Current Phase #:** 8a
+**Status:** Awaiting user approval
+**Next Agent:** user
+**Next Action:** Approve plan in TASK.md, then hand to Codex
+**Last Updated:** 2026-03-16
 
 ## Phases
 
-- [x] **Phase 7a: Restore Bank Kid Cards**
-- [x] **Phase 7b: Fun Tab Trackers**
-- [x] **Phase 7c: Fix Lists Tab**
+- [ ] **Phase 8a: Unified Header Settings** ← START HERE
+  - Move gear icons from Chores/Bank toolbars into header
+  - One gear button opens context-aware settings based on active tab
+  - Remove per-tab toolbar panels
+- [ ] **Phase 8b: Chores Tab Redesign — Daily Tracker**
+  - Replace progress bars with tappable chore checklist
+  - Show today's chores as done/undone based on log entries
+  - Compact weekly summary line
+  - Keep quick-add point buttons
 
 ## Notes
 
-- Restored `window.renderCardView` and card actions before the Phase 4 bank patch runs, so Bank renders again and the weekly card can still be stripped.
-- Added Kid Fun progress tracking in localStorage: unique jokes discovered and completed Mad Lib stories.
-- Rebuilt `window.renderListsHome` and `window.familyLists` with Firebase-backed shared checklists, default lists, templates, and real-time updates.
-- Bumped `sw.js` cache version to `hub-v9`.
-- Manual browser verification is still pending for Bank actions, Fun counter persistence, Lists real-time sync, and parser-driven list actions.
+- Phase 8a must come first (removes per-tab toolbars that 8b eliminates).
+- Chore checklist matches config chores against today's log entries by choreId.
+- Existing renderChoreSettings() and renderBankSettings() are reused, just re-targeted to header panel.
+- sw.js cache bump + Lists placeholder text fix already staged (hub-v10).
