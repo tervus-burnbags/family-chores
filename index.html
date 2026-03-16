@@ -2388,7 +2388,9 @@
 
       function switchView(name) {
         if (!views[name]) name = 'bulletin';
+        appShellState.settingsPanelOpen = false;
         appShellState.currentView = name;
+        renderHeaderSettingsPanel();
         Object.keys(views).forEach(function (key) {
           views[key].classList.toggle('active', key === name);
         });
@@ -2411,11 +2413,11 @@
             window.refreshPhase4().catch(function (e) { console.error(e); });
           }
         }
+        if (name === 'chores' && typeof window.renderChoreProgress === 'function') {
+          window.renderChoreProgress().catch(function (e) { console.error(e); });
+        }
         if (name === 'lists' && typeof window.renderListsHome === 'function') {
           window.renderListsHome();
-        }
-        if (appShellState.settingsPanelOpen) {
-          renderHeaderSettingsPanel();
         }
       }
 
@@ -6719,6 +6721,7 @@
       }
 
       window.renderBankSettings = renderBankSettings;
+      window.renderChoreProgress = renderChoreProgress;
       window.renderChoreSettings = renderChoreSettings;
       window.refreshPhase4 = refreshPhase4;
 
