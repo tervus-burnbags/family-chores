@@ -1,23 +1,23 @@
 # Task State - Family Hub
 
-**Task:** Phase 20 — Require Kid Selection (No "Both" Default)
-**Current Phase:** 20
+**Task:** Phase 21 — Context-Aware Voice/Chat Input
+**Current Phase:** 21
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 20
+**Next Action:** Review Phase 21
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–19 + Consolidation + Visual Polish
+- [x] Phases 8–20 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 20: Remove "Both" mode** — Default to the first kid, require explicit selection, and remove the "Everyone" option from Chores
+- [x] **Phase 21: Context-aware input** — Gate intents by current tab and show redirect toast for wrong-tab commands
 
 ## Notes
 
-- Chores now always operate on one selected kid at a time
-- First render defaults to the first configured kid
-- Quick-add, chore tiles, and week log all follow the same single-kid selection through `selectedChoreKids()`
-- Validation complete: inline scripts parsed successfully after Phase 20 changes
+- Global intents still work everywhere: undo, confirm, and status
+- Chores handles points/chore actions, Bank handles money, Lists handles list ops, Home handles notes
+- The shared input placeholder now updates per tab as a hint for what commands belong there
+- Validation complete: inline scripts parsed successfully after Phase 21 changes

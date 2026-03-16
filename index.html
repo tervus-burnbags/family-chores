@@ -2609,6 +2609,15 @@
         if (!views[name]) name = 'bulletin';
         appShellState.settingsPanelOpen = false;
         appShellState.currentView = name;
+        if (elements.messageInput) {
+          var placeholders = {
+            chores: '"Alex brushed teeth" or "3 points for Louisa"',
+            bank: '"Paid Alex $5" or "Louisa spent $3"',
+            lists: '"Add milk to grocery" or "Create shopping list"',
+            bulletin: '"Pin: picture day Tuesday"'
+          };
+          elements.messageInput.placeholder = placeholders[name] || 'Say something...';
+        }
         renderHeaderSettingsPanel();
         Object.keys(views).forEach(function (key) {
           views[key].classList.toggle('active', key === name);
@@ -3486,10 +3495,40 @@
         showToast(message, { onUndo: () => undoLastAction() });
       }
 
+      var VIEW_INTENTS = {
+        chores: ['log_chore', 'confirm_chore', 'freepoints', 'adhoc', 'change_points'],
+        bank: ['record_payment', 'kid_spent', 'parent_owes_kid', 'kid_owes_parent', 'record_debt', 'settle_debt'],
+        lists: ['create_list', 'add_to_list', 'check_off_list'],
+        bulletin: ['log_note', 'remove_note']
+      };
+
+      var GLOBAL_INTENTS = ['undo', 'confirm_yes', 'confirm_no', 'check_status', 'no_match', 'missing_kid'];
+
+      var VIEW_LABELS = {
+        chores: 'Chores',
+        bank: 'Bank',
+        lists: 'Lists',
+        bulletin: 'Home'
+      };
+
       async function executeIntent(result) {
         if (!familyId || !configLoaded) {
           showToast('Connect to a family first.', { type: 'error' });
           return;
+        }
+
+        var currentView = appShellState.currentView || 'bulletin';
+        if (GLOBAL_INTENTS.indexOf(result.intent) === -1) {
+          var allowedView = null;
+          Object.keys(VIEW_INTENTS).forEach(function (viewName) {
+            if (VIEW_INTENTS[viewName].indexOf(result.intent) !== -1) {
+              allowedView = viewName;
+            }
+          });
+          if (allowedView && allowedView !== currentView) {
+            showToast('Switch to ' + (VIEW_LABELS[allowedView] || allowedView) + ' for that.', { type: 'error' });
+            return;
+          }
         }
 
         if (result.intent === 'confirm_yes') {
