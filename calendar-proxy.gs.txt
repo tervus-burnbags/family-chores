@@ -1,11 +1,13 @@
 const CALENDAR_ID = 'primary';
-const LOOKAHEAD_DAYS = 7;
-const KID_RULES = {
+const DEFAULT_DAYS = 10;
+const MAX_DAYS = 30;
+const MEMBER_RULES = {
   alex: ['alex'],
-  louisa: ['louisa', 'lou']
+  louisa: ['louisa', 'lou'],
+  jameson: ['jameson', 'jamie']
 };
 
-function doGet() {
+function doGet(e) {
   const calendar = CalendarApp.getCalendarById(CALENDAR_ID);
   if (!calendar) {
     return ContentService
@@ -13,10 +15,14 @@ function doGet() {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  var days = parseInt(e && e.parameter && e.parameter.days, 10);
+  if (!days || days < 1) days = DEFAULT_DAYS;
+  if (days > MAX_DAYS) days = MAX_DAYS;
+
   const now = new Date();
-  const end = new Date(now.getTime() + LOOKAHEAD_DAYS * 24 * 60 * 60 * 1000);
+  const end = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
   const events = calendar.getEvents(now, end).map(toEventPayload).filter(function (event) {
-    return event.kids.length > 0;
+    return event.members.length > 0;
   });
 
   return ContentService
@@ -33,14 +39,14 @@ function toEventPayload(event) {
     title: event.getTitle(),
     start: event.getStartTime().toISOString(),
     end: event.getEndTime().toISOString(),
-    kids: detectKids(haystack),
+    members: detectMembers(haystack),
     allDay: event.isAllDayEvent()
   };
 }
 
-function detectKids(text) {
-  return Object.keys(KID_RULES).filter(function (kidId) {
-    return KID_RULES[kidId].some(function (token) {
+function detectMembers(text) {
+  return Object.keys(MEMBER_RULES).filter(function (memberId) {
+    return MEMBER_RULES[memberId].some(function (token) {
       return text.indexOf(token) !== -1;
     });
   });

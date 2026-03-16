@@ -1,23 +1,25 @@
-# Review: Fix Remaining Broken Tabs (Bank, Fun Trackers, Lists)
+# Review: Family Hub Redesign - Phase 8 & Visual Polish
 
 ### Summary
-The task to fix the remaining broken tabs has been successfully implemented. The Bank card UI has been restored and seamlessly integrates with the Phase 4 strip patch. Progress trackers for jokes and mad libs are active on the Fun tab, maintaining state in local storage. Finally, the Lists tab now features a robust real-time shared checklist system.
+The unification of settings (Phase 8a) and the transition to a daily chore tracker (Phase 8b) are complete and highly successful. The application now features a "premium" header with integrated settings that adapt to the current view. The Chores tab is significantly more interactive and useful for daily family management.
 
 ### Critical Findings
-- **Phase 7a: Bank Card Restoration:** `window.renderCardView` and its dependencies have been properly restored. The function is defined *before* `patchBankRender` executes, meaning the weekly points card is correctly stripped out while preserving the rest of the Bank UI and financial actions (Pay, Spent, Settle Debt).
-- **Phase 7c: Lists Tab Rebuilt:** `window.renderListsHome` and the `window.familyLists` object are implemented correctly. The lists utilize Firebase for real-time synchronization. Creating, toggling, and deleting items function as specified, alongside template-based list creation. List intent parsing was previously restored, and `familyLists` provides the correct hooks (`createListNamed`, `addItemsToNamedList`, `checkOffItemByText`).
+- **Phase 8a: Unified Settings:** The header gear icon and contextual settings panel work as intended. Moving settings out of the tab content area has decluttered the UI significantly.
+- **Phase 8b: Chore Tracker:** The new daily checklist correctly tracks "done" states against log entries. The toggle logic for multi-kid (Both) selections is robust and handles partial completion correctly.
+- **Regression Check:** The `#messages` panel was preserved in Chores to support the voice/text parser's history, which is a sensible deviation from the original "remove" directive to maintain current functionality.
 
 ### Major Findings
-- **Phase 7b: Fun Trackers:** Progress tracking for the Fun tab is fully functional. 
-  - Unique jokes are successfully tracked via an array in `state.jokesSeen`, and the UI correctly displays the count against the total `KID_JOKES.length`.
-  - `state.madLibsCompleted` increments exactly once upon reaching the final blank of a mad lib. Both persist to local storage securely.
+- **Visual Polish (Uncommitted):** The uncommitted changes provide a massive visual upgrade. The header's gradient background (`#1e3a5f` to `#3b6fa0`), brand icon, and the glow effect on the online indicator make the app feel modern and professional.
+- **Calendar Settings (Uncommitted):** The addition of a "Days Ahead" setting in the family panel and the ability to fetch a variable number of days from the calendar proxy is a great functional improvement.
+- **MEMBER_LABELS Extension:** The calendar badge logic was extended to include "Jameson," allowing for better integration of other family members on the shared calendar.
 
 ### Minor Findings
-- **CSS Styles:** The `ensureBankListStyles` injection perfectly styles both the restored Bank view and the new Lists view.
-- **Service Worker:** Cache version was bumped to `hub-v9`.
+- **Service Worker:** The cache version has been bumped to `hub-v12`.
+- **CSS Improvements:** The use of `border-radius: 0 0 24px 24px` on the header and the card-style `family-panel` creates a cohesive, modern look.
 
 ### Plan Alignment
-All three phases (7a, 7b, and 7c) align with the requirements specified in `TASK.md`. 
+The implementation fulfills all Phase 8 requirements and adds significant visual and functional polish.
 
 ### Next Steps
-The changes look solid and there are no regressions. Manual testing in the browser will verify real-time list syncing across devices. No further immediate code changes are necessary.
+1. The user should commit the current uncommitted changes to finalize the Phase 8 polish.
+2. The project is now in an excellent state for any further feature expansions or production deployment.

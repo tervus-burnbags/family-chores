@@ -73,32 +73,66 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 4px;
-      padding: 14px 18px;
+      gap: 0;
+      padding: 0;
       flex-shrink: 0;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #3b6fa0 100%);
+      border: none;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 20px rgba(30, 58, 95, 0.25);
+      color: #fff;
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 14px;
     }
 
     .brand {
       display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      display: flex;
       flex-direction: column;
-      gap: 4px;
       min-width: 0;
     }
 
     .brand h1 {
       margin: 0;
       font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       line-height: 1.2;
+      color: #fff;
     }
 
     .brand small {
-      color: var(--muted);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.78rem;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .header-summary {
@@ -111,11 +145,7 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-      width: 100%;
-      min-width: 0;
+      gap: 6px;
     }
 
     .icon-btn {
@@ -129,19 +159,23 @@
       background: var(--panel-alt);
       color: var(--text);
       cursor: pointer;
-      flex: 0 1 auto;
-    }
-
-    .icon-btn:hover {
-      background: rgba(74, 144, 217, 0.15);
+      transition: transform 0.12s ease, background 0.15s ease;
     }
 
     .icon-btn:active {
       transform: scale(0.93);
     }
 
-    .icon-btn {
-      transition: transform 0.15s ease, background 0.2s ease;
+    .header .icon-btn {
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .header .icon-btn:active {
+      background: rgba(255, 255, 255, 0.22);
     }
 
     .header-meta {
@@ -152,16 +186,16 @@
     }
 
     .sync-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 999px;
-      background: #94a3b8;
+      background: rgba(255, 255, 255, 0.4);
       flex: 0 0 auto;
     }
 
     .sync-dot.online {
-      background: #16a34a;
-      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+      background: #4ade80;
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
     }
 
     .family-panel[hidden] {
@@ -169,11 +203,13 @@
     }
 
     .family-panel {
-      margin-top: 8px;
+      margin: 0 12px 12px;
       padding: 14px;
-      border-radius: 18px;
-      background: rgba(247, 250, 255, 0.95);
-      border: 1px solid rgba(215, 224, 238, 0.9);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--text);
+      border: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
 
     .family-panel-row {
@@ -591,6 +627,7 @@
 
     .calendar-item-dot.alex { background: var(--alex); }
     .calendar-item-dot.louisa { background: var(--louisa); }
+    .calendar-item-dot.jameson { background: #3a8a52; }
     .calendar-item-dot.both { background: linear-gradient(135deg, var(--alex), var(--louisa)); }
 
     .calendar-item-body {
@@ -643,6 +680,11 @@
     .calendar-badge.louisa {
       background: rgba(138, 91, 209, 0.14);
       color: var(--louisa);
+    }
+
+    .calendar-badge.jameson {
+      background: rgba(76, 153, 96, 0.14);
+      color: #3a8a52;
     }
 
     .calendar-badge.both {
@@ -754,8 +796,15 @@
     }
 
     .tab-icon {
-      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
       line-height: 1;
+    }
+
+    .tab-icon svg {
+      display: block;
     }
 
     .tab-label {
@@ -1668,8 +1717,9 @@
         font-size: 0.68rem;
       }
 
-      .tab-icon {
-        font-size: 1.1rem;
+      .tab-icon svg {
+        width: 18px;
+        height: 18px;
       }
     }
   </style>
@@ -1677,18 +1727,19 @@
 <body>
   <div id="toastContainer" class="toast-container"></div>
   <main class="app">
-    <section class="panel header" aria-label="App header">
-      <div class="header-summary">
+    <section class="header" aria-label="App header">
+      <div class="header-main">
         <div class="brand">
-          <h1>Family Hub</h1>
-          <small id="familyLabel"></small>
+          <div class="brand-icon">&#127968;</div>
+          <div class="brand-text">
+            <h1>Family Hub</h1>
+            <small id="familyLabel"></small>
+          </div>
         </div>
         <div class="header-actions">
-          <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Open settings">&#9881;</button>
-          <button type="button" class="icon-btn" id="headerFamilyButton" aria-label="Open family info and sharing">&#128279;</button>
+          <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Open settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
         </div>
       </div>
-      <section class="family-panel" id="headerFamilyPanel" hidden></section>
       <section class="family-panel" id="headerSettingsPanel" hidden></section>
     </section>
 
@@ -1751,24 +1802,24 @@
     <!-- Bottom Tab Bar -->
     <nav class="tab-bar" id="tabBar">
       <a class="tab active" href="#bulletin" data-tab="bulletin">
-        <span class="tab-icon">&#127968;</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <span class="tab-label">Home</span>
       </a>
       <a class="tab" href="#chores" data-tab="chores">
-        <span class="tab-icon">&#9998;</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
         <span class="tab-label">Chores</span>
       </a>
-      <a class="tab" href="#fun" data-tab="fun">
-        <span class="tab-icon">&#127880;</span>
-        <span class="tab-label">Fun</span>
-      </a>
       <a class="tab" href="#lists" data-tab="lists">
-        <span class="tab-icon">&#9776;</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
         <span class="tab-label">Lists</span>
       </a>
       <a class="tab" href="#bank" data-tab="bank">
-        <span class="tab-icon">&#36;</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
         <span class="tab-label">Bank</span>
+      </a>
+      <a class="tab" href="#fun" data-tab="fun">
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+        <span class="tab-label">Fun</span>
       </a>
     </nav>
   </main>
@@ -1925,8 +1976,6 @@
       familyModalStatus: document.getElementById('familyModalStatus'),
       headerSettingsButton: document.getElementById('headerSettingsButton'),
       headerSettingsPanel: document.getElementById('headerSettingsPanel'),
-      headerFamilyButton: document.getElementById('headerFamilyButton'),
-      headerFamilyPanel: document.getElementById('headerFamilyPanel'),
       createFamilyButton: document.getElementById('createFamilyButton'),
       joinFamilyButton: document.getElementById('joinFamilyButton'),
       joinFamilyInput: document.getElementById('joinFamilyInput'),
@@ -2128,6 +2177,7 @@
     function buildFamilySettingsMarkup() {
       const runtime = window.phaseRuntime;
       const calendarUrl = runtime && runtime.currentConfig ? String(runtime.currentConfig.calendarUrl || '') : '';
+      const calendarDays = runtime && runtime.currentConfig ? Number(runtime.currentConfig.calendarDays || 10) : 10;
       if (!familyId) {
         return '<div class="settings-empty">' +
           '<strong>Family</strong>' +
@@ -2150,12 +2200,19 @@
         '</div>' +
         '<form id="familyCalendarForm" class="family-calendar-form">' +
           '<div class="family-panel-copy">' +
-            '<strong>Calendar URL</strong>' +
-            '<p class="family-panel-note">Paste the deployed Google Apps Script web app URL to show upcoming events on Home.</p>' +
+            '<strong>Calendar</strong>' +
           '</div>' +
           '<input type="url" id="familyCalendarUrl" name="familyCalendarUrl" placeholder="https://script.google.com/macros/s/..." value="' + escapeHtml(calendarUrl) + '">' +
+          '<div class="family-panel-row" style="margin-top:8px">' +
+            '<div class="family-panel-copy"><strong>Days ahead</strong></div>' +
+            '<select id="familyCalendarDays" style="min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff">' +
+              [7, 10, 14, 21, 30].map(function (d) {
+                return '<option value="' + d + '"' + (d === calendarDays ? ' selected' : '') + '>' + d + ' days</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
           '<div class="family-panel-actions">' +
-            '<button type="submit" class="settings-btn">Save calendar URL</button>' +
+            '<button type="submit" class="settings-btn">Save calendar settings</button>' +
           '</div>' +
         '</form>';
     }
@@ -2267,16 +2324,7 @@
         location.hash = '#' + name;
       });
 
-      elements.headerFamilyButton.addEventListener('click', function () {
-        appShellState.settingsPanelOpen = false;
-        renderHeaderSettingsPanel();
-        appShellState.familyPanelOpen = !appShellState.familyPanelOpen;
-        renderHeaderFamilyPanel();
-      });
-
       elements.headerSettingsButton.addEventListener('click', function () {
-        appShellState.familyPanelOpen = false;
-        renderHeaderFamilyPanel();
         appShellState.settingsPanelOpen = !appShellState.settingsPanelOpen;
         renderHeaderSettingsPanel();
       });
@@ -2420,13 +2468,20 @@
           }
         }
 
-        database.ref('families/' + familyId + '/config/calendarUrl').set(calendarUrl || null).then(() => {
+        const daysInput = document.getElementById('familyCalendarDays');
+        const calendarDays = daysInput ? Number(daysInput.value) || 10 : 10;
+
+        var updates = {};
+        updates['families/' + familyId + '/config/calendarUrl'] = calendarUrl || null;
+        updates['families/' + familyId + '/config/calendarDays'] = calendarDays;
+        database.ref().update(updates).then(() => {
           if (window.phaseRuntime && window.phaseRuntime.currentConfig) {
             if (calendarUrl) {
               window.phaseRuntime.currentConfig.calendarUrl = calendarUrl;
             } else {
               delete window.phaseRuntime.currentConfig.calendarUrl;
             }
+            window.phaseRuntime.currentConfig.calendarDays = calendarDays;
           }
           if (window.familyBulletin && typeof window.familyBulletin.invalidateCalendarCache === 'function') {
             window.familyBulletin.invalidateCalendarCache();
@@ -2437,7 +2492,7 @@
             window.renderBulletin().catch((error) => console.error(error));
           }
           if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
-            window.phaseRuntime.showToast(calendarUrl ? 'Saved calendar URL.' : 'Removed calendar URL.');
+            window.phaseRuntime.showToast('Saved calendar settings.');
           }
         }).catch((error) => {
           console.error(error);
@@ -4938,7 +4993,7 @@
             title: String(event && event.title ? event.title : 'Untitled event'),
             start: String(event && event.start ? event.start : ''),
             end: String(event && event.end ? event.end : ''),
-            kids: Array.isArray(event && event.kids) ? event.kids.filter(Boolean) : [],
+            kids: Array.isArray(event && event.members) ? event.members.filter(Boolean) : Array.isArray(event && event.kids) ? event.kids.filter(Boolean) : [],
             allDay: Boolean(event && event.allDay)
           };
         }).filter(function (event) {
@@ -4975,7 +5030,9 @@
 
         calendarCache.familyId = phase.familyId;
         calendarCache.url = url;
-        calendarCache.pending = fetch(url, { cache: 'no-store' })
+        var calendarDays = Number(phase.currentConfig && phase.currentConfig.calendarDays) || 10;
+        var fetchUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'days=' + calendarDays;
+        calendarCache.pending = fetch(fetchUrl, { cache: 'no-store' })
           .then(function (response) {
             if (!response.ok) {
               throw new Error('Calendar request failed with status ' + response.status + '.');
@@ -5025,29 +5082,29 @@
         return startText + ' - ' + end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       }
 
-      function renderCalendarBadges(kids) {
-        var normalized = Array.isArray(kids) ? kids.filter(Boolean) : [];
+      function renderCalendarBadges(members) {
+        var MEMBER_LABELS = { alex: 'Alex', louisa: 'Louisa', jameson: 'Jameson' };
+        var normalized = Array.isArray(members) ? members.filter(Boolean) : [];
         if (!normalized.length) {
           return '<span class="calendar-badge both">Family</span>';
         }
-        if (normalized.length > 1) {
-          return '<span class="calendar-badge both">Both</span>';
-        }
-        return normalized.map(function (kidId) {
-          var label = kidId === 'louisa' ? 'Louisa' : kidId === 'alex' ? 'Alex' : kidId;
-          return '<span class="calendar-badge ' + escapeBulletinHtml(kidId) + '">' + escapeBulletinHtml(label) + '</span>';
+        return normalized.map(function (id) {
+          var label = MEMBER_LABELS[id] || id;
+          return '<span class="calendar-badge ' + escapeBulletinHtml(id) + '">' + escapeBulletinHtml(label) + '</span>';
         }).join('');
       }
 
       function renderCalendarSection(calendarState) {
         if (calendarState.status === 'missing-url') {
-          return '<div class="calendar-empty"><strong>Set up calendar in family settings.</strong><p>Paste your deployed Apps Script URL in the header panel to show the next 7 days of events here.</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="open-settings">Open settings</button></div></div>';
+          return '<div class="calendar-empty"><strong>Set up calendar in settings.</strong><p>Tap the gear icon in the header to add your Google Calendar URL.</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="open-settings">Open settings</button></div></div>';
         }
         if (calendarState.status === 'error') {
           return '<div class="calendar-empty"><strong>Calendar unavailable.</strong><p>' + escapeBulletinHtml(calendarState.error || 'We could not load events right now.') + '</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="retry">Retry</button></div></div>';
         }
         if (!calendarState.events.length) {
-          return '<div class="calendar-empty"><strong>No upcoming events.</strong><p>The next 7 days are clear right now.</p></div>';
+          var rt = runtime();
+          var daysAhead = Number(rt && rt.currentConfig && rt.currentConfig.calendarDays) || 10;
+          return '<div class="calendar-empty"><strong>No upcoming events.</strong><p>Nothing in the next ' + daysAhead + ' days.</p></div>';
         }
 
         var groups = {};
@@ -5294,8 +5351,8 @@
             return;
           }
           if (calendarBtn.dataset.calendarAction === 'open-settings') {
-            appShellState.familyPanelOpen = true;
-            renderHeaderFamilyPanel();
+            appShellState.settingsPanelOpen = true;
+            renderHeaderSettingsPanel();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }

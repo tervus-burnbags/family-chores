@@ -3,6 +3,7 @@
 ## Shared Instructions
 
 Before starting any work, read and follow:
+- `../AI_COMMAND/BOOT.md` — quick-start context (roles, workflow, file map)
 - `../AI_COMMAND/core/roles.md` — roles and override rules
 - `../AI_COMMAND/core/workflow.md` — collaboration pipeline
 - `../AI_COMMAND/core/coding_standards.md` — standards
