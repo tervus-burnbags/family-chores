@@ -1325,7 +1325,7 @@
     .chore-board {
       padding: 8px 0 0;
       display: grid;
-      gap: 10px;
+      gap: 12px;
     }
 
     .chore-board-header {
@@ -1352,9 +1352,112 @@
       font-size: 0.9rem;
     }
 
-    .chore-list {
+    .chore-section-label {
+      padding: 0 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .weekly-progress-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(237, 244, 255, 0.9));
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .weekly-progress-row {
       display: grid;
       gap: 8px;
+    }
+
+    .weekly-progress-row + .weekly-progress-row {
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .weekly-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .weekly-progress-kid {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .weekly-progress-pts {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+
+    .weekly-progress-pay {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .weekly-progress-bar-track {
+      height: 8px;
+      background: rgba(148, 163, 184, 0.18);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .weekly-progress-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      background: linear-gradient(90deg, var(--alex), #2563eb);
+    }
+
+    .weekly-progress-bar-fill.alex {
+      background: linear-gradient(90deg, var(--alex), #2563eb);
+    }
+
+    .weekly-progress-bar-fill.louisa {
+      background: linear-gradient(90deg, var(--louisa), #9333ea);
+    }
+
+    .weekly-progress-bar-fill.both {
+      background: linear-gradient(90deg, #64748b, #475569);
+    }
+
+    .weekly-bonus-teaser {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .weekly-progress-card.both-mode .weekly-progress-pts {
+      font-size: 1.2rem;
+    }
+
+    .weekly-progress-card.both-mode .weekly-progress-pay {
+      font-size: 0.84rem;
+    }
+
+    .chore-list {
+      display: grid;
+      gap: 0;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
     }
 
     .chore-item {
@@ -1363,37 +1466,43 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.92);
+      padding: 14px 16px;
+      border: 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 0;
+      background: transparent;
       color: var(--text);
       text-align: left;
       cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+      transition: transform 0.15s ease, background 0.12s ease, opacity 0.15s ease;
+    }
+
+    .chore-item:last-child {
+      border-bottom: 0;
     }
 
     .chore-item:active {
-      transform: scale(0.98);
+      transform: scale(0.99);
+      background: var(--panel-alt);
     }
 
     .chore-item.done {
-      background: rgba(34, 197, 94, 0.08);
-      border-color: rgba(34, 197, 94, 0.3);
+      opacity: 0.55;
     }
 
     .chore-check {
-      width: 24px;
-      height: 24px;
-      flex: 0 0 24px;
+      width: 26px;
+      height: 26px;
+      flex: 0 0 26px;
       border-radius: 999px;
-      border: 2px solid #b8c5d8;
+      border: 2px solid var(--line);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: transparent;
       background: #fff;
+      transition: all 0.15s ease;
     }
 
     .chore-item.done .chore-check {
@@ -1410,12 +1519,12 @@
     }
 
     .chore-label {
-      font-weight: 700;
+      font-size: 0.95rem;
+      font-weight: 500;
       line-height: 1.2;
     }
 
     .chore-item.done .chore-label {
-      color: var(--muted);
       text-decoration: line-through;
     }
 
@@ -1426,13 +1535,17 @@
 
     .chore-pts {
       flex: 0 0 auto;
-      padding: 6px 10px;
+      padding: 2px 8px;
       border-radius: 999px;
       background: var(--panel-alt);
-      color: var(--text);
+      color: var(--muted);
       font-size: 0.82rem;
       font-weight: 700;
       white-space: nowrap;
+    }
+
+    .chore-item.done .chore-pts {
+      color: #22c55e;
     }
 
     .qp-row {
@@ -1755,12 +1868,6 @@
           <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
           <button type="button" class="qp-kid louisa" data-qp-kid="louisa">Louisa</button>
           <button type="button" class="qp-kid both" data-qp-kid="both">Both</button>
-        </div>
-        <div class="qp-row">
-          <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
-          <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
-          <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
-          <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
         </div>
       </div>
       <section class="panel" id="choreProgress" aria-live="polite"></section>
@@ -3776,7 +3883,7 @@
         var qpKid = 'alex';
         var qpPanel = document.getElementById('quickPoints');
         if (!qpPanel) return;
-        qpPanel.addEventListener('click', function (e) {
+        document.addEventListener('click', function (e) {
           var btn = e.target.closest('[data-qp-kid]');
           if (btn) {
             qpKid = btn.dataset.qpKid;
@@ -5527,6 +5634,29 @@
         return { mode: 'bonus', next: { minPts: Number(topTier.minPts || 0) + targetBonusPoints, pay: topTier.pay || 0 }, targetPoints: targetBonusPoints, bonusPoints: bonusPoints, width: Math.min(100, Math.round((bonusPoints / targetBonusPoints) * 100)) };
       }
 
+      function getWeeklyPayBreakdown(kid, weeklyPoints, calculatePay) {
+        var safeKid = kid || {};
+        var tiers = (safeKid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
+        var tierPay = Number((calculatePay || function () { return 0; })(tiers, weeklyPoints) || 0);
+        var topMinPts = tiers.length ? Number(tiers[tiers.length - 1].minPts || 0) : 0;
+        var weeklyBonus = safeKid.weeklyBonus || { extraPts: 10, bonus: 2 };
+        var extraPts = Math.max(1, Number(weeklyBonus.extraPts || 10));
+        var bonusAmount = Number(weeklyBonus.bonus || 2);
+        var extraPoints = Math.max(0, Number(weeklyPoints || 0) - topMinPts);
+        var bonus = Math.floor(extraPoints / extraPts) * bonusAmount;
+        return {
+          tierPay: tierPay,
+          topMinPts: topMinPts,
+          extraPts: extraPts,
+          bonusAmount: bonusAmount,
+          extraPoints: extraPoints,
+          bonus: Number(bonus.toFixed(2)),
+          totalPay: Number((tierPay + bonus).toFixed(2))
+        };
+      }
+
+      window.getWeeklyPayBreakdown = getWeeklyPayBreakdown;
+
       async function getDebts(phase) {
         var snapshot = await phase.database.ref('families/' + phase.familyId + '/debts').get();
         return snapshot.exists() ? Object.entries(snapshot.val()).map(function (entry) {
@@ -5550,10 +5680,17 @@
         var kidIds = Object.keys(phase.currentConfig.kids || {});
         for (var i = 0; i < kidIds.length; i += 1) {
           var kidId = kidIds[i];
-          var note = 'Auto weekly pay for ' + previousWeek;
-          if (payments.some(function (payment) { return payment.kid === kidId && payment.type === 'weekly' && payment.note === note; })) continue;
           var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === previousWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
-          var amount = phase.calculateWeeklyPay((phase.currentConfig.kids[kidId] || {}).payTiers || [], weeklyPoints);
+          var kid = (phase.currentConfig.kids[kidId] || {});
+          var payInfo = getWeeklyPayBreakdown(kid, weeklyPoints, phase.calculateWeeklyPay);
+          var bonus = payInfo.bonus;
+          var note = 'Auto weekly pay for ' + previousWeek + (bonus > 0 ? ' (includes $' + bonus.toFixed(2) + ' bonus)' : '');
+          if (payments.some(function (payment) {
+            return payment.kid === kidId &&
+              payment.type === 'weekly' &&
+              String(payment.note || '').indexOf('Auto weekly pay for ' + previousWeek) === 0;
+          })) continue;
+          var amount = payInfo.totalPay;
           if (amount > 0) {
             var paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: note, balanceDelta: Number(amount.toFixed(2)) };
             var ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
@@ -5590,12 +5727,11 @@
         var owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
         var currentWeek = phase.toIsoWeek(now);
         var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === currentWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
-        var weeklyPay = phase.calculateWeeklyPay(kid.payTiers || [], weeklyPoints);
-        var topTier = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
-        var topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
-        var wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
-        var extraPoints = Math.max(0, weeklyPoints - topMinPts);
-        var weeklyBonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
+        var payInfo = getWeeklyPayBreakdown(kid, weeklyPoints, phase.calculateWeeklyPay);
+        var weeklyPay = payInfo.tierPay;
+        var topMinPts = payInfo.topMinPts;
+        var wb = { extraPts: payInfo.extraPts, bonus: payInfo.bonusAmount };
+        var weeklyBonus = payInfo.bonus;
         var threshold = thresholdInfo(kid, weeklyPoints);
         var progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
         var progressLabel = threshold.mode === 'bonus' ? 'bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts' : 'next: ' + threshold.next.minPts + 'pts';
@@ -5626,7 +5762,7 @@
           return '<div class="stmt-row"><div class="stmt-desc"><span>' + escapeHtml(label + (item.label && item.label !== item.type ? ': ' + item.label : '')) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + '</span></div><span class="stmt-amount ' + (delta >= 0 ? 'credit' : 'debit') + '">' + (delta >= 0 ? '+' : '-') + phase.dollars(Math.abs(delta)) + '</span></div>';
         }).join('');
 
-        cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div><div class="card-pts">' + weeklyPoints + ' pts<br>this week</div></div></div><div class="drawer-grid"><article class="stat-card"><h3>This Week (' + formatWeekRange(now) + ')</h3><div class="score-actions"><div class="score-top"><div><div class="score-name">' + escapeHtml(kid.name || kidId) + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div><div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div><div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div></div></article><article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
+        cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div><div class="card-pts">' + weeklyPoints + ' pts<br>this week</div></div></div><div class="drawer-grid"><article class="stat-card"><h3>This Week (' + formatWeekRange(now) + ')</h3><div class="score-actions"><div class="score-top"><div><div class="score-name">' + escapeHtml(kid.name || kidId) + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(payInfo.totalPay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div><div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div><div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div></div></article><article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
       };
 
       function handleCardAction(button) {
@@ -6061,7 +6197,11 @@
             return sum + Number(entry.points || 0);
           }, 0);
           summary.points += points;
-          summary.pay += phase.calculateWeeklyPay(kid.payTiers || [], points);
+          if (typeof window.getWeeklyPayBreakdown === 'function') {
+            summary.pay += window.getWeeklyPayBreakdown(kid, points, phase.calculateWeeklyPay).totalPay;
+          } else {
+            summary.pay += phase.calculateWeeklyPay(kid.payTiers || [], points);
+          }
           return summary;
         }, { points: 0, pay: 0 });
       }
@@ -6079,6 +6219,64 @@
           return 'Done for ' + selectedKidLabel(doneKids, phase);
         }
         return '';
+      }
+
+      function getWeeklyProgressInfo(phase, kidId, entries, week) {
+        var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
+        var points = entries.filter(function (entry) {
+          return entry.kid === kidId && entry.week === week;
+        }).reduce(function (sum, entry) {
+          return sum + Number(entry.points || 0);
+        }, 0);
+        var tiers = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
+        var currentTierPay = Number(phase.calculateWeeklyPay(kid.payTiers || [], points) || 0);
+        var nextTier = tiers.find(function (tier) { return points < Number(tier.minPts || 0); }) || null;
+        var payInfo = typeof window.getWeeklyPayBreakdown === 'function'
+          ? window.getWeeklyPayBreakdown(kid, points, phase.calculateWeeklyPay)
+          : { totalPay: currentTierPay, bonus: 0, bonusAmount: 2, extraPts: 10, topMinPts: 0, extraPoints: 0 };
+        var progressPct = nextTier
+          ? Math.max(0, Math.min(100, Math.round((points / Math.max(Number(nextTier.minPts || 0), 1)) * 100)))
+          : 100;
+        var pointsLabel = nextTier
+          ? points + ' / ' + Number(nextTier.minPts || 0) + ' pts'
+          : points + ' pts · Top tier reached!';
+        var payLabel = nextTier
+          ? phase.dollars(currentTierPay) + ' -> ' + phase.dollars(Number(nextTier.pay || currentTierPay))
+          : phase.dollars(payInfo.totalPay) + ' earned';
+        var bonusLabel = '';
+        if (!nextTier) {
+          if (payInfo.bonus > 0) {
+            bonusLabel = 'Bonus +' + phase.dollars(payInfo.bonusAmount) + ' every ' + payInfo.extraPts + 'pts over ' + payInfo.topMinPts + ' · ' + phase.dollars(payInfo.bonus) + ' earned';
+          } else {
+            bonusLabel = 'Bonus +' + phase.dollars(payInfo.bonusAmount) + ' at ' + (payInfo.topMinPts + payInfo.extraPts) + 'pts';
+          }
+        }
+        return {
+          kid: kid,
+          kidId: kidId,
+          points: points,
+          progressPct: progressPct,
+          pointsLabel: pointsLabel,
+          payLabel: payLabel,
+          bonusLabel: bonusLabel,
+          nextTier: nextTier,
+          payInfo: payInfo
+        };
+      }
+
+      function renderWeeklyProgressCard(phase, entries, week, kidIds) {
+        var infos = kidIds.map(function (kidId) {
+          return getWeeklyProgressInfo(phase, kidId, entries, week);
+        });
+        return '<section class="weekly-progress-card' + (infos.length > 1 ? ' both-mode' : '') + '">' +
+          infos.map(function (info) {
+            return '<div class="weekly-progress-row">' +
+              '<div class="weekly-progress-header"><div><div class="weekly-progress-kid">' + escapeHtml(info.kid.name || info.kidId) + '</div><div class="weekly-progress-pts">' + escapeHtml(info.pointsLabel) + '</div></div><div class="weekly-progress-pay">' + escapeHtml(info.payLabel) + '</div></div>' +
+              '<div class="weekly-progress-bar-track"><div class="weekly-progress-bar-fill ' + info.kidId + '" style="width:' + info.progressPct + '%;"></div></div>' +
+              (info.bonusLabel ? '<div class="weekly-bonus-teaser">' + escapeHtml(info.bonusLabel) + '</div>' : '') +
+            '</div>';
+          }).join('') +
+        '</section>';
       }
 
       async function renderChoreProgress() {
@@ -6125,9 +6323,13 @@
           '</button>';
         }).filter(Boolean).join('');
         container.innerHTML = '<div class="chore-board">' +
-          '<div class="chore-board-header"><h2>Today\'s Chores</h2><p>' + escapeHtml(selectedKidLabel(kids, phase)) + '</p></div>' +
+          '<div class="chore-board-header"><h2>Chores</h2><p>' + escapeHtml(selectedKidLabel(kids, phase)) + '</p></div>' +
+          '<div class="chore-section-label">Weekly Progress</div>' +
+          renderWeeklyProgressCard(phase, entries, week, kids) +
+          '<div class="chore-section-label">Today\'s Chores</div>' +
           (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
-          '<div class="chore-summary">' + summary.points + 'pts this week &middot; ' + phase.dollars(summary.pay) + ' earned</div>' +
+          '<div class="panel quick-points"><div class="chore-section-label">Quick Add</div><div class="qp-row"><button type="button" class="qp-pts" data-qp-pts="1">+1</button><button type="button" class="qp-pts" data-qp-pts="2">+2</button><button type="button" class="qp-pts" data-qp-pts="3">+3</button><button type="button" class="qp-pts" data-qp-pts="4">+4</button></div></div>' +
+          '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
         '</div>';
       }
 
@@ -6480,6 +6682,13 @@
       });
 
       document.getElementById('quickPoints').addEventListener('click', function () {
+        setTimeout(function () {
+          renderChoreProgress().catch(function (error) { console.error(error); });
+        }, 150);
+      });
+
+      document.addEventListener('click', function (event) {
+        if (!event.target.closest('[data-qp-pts]')) return;
         setTimeout(function () {
           renderChoreProgress().catch(function (error) { console.error(error); });
         }, 150);
