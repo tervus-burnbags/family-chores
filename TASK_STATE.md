@@ -1,10 +1,10 @@
 # Task State - Family Hub
 
-**Task:** Phase 10 - Chores Tab Redesign + Bonus Bug Fix
-**Current Phase:** 10b
-**Status:** Ready for review
-**Next Agent:** gemini
-**Next Action:** Review Phase 10a/10b bonus pay fix and chores redesign
+**Task:** Phase 11 — Chores Tab Rendering Bugs
+**Current Phase:** 11a
+**Status:** Ready for Codex
+**Next Agent:** codex
+**Next Action:** Implement Phase 11a/b/c (chores render on nav, settings panel fix, SW bump)
 **Last Updated:** 2026-03-16
 
 ## Completed
@@ -13,16 +13,15 @@
 - [x] Phase 8b: Chores Tab Redesign - Daily Tracker
 - [x] Phase 8c: Visual Polish & Calendar settings
 - [x] Phase 9: Header/tab bar cleanup, Jameson calendar support
-- [x] **Phase 10a: Fix Weekly Bonus Payment Bug** - `maybeRunWeeklyPay()` now includes bonus in payment amount
-- [x] **Phase 10b: Chores Tab Redesign** - Added weekly progress card and updated checklist layout
+- [x] Phase 10a: Fix Weekly Bonus Payment Bug
+- [x] Phase 10b: Chores Tab Redesign (weekly progress card + checklist)
+
+## Current
+
+- [ ] **Phase 11a: Fix Chores not rendering on tab switch** — `switchView()` missing `renderChoreProgress()` call
+- [ ] **Phase 11b: Fix settings panel showing wrong content** — Close settings panel on tab switch
+- [ ] **Phase 11c: Bump SW cache** — hub-v12 → hub-v13
 
 ## Pending User Action
 
 - Redeploy calendar-proxy.gs.txt to Google Apps Script (new deployment for ?days= and Jameson)
-
-## Notes
-
-- `maybeRunWeeklyPay()` now uses the same bonus calculation path as the Bank card display and avoids duplicate weekly autopay by matching the week prefix in payment notes.
-- Chores now shows weekly progress in-tab for Alex, Louisa, or Both, with quick-add buttons moved below the checklist.
-- Static validation passed by parsing all inline scripts with Node.
-- Manual browser verification is still required for bonus-credit behavior, Both-mode progress layout, and progress updates after quick-add / undo actions.

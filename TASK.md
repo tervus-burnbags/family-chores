@@ -1,11 +1,11 @@
-# Task: Phase 10 — Chores Tab Redesign + Bonus Bug Fix
+# Task: Phase 11 — Chores Tab Rendering Bugs
 
 ## Summary
 
-Two connected changes:
+The Chores tab is broken — users see the kid picker (Alex/Louisa/Both) and a blank area below, sometimes with a stale settings panel referencing "Lists." Two root causes:
 
-1. **Bug fix** — Weekly bonus pay is never credited to kid balances. `maybeRunWeeklyPay()` only credits tier pay, ignoring bonus earnings. Alex earned enough points for a bonus but got $0 bonus in her balance.
-2. **Chores redesign** — The chore tracking UI currently lives split between Chores (checklist) and Bank (points/earnings display). Consolidate all chore tracking into the Chores tab with a modern, cohesive design matching the recent header/tab bar redesign.
+1. **`switchView` never calls `renderChoreProgress()`** — When navigating to the Chores tab, no render is triggered. The function only runs during warmup (line ~6734) and after chore interactions. If the user navigates away and back, the content area is empty.
+2. **Settings panel renders for wrong view** — If the settings panel is open when switching tabs, it re-renders at line ~2417, but `appShellState.currentView` may already be updated to the new tab. The fallthrough at line ~2358 shows "No settings for Lists" when the view doesn't match any known settings handler.
 
 ## Model Mode
 
@@ -13,312 +13,82 @@ default
 
 ---
 
-## Phase 10a: Fix Weekly Bonus Payment Bug
+## Phase 11a: Fix Chores Tab Not Rendering on Navigation
 
-**Problem:** `maybeRunWeeklyPay()` (line ~5537) calculates weekly pay via `calculateWeeklyPay()` which returns only the tier-based amount. The bonus calculation (`Math.floor(extraPoints / extraPts) * bonusAmount`) exists only in `renderCardView()` for display — it's never included in the actual payment credited to the balance.
+**File:** `index.html`
 
-**Root cause (line ~5556):**
+**Problem:** In `switchView()` (~line 2389), there are render calls for bulletin, fun, bank, and lists — but NOT for chores.
+
+**Fix:** Add a chores render call in `switchView()`, after the existing `if (name === 'bank')` block (~line 2413):
+
 ```javascript
-var amount = phase.calculateWeeklyPay((phase.currentConfig.kids[kidId] || {}).payTiers || [], weeklyPoints);
-```
-This returns tier pay only. Bonus is never added.
-
-**Fix in `maybeRunWeeklyPay()`:**
-
-After line 5556, add bonus calculation:
-```javascript
-var amount = phase.calculateWeeklyPay((phase.currentConfig.kids[kidId] || {}).payTiers || [], weeklyPoints);
-
-// Add bonus pay for points above top tier
-var kid = phase.currentConfig.kids[kidId] || {};
-var tiers = (kid.payTiers || []).slice().sort(function(a, b) { return a.minPts - b.minPts; });
-var topMinPts = tiers.length ? tiers[tiers.length - 1].minPts : 0;
-var extraPoints = Math.max(0, weeklyPoints - topMinPts);
-var wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
-var bonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
-amount += bonus;
+if (name === 'chores' && typeof renderChoreProgress === 'function') {
+  renderChoreProgress().catch(function (e) { console.error(e); });
+}
 ```
 
-**Also update the payment note** to include bonus info when applicable:
-```javascript
-var note = 'Auto weekly pay for ' + previousWeek + (bonus > 0 ? ' (includes $' + bonus.toFixed(2) + ' bonus)' : '');
-```
+Note: `renderChoreProgress` is defined inside the chores IIFE and is NOT on `window`. You'll need to either:
+- **Option A (preferred):** Expose it as `window.renderChoreProgress = renderChoreProgress;` in the chores IIFE (near line ~6722 where `window.renderChoreSettings` is already exposed), then call it from `switchView`.
+- **Option B:** Move the `switchView` chores call inside the chores IIFE where it has access to the function scope — but this is messier since `switchView` is defined elsewhere.
 
 ### Test
-- Set Alex to have 35 points in a week (top tier is 22pts)
-- Verify `maybeRunWeeklyPay` credits tier pay ($7) + bonus ($2 for 10+ extra pts) = $9 total
-- Check payment note shows bonus info
-- Verify balance updates correctly
+- Load app on Home tab
+- Tap Chores tab → should show weekly progress card + today's chores checklist
+- Tap Bank, then tap Chores again → chores still render
+- Tap Lists, then Chores → chores render
+- Refresh page with #chores in URL → chores render on load
 
 ---
 
-## Phase 10b: Chores Tab Redesign
+## Phase 11b: Fix Settings Panel Showing Wrong Content
 
-**Problem:** The Chores tab has a basic checklist and quick-add buttons, but no weekly progress visualization. Parents have to go to the Bank tab to see how many points each kid has earned and what they've earned in dollars. The chore tracking experience should be self-contained in the Chores tab.
+**File:** `index.html`
 
-### Design Spec
+**Problem:** When the settings panel is open and user switches tabs, `renderHeaderSettingsPanel()` is called at line ~2417 after `currentView` is updated. If the new view is `chores` but `window.renderChoreSettings` isn't defined yet (timing), or if there's a mismatch, the fallthrough at line ~2358 shows "No settings for Lists/Fun."
 
-The design follows the existing app aesthetic: clean white cards with subtle shadows, `--alex` blue and `--louisa` purple color accents, SVG icons, and the same font/spacing system used in the header and Home tab redesigns.
+**Fix:** Close the settings panel when switching tabs. In `switchView()`, before the view-specific render calls:
 
-#### Layout (top to bottom):
-
-```
-┌─────────────────────────────────────┐
-│  [Alex]  [Louisa]  [Both]           │  ← kid picker (keep existing)
-├─────────────────────────────────────┤
-│                                     │
-│  ┌─────────────────────────────┐    │
-│  │ ● Weekly Progress           │    │
-│  │                             │    │
-│  │  18 / 22 pts     $3 → $7   │    │ ← points toward next tier
-│  │  ████████████░░░░  82%      │    │ ← progress bar (kid-colored)
-│  │                             │    │
-│  │  🔥 +$2 bonus at 32pts     │    │ ← bonus track teaser
-│  └─────────────────────────────┘    │
-│                                     │
-│  Today's Chores                     │
-│  ┌─────────────────────────────┐    │
-│  │ ✓  Fed the dog (AM)    +1  │    │ ← done (muted, checkmark)
-│  │ ✓  Made bed             +1  │    │
-│  │ ○  Brush teeth PM       +1  │    │ ← not done (tap to log)
-│  │ ○  Clean room           +2  │    │
-│  │ ○  Read 15 min          +2  │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  Quick Add                          │
-│  [+1]  [+2]  [+3]  [+4]            │ ← keep existing buttons
-│                                     │
-└─────────────────────────────────────┘
+```javascript
+appShellState.settingsPanelOpen = false;
+renderHeaderSettingsPanel();
 ```
 
-#### Weekly Progress Card
+This is cleaner UX anyway — switching tabs should dismiss the settings panel rather than trying to re-render it for the new context.
 
-New component — a compact card showing this week's trajectory:
-
-- **Points counter**: `{current} / {nextTierMin} pts` — shows progress toward the next pay tier
-  - If already at top tier, show `{current} pts · Top tier reached!`
-- **Dollar display**: `${currentTierPay} → ${nextTierPay}` — what they're earning now vs what's next
-  - At top tier: `${tierPay} earned`
-- **Progress bar**: Horizontal bar filled to `current / nextTierMin` percentage
-  - Color: `var(--alex)` or `var(--louisa)` based on selected kid
-  - Background: `var(--line)` or similar light neutral
-  - Rounded ends (`border-radius: 999px`)
-  - Height: ~8px
-- **Bonus teaser** (only shows when at or above top tier):
-  - "🔥 +$2 bonus at {topMinPts + extraPts}pts" — shows what they'll earn next
-  - "🔥 $4 bonus earned!" if they've already passed a bonus threshold
-- **When "Both" selected**: Show two mini progress rows, one per kid, stacked
-
-**Data source**: Same as existing — `getAllLogEntries()` filtered by current ISO week + selected kid, summed for points. `calculateWeeklyPay()` for tier mapping. Kid config for tier thresholds and bonus settings.
-
-#### Today's Chores Checklist
-
-Keep existing `renderChoreProgress` logic but update the visual design:
-
-**CSS classes:**
-
-```css
-.chore-progress-card {
-  background: var(--panel);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.chore-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  min-height: 52px;
-  border-bottom: 1px solid var(--line);
-  cursor: pointer;
-  transition: background 0.12s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.chore-item:last-child {
-  border-bottom: 0;
-}
-
-.chore-item:active {
-  background: var(--panel-alt);
-}
-
-.chore-item.done {
-  opacity: 0.55;
-}
-
-.chore-item.done .chore-label {
-  text-decoration: line-through;
-}
-
-.chore-check {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-
-.chore-item.done .chore-check {
-  background: #22c55e;
-  border-color: #22c55e;
-  color: #fff;
-}
-
-/* SVG checkmark icon inside .chore-check when done */
-
-.chore-label {
-  flex: 1;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.chore-pts {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  background: var(--panel-alt);
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-.chore-item.done .chore-pts {
-  color: #22c55e;
+**Remove** the existing settings re-render at line ~2417:
+```javascript
+// DELETE THIS:
+if (appShellState.settingsPanelOpen) {
+  renderHeaderSettingsPanel();
 }
 ```
-
-**Partial completion note**: When "Both" is selected and a chore is done by one kid but not the other, show "Done for Alex" in small muted text below the label (this logic already exists in `choreNote`).
-
-#### Weekly Progress Card CSS
-
-```css
-.weekly-progress-card {
-  background: var(--panel);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 16px;
-}
-
-.weekly-progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 10px;
-}
-
-.weekly-progress-pts {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.weekly-progress-pay {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.weekly-progress-bar-track {
-  height: 8px;
-  background: var(--line);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.weekly-progress-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.weekly-progress-bar-fill.alex { background: var(--alex); }
-.weekly-progress-bar-fill.louisa { background: var(--louisa); }
-
-.weekly-bonus-teaser {
-  font-size: 0.82rem;
-  color: var(--muted);
-  font-weight: 500;
-}
-```
-
-#### Section Headers
-
-Use lightweight text labels (not card headers):
-
-```css
-.chore-section-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  padding: 16px 4px 6px;
-}
-```
-
-### Rendering
-
-Update `renderChoreProgress()` to output:
-
-1. **Weekly Progress Card** — new, placed between kid picker and checklist
-2. **"Today's Chores" label** — section header
-3. **Chore checklist** — existing logic, new CSS
-4. **"Quick Add" label** — section header
-5. **Quick-add buttons** — keep existing `qp-pts` buttons
-
-The weekly progress card needs to:
-- Get current week's log entries for selected kid(s)
-- Sum points
-- Look up pay tiers to find current tier and next tier
-- Calculate progress percentage toward next tier
-- Calculate bonus if at/above top tier
-
-### What to Keep
-- Kid picker buttons (Alex / Louisa / Both) — `#quickPoints`
-- Quick point buttons (+1/+2/+3/+4) — existing `qp-pts`
-- `toggleChoreItem()` logic
-- `saveLogEntries()` infrastructure
-- `renderChoreSettings()` for the header settings panel
-- Chat composer / voice input at bottom
-
-### What NOT to Change
-- Bank tab — leave `renderCardView` as-is (it still shows balance, payments, debts)
-- Home tab — no changes
-- Header — no changes
 
 ### Test
-- Select Alex → weekly progress shows her points, current/next tier, progress bar in blue
-- Select Louisa → same in purple
-- Select Both → two stacked mini progress rows
-- Tap unchecked chore → logs it, progress bar updates, points tick up
-- Tap checked chore → undo prompt, progress bar adjusts down
-- At top tier → bonus teaser shows next bonus threshold
-- Past bonus threshold → shows bonus earned amount
-- Quick add +2 → points update, progress bar moves
+- Open settings on Home tab (gear icon)
+- Tap Chores tab → settings panel closes
+- Tap Bank, open settings, tap Fun → settings panel closes
+- Settings gear still works independently on each tab
+
+---
+
+## Phase 11c: Bump SW Cache
+
+**File:** `sw.js`
+
+Bump cache version from `hub-v12` to `hub-v13`.
 
 ---
 
 ## Files Changed
 
-- `index.html` — both phases (bug fix + UI)
-- `sw.js` — bump cache version after Phase 10b
+- `index.html` — Phase 11a and 11b
+- `sw.js` — Phase 11c
 
 ## Phase Order
 
-```
-Phase 10a: Bonus bug fix → small, standalone fix
-Phase 10b: Chores redesign → depends on 10a being correct (progress card shows bonus info)
-```
+All three are small, independent fixes. Can be done in one pass.
 
 ## Risks
 
-1. **Weekly pay retroactivity** — The bonus fix only applies going forward. If Alex was already shorted a bonus for a past week, her balance won't auto-correct. Consider: should we add a one-time correction? (Ask user if needed.)
-2. **Progress bar edge cases** — When a kid has 0 points, bar should show empty, not NaN%. When they exceed top tier, bar should show 100% + bonus teaser.
-3. **"Both" mode layout** — Two progress rows need to stack cleanly without feeling cramped. Use compact variant with smaller text/bar when showing both.
+1. **`renderChoreProgress` scope** — It's defined inside an IIFE. Must be exposed on `window` for `switchView` to call it. Check that no naming collision exists.
+2. **Settings close behavior** — Closing settings on tab switch is a UX choice. If the user explicitly wants settings to persist across tabs, this would be wrong. But given the bug it causes, closing is the right call.
