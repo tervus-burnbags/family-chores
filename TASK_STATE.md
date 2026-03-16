@@ -1,10 +1,10 @@
 # Task State - Family Hub
 
 **Task:** Phase 12 — Header Polish + Fullscreen PWA
-**Current Phase:** 12a
-**Status:** Ready for Codex
-**Next Agent:** codex
-**Next Action:** Implement Phase 12a and 12b (settings text, family name, fullscreen PWA)
+**Current Phase:** 12b
+**Status:** Build Complete
+**Next Agent:** gemini
+**Next Action:** Review Phase 12a and 12b
 **Last Updated:** 2026-03-16
 
 ## Completed
@@ -14,11 +14,11 @@
 
 ## Current
 
-- [ ] **Phase 12a: Settings text + family name** — "Update code" button, customizable header name in DB
-- [ ] **Phase 12b: Fullscreen PWA** — Apple meta tags, safe area padding
+- [x] **Phase 12a: Settings text + family name** — "Update code" button, customizable header name in DB
+- [x] **Phase 12b: Fullscreen PWA** — Apple meta tags, safe area padding
 
 ## Notes
 
 - Phase 12c (extract fun data) was completed as part of consolidation C4
 - Consolidation is approved and ready for push — human pushes when ready
-- TASK.md still has the consolidation task — Codex should reference the Phase 12 spec below
+- Validation complete: inline scripts parsed successfully after Phase 12 changes

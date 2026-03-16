@@ -6,6 +6,8 @@
   <title>Family Hub</title>
   <meta name="theme-color" content="#4a90d9">
   <meta name="description" content="Family hub for chores, lists, and finances.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -75,6 +77,7 @@
       align-items: stretch;
       gap: 0;
       padding: 0;
+      padding-top: calc(8px + env(safe-area-inset-top));
       flex-shrink: 0;
       background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #3b6fa0 100%);
       border: none;
@@ -259,6 +262,17 @@
       margin-top: 12px;
     }
 
+    .settings-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .settings-field label {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
     .family-calendar-form input {
       width: 100%;
       min-height: 44px;
@@ -313,6 +327,7 @@
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
       flex-shrink: 0;
       z-index: 100;
     }
@@ -1800,8 +1815,8 @@
         width: calc(100% - 12px);
       }
 
-      .header {
-        padding: 10px 14px;
+      .header-main {
+        padding: 10px 14px 14px;
       }
 
       .brand small {
@@ -1845,7 +1860,7 @@
         <div class="brand">
           <div class="brand-icon">&#127968;</div>
           <div class="brand-text">
-            <h1>Family Hub</h1>
+            <h1 id="headerTitle">Family Hub</h1>
             <small id="familyLabel"></small>
           </div>
         </div>
@@ -2079,6 +2094,7 @@
     const elements = {
       messages: document.getElementById('messages'),
       familyLabel: document.getElementById('familyLabel'),
+      headerTitle: document.getElementById('headerTitle'),
       familyModal: document.getElementById('familyModal'),
       familyModalStatus: document.getElementById('familyModalStatus'),
       headerSettingsButton: document.getElementById('headerSettingsButton'),
@@ -2117,6 +2133,7 @@
     function buildDefaultConfig() {
       return {
         createdAt: firebase.database.ServerValue.TIMESTAMP,
+        familyName: 'Family Hub',
         kids: KIDS,
         chores: CHORES
       };
@@ -2280,6 +2297,11 @@
       elements.familyLabel.innerHTML = '<span class="header-meta"><span class="sync-dot ' + (appShellState.online ? 'online' : '') + '"></span><span>' + (appShellState.online ? 'Sync ready' : 'Offline mode') + '</span></span>';
     }
 
+    function updateHeaderTitle(name) {
+      if (!elements.headerTitle) return;
+      elements.headerTitle.textContent = String(name || '').trim() || 'Family Hub';
+    }
+
     function getFamilyShareUrl() {
       const url = new URL(window.location.href);
       if (familyId) {
@@ -2293,6 +2315,7 @@
 
     function buildFamilySettingsMarkup() {
       const runtime = window.phaseRuntime;
+      const familyName = runtime && runtime.currentConfig ? String(runtime.currentConfig.familyName || '') : '';
       const calendarUrl = runtime && runtime.currentConfig ? String(runtime.currentConfig.calendarUrl || '') : '';
       const calendarDays = runtime && runtime.currentConfig ? Number(runtime.currentConfig.calendarDays || 10) : 10;
       if (!familyId) {
@@ -2312,10 +2335,14 @@
           '</div>' +
           '<div class="family-panel-actions">' +
             '<button type="button" class="settings-btn" data-family-action="copy">Copy link</button>' +
-            '<button type="button" class="settings-btn" data-family-action="manage">Switch family</button>' +
+            '<button type="button" class="settings-btn" data-family-action="manage">Update code</button>' +
           '</div>' +
         '</div>' +
         '<form id="familyCalendarForm" class="family-calendar-form">' +
+          '<div class="settings-field">' +
+            '<label for="familyNameInput">Family name</label>' +
+            '<input type="text" id="familyNameInput" name="familyNameInput" placeholder="Family Hub" value="' + escapeHtml(familyName) + '" maxlength="30">' +
+          '</div>' +
           '<div class="family-panel-copy">' +
             '<strong>Calendar</strong>' +
           '</div>' +
@@ -2566,6 +2593,8 @@
 
         const input = document.getElementById('familyCalendarUrl');
         const calendarUrl = input ? String(input.value || '').trim() : '';
+        const nameInput = document.getElementById('familyNameInput');
+        const familyName = nameInput ? String(nameInput.value || '').trim() : '';
         if (calendarUrl) {
           try {
             new URL(calendarUrl);
@@ -2581,10 +2610,16 @@
         const calendarDays = daysInput ? Number(daysInput.value) || 10 : 10;
 
         var updates = {};
+        updates['families/' + familyId + '/config/familyName'] = familyName || null;
         updates['families/' + familyId + '/config/calendarUrl'] = calendarUrl || null;
         updates['families/' + familyId + '/config/calendarDays'] = calendarDays;
         database.ref().update(updates).then(() => {
           if (window.phaseRuntime && window.phaseRuntime.currentConfig) {
+            if (familyName) {
+              window.phaseRuntime.currentConfig.familyName = familyName;
+            } else {
+              delete window.phaseRuntime.currentConfig.familyName;
+            }
             if (calendarUrl) {
               window.phaseRuntime.currentConfig.calendarUrl = calendarUrl;
             } else {
@@ -2592,6 +2627,7 @@
             }
             window.phaseRuntime.currentConfig.calendarDays = calendarDays;
           }
+          updateHeaderTitle(familyName);
           if (window.familyBulletin && typeof window.familyBulletin.invalidateCalendarCache === 'function') {
             window.familyBulletin.invalidateCalendarCache();
           }
@@ -2600,7 +2636,7 @@
             window.renderBulletin().catch((error) => console.error(error));
           }
           if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
-            window.phaseRuntime.showToast('Saved calendar settings.');
+            window.phaseRuntime.showToast('Saved family settings.');
           }
         }).catch((error) => {
           console.error(error);
@@ -2667,6 +2703,7 @@
         keepPathsSynced(familyId);
         const snapshot = await database.ref('families/' + familyId + '/config').get();
         currentConfig = snapshot.exists() ? snapshot.val() : buildDefaultConfig();
+        updateHeaderTitle(currentConfig.familyName);
         configLoaded = true;
       }
       window.loadFamilyConfigV2 = loadFamilyConfigV2;
