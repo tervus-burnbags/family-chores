@@ -1525,6 +1525,10 @@
     let database;
     let familyId = null;
     let currentUser = null;
+    const syncedPathState = {
+      familyId: null,
+      teardown: []
+    };
     const appShellState = {
       familyPanelOpen: false,
       online: navigator.onLine !== false
@@ -1536,6 +1540,42 @@
         kids: KIDS,
         chores: CHORES
       };
+    }
+
+    function keepPathsSynced(nextFamilyId) {
+      if (!database || !nextFamilyId || syncedPathState.familyId === nextFamilyId) {
+        return;
+      }
+
+      syncedPathState.teardown.forEach(function (release) {
+        try {
+          release();
+        } catch (error) {
+          console.warn('Failed to release synced path listener.', error);
+        }
+      });
+      syncedPathState.teardown = [];
+      syncedPathState.familyId = nextFamilyId;
+
+      ['config', 'balances', 'bulletin/notes'].forEach(function (path) {
+        var ref = database.ref('families/' + nextFamilyId + '/' + path);
+
+        // Realtime Database web does not consistently expose keepSynced, so
+        // keep a live listener attached as a compatible fallback.
+        if (typeof ref.keepSynced === 'function') {
+          ref.keepSynced(true);
+          syncedPathState.teardown.push(function () {
+            ref.keepSynced(false);
+          });
+          return;
+        }
+
+        var noop = function () {};
+        ref.on('value', noop);
+        syncedPathState.teardown.push(function () {
+          ref.off('value', noop);
+        });
+      });
     }
 
     function addMessage(role, text, meta, actions) {
@@ -1950,6 +1990,7 @@
         if (!familyId) {
           return;
         }
+        keepPathsSynced(familyId);
         const snapshot = await database.ref('families/' + familyId + '/config').get();
         currentConfig = snapshot.exists() ? snapshot.val() : buildDefaultConfig();
         configLoaded = true;
