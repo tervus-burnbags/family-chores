@@ -1343,24 +1343,6 @@
       gap: 12px;
     }
 
-    .chore-board-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 0 4px;
-    }
-
-    .chore-board-header h2,
-    .chore-board-header p {
-      margin: 0;
-    }
-
-    .chore-board-header h2 {
-      font-size: 1rem;
-    }
-
-    .chore-board-header p,
     .chore-list-note,
     .chore-summary {
       color: var(--muted);
@@ -1376,53 +1358,76 @@
       color: var(--muted);
     }
 
-    .weekly-progress-card {
+    .chore-kid-cards {
       display: grid;
-      gap: 12px;
-      padding: 16px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(237, 244, 255, 0.9));
-      border: 1px solid var(--line);
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 4px 0 8px;
+    }
+
+    .chore-kid-card {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 14px;
+      border: 2px solid var(--line);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      text-align: left;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
     }
 
-    .weekly-progress-row {
-      display: grid;
-      gap: 8px;
+    .chore-kid-card:active {
+      transform: scale(0.97);
     }
 
-    .weekly-progress-row + .weekly-progress-row {
-      padding-top: 10px;
-      border-top: 1px solid rgba(148, 163, 184, 0.18);
+    .chore-kid-card.alex { border-color: rgba(74, 144, 217, 0.3); }
+    .chore-kid-card.louisa { border-color: rgba(138, 91, 209, 0.3); }
+
+    .chore-kid-card.selected.alex {
+      border-color: var(--alex);
+      background: rgba(74, 144, 217, 0.06);
+      box-shadow: 0 4px 16px rgba(74, 144, 217, 0.15);
     }
 
-    .weekly-progress-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
+    .chore-kid-card.selected.louisa {
+      border-color: var(--louisa);
+      background: rgba(138, 91, 209, 0.06);
+      box-shadow: 0 4px 16px rgba(138, 91, 209, 0.15);
     }
 
-    .weekly-progress-kid {
+    .chore-kid-card.dimmed {
+      opacity: 0.45;
+      border-color: var(--line);
+      box-shadow: none;
+    }
+
+    .chore-kid-card-name {
       font-size: 0.85rem;
       font-weight: 700;
-      letter-spacing: 0.04em;
+      margin-bottom: 6px;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
       color: var(--muted);
     }
 
-    .weekly-progress-pts {
-      font-size: 1.45rem;
+    .chore-kid-card-pts {
+      font-size: 1.25rem;
       font-weight: 800;
       letter-spacing: -0.02em;
       line-height: 1.05;
     }
 
-    .weekly-progress-pay {
-      font-size: 0.9rem;
-      font-weight: 600;
+    .chore-kid-card-pay {
+      font-size: 0.78rem;
       color: var(--muted);
-      text-align: right;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .chore-kid-card .weekly-progress-bar-track {
+      margin-top: 8px;
+      height: 6px;
     }
 
     .weekly-progress-bar-track {
@@ -1451,97 +1456,10 @@
       background: linear-gradient(90deg, #64748b, #475569);
     }
 
-    .weekly-bonus-teaser {
-      font-size: 0.82rem;
+    .chore-kid-card-bonus {
+      font-size: 0.72rem;
       color: var(--muted);
-      font-weight: 500;
-    }
-
-    .quick-tasks {
-      display: flex;
-      gap: 8px;
-      padding: 4px 0 2px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-
-    .quick-tasks::-webkit-scrollbar {
-      display: none;
-    }
-
-    .quick-task-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      min-width: 96px;
-      min-height: 56px;
-      padding: 8px 14px;
-      border: 2px solid var(--line);
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.98);
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-      font: inherit;
-      font-size: 0.86rem;
-      font-weight: 700;
-      color: var(--text);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, background 0.15s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .quick-task-btn.alex { border-color: rgba(74, 144, 217, 0.45); color: var(--alex); }
-    .quick-task-btn.louisa { border-color: rgba(138, 91, 209, 0.45); color: var(--louisa); }
-    .quick-task-btn.both { border-color: rgba(100, 116, 139, 0.45); color: var(--muted); }
-
-    .quick-task-btn:active {
-      transform: scale(0.95);
-    }
-
-    .quick-task-btn.done {
-      background: var(--panel-alt);
-      opacity: 0.62;
-    }
-
-    .quick-task-btn.flash {
-      animation: quickTaskPulse 0.28s ease-out;
-    }
-
-    .quick-task-label {
-      line-height: 1.1;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .quick-task-pts {
-      font-size: 0.74rem;
-      font-weight: 800;
-      color: var(--muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .quick-task-check {
-      width: 14px;
-      height: 14px;
-      display: inline-block;
-    }
-
-    @keyframes quickTaskPulse {
-      0% { transform: scale(0.94); }
-      100% { transform: scale(1); }
-    }
-
-    .weekly-progress-card.both-mode .weekly-progress-pts {
-      font-size: 1.2rem;
-    }
-
-    .weekly-progress-card.both-mode .weekly-progress-pay {
-      font-size: 0.84rem;
+      margin-top: 4px;
     }
 
     .chore-list {
@@ -1661,7 +1579,6 @@
     }
 
     .qp-kid, .qp-pts {
-      flex: 1;
       min-height: 44px;
       border: 2px solid var(--line);
       border-radius: 14px;
@@ -1688,6 +1605,16 @@
       background: var(--panel-alt);
       color: var(--text);
       border-color: transparent;
+    }
+
+    .chore-quick-add {
+      display: flex;
+      gap: 8px;
+      padding: 4px 0 12px;
+    }
+
+    .chore-quick-add .qp-pts {
+      flex: 1;
     }
 
 
@@ -1970,14 +1897,14 @@
 
     <!-- Chores View -->
     <div class="view" id="viewChores">
-      <div class="panel quick-points" id="quickPoints">
-        <div class="qp-row">
-          <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
-          <button type="button" class="qp-kid louisa" data-qp-kid="louisa">Louisa</button>
-          <button type="button" class="qp-kid both" data-qp-kid="both">Both</button>
-        </div>
+      <div id="choreKidCards"></div>
+      <div class="chore-quick-add" id="choreQuickAdd">
+        <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
+        <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
+        <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
+        <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
       </div>
-      <section class="panel" id="choreProgress" aria-live="polite"></section>
+      <section id="choreProgress" aria-live="polite"></section>
       <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
     </div>
 
@@ -4010,21 +3937,11 @@
 
       // Quick Points panel
       (function () {
-        var qpKid = 'alex';
-        var qpPanel = document.getElementById('quickPoints');
-        if (!qpPanel) return;
         document.addEventListener('click', function (e) {
-          var btn = e.target.closest('[data-qp-kid]');
-          if (btn) {
-            qpKid = btn.dataset.qpKid;
-            qpPanel.querySelectorAll('.qp-kid').forEach(function (b) { b.classList.remove('active'); });
-            btn.classList.add('active');
-            return;
-          }
           var ptsBtn = e.target.closest('[data-qp-pts]');
           if (ptsBtn) {
             var pts = Number(ptsBtn.dataset.qpPts);
-            var kids = qpKid === 'both' ? ['alex', 'louisa'] : [qpKid];
+            var kids = typeof window.getSelectedChoreKids === 'function' ? window.getSelectedChoreKids() : ['alex'];
             var now = new Date();
             saveLogEntries(kids.map(function (kidId) {
               return { kid: kidId, choreId: 'freepoints', choreLabel: 'Quick points', points: pts, timestamp: Date.now(), date: toDateString(now), week: toIsoWeek(now), note: '' };
@@ -5420,7 +5337,7 @@
         kid: 'all',
         date: localDateString(new Date())
       };
-      var quickTaskFlashId = '';
+      var choreSelectedKid = 'both';
 
       function isChoresViewActive() {
         return appShellState.currentView === 'chores' || location.hash.replace('#', '') === 'chores';
@@ -5439,20 +5356,15 @@
       }
 
       function selectedChoreKids() {
-        var active = document.querySelector('#quickPoints [data-qp-kid].active');
-        var kid = active ? active.dataset.qpKid : 'alex';
-        return kid === 'both' ? ['alex', 'louisa'] : [kid];
+        if (choreSelectedKid === 'both') return ['alex', 'louisa'];
+        return [choreSelectedKid];
       }
+      window.getSelectedChoreKids = selectedChoreKids;
 
       function selectedKidLabel(kidIds, phase) {
         return kidIds.map(function (kidId) {
           return ((phase.currentConfig.kids || {})[kidId] || {}).name || kidId;
         }).join(' and ');
-      }
-
-      function selectedQuickTaskTone(kidIds) {
-        if (kidIds.length > 1) return 'both';
-        return kidIds[0] || 'alex';
       }
 
       function choreAppliesToSelectedKids(chore, kidIds) {
@@ -5499,30 +5411,22 @@
         return '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       }
 
-      function renderQuickTasks(phase, chores, todayEntries, kidIds) {
-        var quickTasks = chores.filter(function (entry) {
-          return !!(entry[1] && entry[1].quickTask);
-        });
-        if (!quickTasks.length) return '';
-        var tone = selectedQuickTaskTone(kidIds);
-        return '<div class="chore-section-label">Quick Tasks</div><div class="quick-tasks">' +
-          quickTasks.map(function (entry) {
-            var choreId = entry[0];
-            var chore = entry[1] || {};
-            var applicableKids = choreAppliesToSelectedKids(chore, kidIds);
-            if (!applicableKids.length) return '';
-            var matches = todayEntries.filter(function (logEntry) {
-              return logEntry.choreId === choreId && applicableKids.indexOf(logEntry.kid) !== -1;
-            });
-            var doneKids = uniqueDoneKids(matches);
-            var done = applicableKids.every(function (kidId) {
-              return doneKids.indexOf(kidId) !== -1;
-            });
-            return '<button type="button" class="quick-task-btn ' + tone + (done ? ' done' : '') + (quickTaskFlashId === choreId ? ' flash' : '') + '" data-quick-task="' + escapeHtml(choreId) + '">' +
-              '<span class="quick-task-label">' + escapeHtml(chore.label || choreId) + '</span>' +
-              '<span class="quick-task-pts">+' + Number(chore.points || 0) + (done ? ' <span class="quick-task-check">' + makeCheckIcon() + '</span>' : '') + '</span>' +
+      function renderKidCards(phase, entries, week) {
+        var kidIds = Object.keys(phase.currentConfig.kids || {});
+        return '<div class="chore-kid-cards">' +
+          kidIds.map(function (kidId) {
+            var info = getWeeklyProgressInfo(phase, kidId, entries, week);
+            var isSelected = choreSelectedKid === 'both' || choreSelectedKid === kidId;
+            var isDimmed = choreSelectedKid !== 'both' && choreSelectedKid !== kidId;
+            var cardClass = 'chore-kid-card ' + kidId + (isSelected ? ' selected' : '') + (isDimmed ? ' dimmed' : '');
+            return '<button type="button" class="' + cardClass + '" data-chore-kid="' + kidId + '">' +
+              '<div class="chore-kid-card-name">' + escapeHtml(info.kid.name || info.kidId) + '</div>' +
+              '<div class="chore-kid-card-pts">' + escapeHtml(info.pointsLabel) + '</div>' +
+              '<div class="chore-kid-card-pay">' + escapeHtml(info.payLabel) + '</div>' +
+              '<div class="weekly-progress-bar-track"><div class="weekly-progress-bar-fill ' + kidId + '" style="width:' + info.progressPct + '%;"></div></div>' +
+              (info.bonusLabel ? '<div class="chore-kid-card-bonus">' + escapeHtml(info.bonusLabel) + '</div>' : '') +
             '</button>';
-          }).filter(Boolean).join('') +
+          }).join('') +
         '</div>';
       }
 
@@ -5569,26 +5473,13 @@
         };
       }
 
-      function renderWeeklyProgressCard(phase, entries, week, kidIds) {
-        var infos = kidIds.map(function (kidId) {
-          return getWeeklyProgressInfo(phase, kidId, entries, week);
-        });
-        return '<section class="weekly-progress-card' + (infos.length > 1 ? ' both-mode' : '') + '">' +
-          infos.map(function (info) {
-            return '<div class="weekly-progress-row">' +
-              '<div class="weekly-progress-header"><div><div class="weekly-progress-kid">' + escapeHtml(info.kid.name || info.kidId) + '</div><div class="weekly-progress-pts">' + escapeHtml(info.pointsLabel) + '</div></div><div class="weekly-progress-pay">' + escapeHtml(info.payLabel) + '</div></div>' +
-              '<div class="weekly-progress-bar-track"><div class="weekly-progress-bar-fill ' + info.kidId + '" style="width:' + info.progressPct + '%;"></div></div>' +
-              (info.bonusLabel ? '<div class="weekly-bonus-teaser">' + escapeHtml(info.bonusLabel) + '</div>' : '') +
-            '</div>';
-          }).join('') +
-        '</section>';
-      }
-
       async function renderChoreProgress() {
         var phase = runtime();
         var container = document.getElementById('choreProgress');
+        var kidCardsContainer = document.getElementById('choreKidCards');
         if (!container) return;
         if (!phase || !phase.familyId || !phase.configLoaded) {
+          if (kidCardsContainer) kidCardsContainer.innerHTML = '';
           container.innerHTML = '<div class="chore-board"><p class="chore-list-note">Loading today\'s chores...</p></div>';
           return;
         }
@@ -5608,13 +5499,7 @@
             return entry.date === today && kids.indexOf(entry.kid) !== -1;
           });
           var summary = summarizeWeek(entries, phase, kids, week);
-          var progressMarkup = '';
-          try {
-            progressMarkup = renderWeeklyProgressCard(phase, entries, week, kids);
-          } catch (progressError) {
-            console.error(progressError);
-            progressMarkup = '<p class="chore-list-note">Weekly progress is unavailable right now.</p>';
-          }
+          var kidCardsMarkup = renderKidCards(phase, entries, week);
           var checklistMarkup = '';
           try {
             checklistMarkup = chores.map(function (entry) {
@@ -5644,23 +5529,17 @@
             console.error(checklistError);
             checklistMarkup = '';
           }
-          var quickTasksMarkup = renderQuickTasks(phase, chores, todayEntries, kids);
+          if (kidCardsContainer) kidCardsContainer.innerHTML = kidCardsMarkup;
           container.innerHTML = '<div class="chore-board">' +
-            '<div class="chore-board-header"><h2>Chores</h2><p>' + escapeHtml(selectedKidLabel(kids, phase)) + '</p></div>' +
-            quickTasksMarkup +
-            '<div class="chore-section-label">Weekly Progress</div>' +
-            progressMarkup +
             '<div class="chore-section-label">Today\'s Chores</div>' +
             (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
-            '<div class="panel quick-points"><div class="chore-section-label">Quick Add</div><div class="qp-row"><button type="button" class="qp-pts" data-qp-pts="1">+1</button><button type="button" class="qp-pts" data-qp-pts="2">+2</button><button type="button" class="qp-pts" data-qp-pts="3">+3</button><button type="button" class="qp-pts" data-qp-pts="4">+4</button></div></div>' +
             '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
           '</div>';
         } catch (error) {
           console.error(error);
+          if (kidCardsContainer) kidCardsContainer.innerHTML = '';
           container.innerHTML = '<div class="chore-board">' +
-            '<div class="chore-board-header"><h2>Chores</h2><p>Could not load right now</p></div>' +
             '<p class="chore-list-note">The Chores view hit an error. You can still use quick add below.</p>' +
-            '<div class="panel quick-points"><div class="chore-section-label">Quick Add</div><div class="qp-row"><button type="button" class="qp-pts" data-qp-pts="1">+1</button><button type="button" class="qp-pts" data-qp-pts="2">+2</button><button type="button" class="qp-pts" data-qp-pts="3">+3</button><button type="button" class="qp-pts" data-qp-pts="4">+4</button></div></div>' +
           '</div>';
         }
       }
@@ -5715,54 +5594,6 @@
         if (shouldRenderSettings('bank')) {
           renderBankSettings().catch(function (error) { console.error(error); });
         }
-      }
-
-      async function triggerQuickTask(choreId) {
-        var phase = runtime();
-        if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
-        var chore = (phase.currentConfig.chores || {})[choreId];
-        if (!chore) return;
-        var kidIds = selectedChoreKids();
-        var applicableKids = choreAppliesToSelectedKids(chore, kidIds);
-        if (!applicableKids.length) return;
-        var now = new Date();
-        var today = phase.toDateString(now);
-        var existing = (await phase.getAllLogEntries()).filter(function (entry) {
-          return entry.date === today && entry.choreId === choreId && applicableKids.indexOf(entry.kid) !== -1;
-        });
-        var doneKids = uniqueDoneKids(existing);
-        var alreadyDone = applicableKids.every(function (kidId) {
-          return doneKids.indexOf(kidId) !== -1;
-        });
-        if (alreadyDone && !window.confirm('Already done. Log again?')) {
-          return;
-        }
-        await phase.saveLogEntries(applicableKids.map(function (kidId) {
-          return {
-            kid: kidId,
-            choreId: choreId,
-            choreLabel: chore.label,
-            points: Number(chore.points || 0),
-            timestamp: Date.now(),
-            date: today,
-            week: phase.toIsoWeek(now),
-            note: ''
-          };
-        }));
-        quickTaskFlashId = choreId;
-        renderChoreProgress().catch(function (error) { console.error(error); });
-        setTimeout(function () {
-          if (quickTaskFlashId === choreId) {
-            quickTaskFlashId = '';
-            renderChoreProgress().catch(function (error) { console.error(error); });
-          }
-        }, 280);
-        phase.showToast('Logged ' + (chore.label || 'chore') + ' for ' + selectedKidLabel(applicableKids, phase) + '.', {
-          kid: applicableKids.length === 1 ? applicableKids[0] : null,
-          onUndo: function () {
-            phase.undoLastAction().catch(function (error) { console.error(error); });
-          }
-        });
       }
 
       function renderPayTierEditor(kidId, kid) {
@@ -5856,7 +5687,7 @@
           '<article class="stat-card"><h3>Chore Settings</h3><div class="settings-list">' +
           Object.keys(chores).map(function (choreId) {
             var chore = chores[choreId] || {};
-            return '<div class="settings-row"><span>' + String(chore.label || choreId).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span><input type="number" min="0" value="' + Number(chore.points || 0) + '" data-chore-setting="points" data-chore="' + choreId + '"><label style="display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--muted)"><input type="checkbox" data-chore-setting="quick-task" data-chore="' + choreId + '"' + (chore.quickTask ? ' checked' : '') + '>Quick task</label><button type="button" data-chore-action="remove" data-chore="' + choreId + '">Remove</button></div>';
+            return '<div class="settings-row"><span>' + String(chore.label || choreId).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span><input type="number" min="0" value="' + Number(chore.points || 0) + '" data-chore-setting="points" data-chore="' + choreId + '"><button type="button" data-chore-action="remove" data-chore="' + choreId + '">Remove</button></div>';
           }).join('') +
           '</div><button type="button" class="settings-btn" data-chore-action="add">Add chore</button></article>' +
         '</div>';
@@ -5870,7 +5701,7 @@
         var points = Number(window.prompt('Points for ' + label + '?', '1'));
         if (!points || Number.isNaN(points)) return;
         var key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('chore_' + Date.now());
-        var chore = { label: label, points: points, quickTask: false, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
+        var chore = { label: label, points: points, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
         await phase.database.ref('families/' + phase.familyId + '/config/chores/' + key).set(chore);
         phase.currentConfig.chores[key] = chore;
         renderChoreSettings();
@@ -5888,6 +5719,13 @@
       }
 
       document.addEventListener('click', function (event) {
+        var kidCard = event.target.closest('[data-chore-kid]');
+        if (kidCard) {
+          var kidId = kidCard.dataset.choreKid;
+          choreSelectedKid = choreSelectedKid === kidId ? 'both' : kidId;
+          renderChoreProgress().catch(function (error) { console.error(error); });
+          return;
+        }
         var choreItem = event.target.closest('[data-chore-item]');
         if (choreItem) {
           toggleChoreItem(choreItem.dataset.choreItem).catch(function (error) {
@@ -5895,17 +5733,6 @@
             var phase = runtime();
             if (phase && typeof phase.showToast === 'function') {
               phase.showToast('Could not update that chore.', { type: 'error' });
-            }
-          });
-          return;
-        }
-        var quickTaskBtn = event.target.closest('[data-quick-task]');
-        if (quickTaskBtn) {
-          triggerQuickTask(quickTaskBtn.dataset.quickTask).catch(function (error) {
-            console.error(error);
-            var phase = runtime();
-            if (phase && typeof phase.showToast === 'function') {
-              phase.showToast('Could not log that quick task.', { type: 'error' });
             }
           });
           return;
@@ -5974,17 +5801,6 @@
           return;
         }
 
-        if (target.dataset.choreSetting === 'quick-task') {
-          var quickTaskEnabled = !!target.checked;
-          phase.database.ref('families/' + phase.familyId + '/config/chores/' + target.dataset.chore + '/quickTask').set(quickTaskEnabled).then(function () {
-            if (!phase.currentConfig.chores[target.dataset.chore]) return;
-            phase.currentConfig.chores[target.dataset.chore].quickTask = quickTaskEnabled;
-            renderChoreSettings();
-            renderChoreProgress().catch(function (error) { console.error(error); });
-          }).catch(function (error) { console.error(error); });
-          return;
-        }
-
         if (target.dataset.bankSetting) {
           var setting = target.dataset.bankSetting;
           var kidId = target.dataset.kid;
@@ -6034,12 +5850,6 @@
             renderBankSettings().catch(function (error) { console.error(error); });
           }
         }
-      });
-
-      document.getElementById('quickPoints').addEventListener('click', function () {
-        setTimeout(function () {
-          renderChoreProgress().catch(function (error) { console.error(error); });
-        }, 150);
       });
 
       document.addEventListener('click', function (event) {
