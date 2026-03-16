@@ -1,23 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 11 - Chores Tab Rendering Bugs
-**Current Phase:** 11c
-**Status:** Ready for review
-**Next Agent:** gemini
-**Next Action:** Review Phase 11 chores navigation/rendering fixes
+**Task:** Phase 12 — Header Polish, Fullscreen PWA, Data Extraction
+**Current Phase:** Queued (waiting for Phase 11 review to complete)
+**Status:** Plan ready, waiting for Gemini to finish Phase 11 review
+**Next Agent:** gemini (finishing Phase 11 review) → codex (Phase 12)
+**Next Action:** After Gemini's Phase 11 review completes, Codex starts Phase 12
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phase 8a: Unified Header Settings
-- [x] Phase 8b: Chores Tab Redesign - Daily Tracker
-- [x] Phase 8c: Visual Polish & Calendar settings
+- [x] Phase 8a-c: Unified Header Settings + Visual Polish
 - [x] Phase 9: Header/tab bar cleanup, Jameson calendar support
-- [x] Phase 10a: Fix Weekly Bonus Payment Bug
-- [x] Phase 10b: Chores Tab Redesign (weekly progress card + checklist)
-- [x] **Phase 11a: Fix Chores not rendering on tab switch** - `switchView()` now calls the chores renderer
-- [x] **Phase 11b: Fix settings panel showing wrong content** - settings panel now closes on tab switch
-- [x] **Phase 11c: Bump SW cache** - `hub-v13`
+- [x] Phase 10a-b: Bonus bug fix + Chores redesign
+- [x] Phase 11a-c: Chores tab rendering bugs (in Gemini review)
+
+## Queued
+
+- [ ] **Phase 12a: Settings text + family name** — "Update code" button, customizable header name in DB
+- [ ] **Phase 12b: Fullscreen PWA** — Apple meta tags, safe area padding
+- [ ] **Phase 12c: Extract fun data** — Move jokes/madlibs to kid-fun-data.js (~855 lines out of index.html)
 
 ## Pending User Action
 
@@ -25,6 +26,6 @@
 
 ## Notes
 
-- `renderChoreProgress()` is now exposed on `window` so the router can trigger it when entering Chores.
-- `switchView()` now dismisses settings before changing tabs, which avoids stale settings content carrying across views.
-- Manual browser verification is still needed for tab-to-tab navigation, `#chores` deep-link loads, and gear-panel dismissal behavior.
+- Gemini is actively reviewing Phase 11 — do NOT modify index.html until that review completes
+- Phase 12c is the most impactful: reduces index.html from ~6773 to ~5918 lines, improving AI agent performance
+- kid-fun-data.js already exists but may have fewer items than what's currently embedded — Codex must sync content
