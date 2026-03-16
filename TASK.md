@@ -1,11 +1,11 @@
-# Task: Chores Redesign + Unified Settings
+# Task: Phase 10 — Chores Tab Redesign + Bonus Bug Fix
 
 ## Summary
 
 Two connected changes:
 
-1. **Chores tab redesign** — add a visual chore tracker showing today's chores as a tappable checklist, replacing the generic progress bars with something parents actually use
-2. **Unified settings** — move all gear icons out of individual tabs into the header, where one gear button opens context-aware settings based on the active tab
+1. **Bug fix** — Weekly bonus pay is never credited to kid balances. `maybeRunWeeklyPay()` only credits tier pay, ignoring bonus earnings. Alex earned enough points for a bonus but got $0 bonus in her balance.
+2. **Chores redesign** — The chore tracking UI currently lives split between Chores (checklist) and Bank (points/earnings display). Consolidate all chore tracking into the Chores tab with a modern, cohesive design matching the recent header/tab bar redesign.
 
 ## Model Mode
 
@@ -13,171 +13,312 @@ default
 
 ---
 
-## Phase 8a: Unified Header Settings
+## Phase 10a: Fix Weekly Bonus Payment Bug
 
-**Problem:** Each tab has its own gear icon + inline settings panel (Chores toolbar line ~1579, Bank toolbar line ~1617). This is inconsistent — Home and Fun and Lists have no gear. The gear buttons feel random and take up space in the tab content area.
+**Problem:** `maybeRunWeeklyPay()` (line ~5537) calculates weekly pay via `calculateWeeklyPay()` which returns only the tier-based amount. The bonus calculation (`Math.floor(extraPoints / extraPts) * bonusAmount`) exists only in `renderCardView()` for display — it's never included in the actual payment credited to the balance.
 
-**Fix:** One gear icon in the header (next to the existing link icon). When tapped, it opens settings relevant to the currently active tab.
+**Root cause (line ~5556):**
+```javascript
+var amount = phase.calculateWeeklyPay((phase.currentConfig.kids[kidId] || {}).payTiers || [], weeklyPoints);
+```
+This returns tier pay only. Bonus is never added.
 
-### Header Changes
+**Fix in `maybeRunWeeklyPay()`:**
 
-**File:** `index.html`
+After line 5556, add bonus calculation:
+```javascript
+var amount = phase.calculateWeeklyPay((phase.currentConfig.kids[kidId] || {}).payTiers || [], weeklyPoints);
 
-**Current header-actions (line ~1564):**
-```html
-<div class="header-actions">
-  <button type="button" class="icon-btn" id="headerFamilyButton">&#128279;</button>
-</div>
+// Add bonus pay for points above top tier
+var kid = phase.currentConfig.kids[kidId] || {};
+var tiers = (kid.payTiers || []).slice().sort(function(a, b) { return a.minPts - b.minPts; });
+var topMinPts = tiers.length ? tiers[tiers.length - 1].minPts : 0;
+var extraPoints = Math.max(0, weeklyPoints - topMinPts);
+var wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
+var bonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
+amount += bonus;
 ```
 
-**New header-actions:**
-```html
-<div class="header-actions">
-  <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Settings">&#9881;</button>
-  <button type="button" class="icon-btn" id="headerFamilyButton" aria-label="Family info">&#128279;</button>
-</div>
+**Also update the payment note** to include bonus info when applicable:
+```javascript
+var note = 'Auto weekly pay for ' + previousWeek + (bonus > 0 ? ' (includes $' + bonus.toFixed(2) + ' bonus)' : '');
 ```
-
-### Settings Panel Behavior
-
-Add a `headerSettingsPanel` section (similar to `headerFamilyPanel`) that renders different content based on the current view:
-
-| Active Tab | Settings Content |
-|-----------|-----------------|
-| **Home** | Family code, calendar URL (current family panel content) |
-| **Chores** | Chore list editor (add/remove/edit points) — current `renderChoreSettings()` content |
-| **Fun** | Nothing (or "No settings for Fun") |
-| **Lists** | Nothing (or "No settings for Lists") |
-| **Bank** | Pay tiers, bonus settings, history, transactions — current `renderBankSettings()` content |
-
-### What to Remove
-
-- Remove `choresSettingsToggle` button from Chores toolbar (line ~1581)
-- Remove `bankSettingsToggle` button from Bank toolbar (line ~1619)
-- Remove the `choresSettings` hidden panel from Chores view (line ~1598)
-- Remove the `bankSettings` hidden panel from Bank view (line ~1622)
-- Remove the per-tab toolbar `.chores-toolbar` panels entirely — the tab title is redundant since the tab bar already shows which tab you're on
-- Keep the `renderChoreSettings()` and `renderBankSettings()` functions but rewire them to render into the new header settings panel
-
-### Implementation
-
-1. Add `headerSettingsPanel` div in the header section (after `headerFamilyPanel`)
-2. Add `headerSettingsButton` click handler that toggles `appShellState.settingsPanelOpen`
-3. Add `renderHeaderSettings()` function that checks `currentView` and calls the appropriate renderer
-4. When switching tabs, if settings panel is open, re-render it for the new tab's context
-5. Merge the family panel (link icon) into settings when on Home tab — or keep them separate if simpler
 
 ### Test
-- Tap gear on Home → see family code + calendar URL settings
-- Tap gear on Chores → see chore list editor
-- Tap gear on Bank → see pay tiers, history, transactions
-- Tap gear on Fun/Lists → see "no settings" or panel stays closed
-- Switch tabs while settings open → content updates to match new tab
+- Set Alex to have 35 points in a week (top tier is 22pts)
+- Verify `maybeRunWeeklyPay` credits tier pay ($7) + bonus ($2 for 10+ extra pts) = $9 total
+- Check payment note shows bonus info
+- Verify balance updates correctly
 
 ---
 
-## Phase 8b: Chores Tab Redesign — Daily Tracker
+## Phase 10b: Chores Tab Redesign
 
-**Problem:** The Chores tab has quick-point buttons and progress bars but no visual sense of "what chores need doing today" or "what's been done." Parents want to see today's chores as a checklist they can tap through.
+**Problem:** The Chores tab has a basic checklist and quick-add buttons, but no weekly progress visualization. Parents have to go to the Bank tab to see how many points each kid has earned and what they've earned in dollars. The chore tracking experience should be self-contained in the Chores tab.
 
-**New Chores tab layout:**
+### Design Spec
 
-```
-┌──────────────────────────────┐
-│  [Alex] [Louisa] [Both]     │  ← kid picker (keep)
-├──────────────────────────────┤
-│  Today's Chores              │
-│  ☑ Fed the dog        +1    │  ← done (tappable to undo)
-│  ☑ Made bed           +1    │
-│  ☐ Brush teeth AM     +1    │  ← not done (tap to log)
-│  ☐ Clean room         +2    │
-│  ☐ Read 15 min        +2    │
-├──────────────────────────────┤
-│  Quick Add            [+1] [+2] [+3]  │  ← for ad-hoc points
-├──────────────────────────────┤
-│  This Week: 14pts · $3.50   │  ← compact summary line
-└──────────────────────────────┘
-```
+The design follows the existing app aesthetic: clean white cards with subtle shadows, `--alex` blue and `--louisa` purple color accents, SVG icons, and the same font/spacing system used in the header and Home tab redesigns.
 
-### How It Works
-
-1. **Chore checklist** — render all configured chores from `config.chores` as a tappable list
-2. **Done state** — cross-reference today's log entries (from `getAllLogEntries()` filtered by today's date and selected kid) against the chore list. If a chore was logged today for this kid, show it checked
-3. **Tap to log** — tapping an unchecked chore calls the existing `saveLogEntries()` to log it for the selected kid. Shows a toast confirmation
-4. **Tap to undo** — tapping a checked chore prompts "Remove this entry?" and deletes the log entry
-5. **Quick Add** stays — the `+1/+2/+3/+4` buttons remain for ad-hoc/free points (renamed "Quick Add")
-6. **Weekly summary** — single compact line replacing the full progress cards: "14pts this week · $3.50 earned"
-7. **Remove** the old `choreProgress` progress bar cards — the checklist IS the tracker now
-
-### Chore Checklist Data Flow
+#### Layout (top to bottom):
 
 ```
-Config chores (Firebase):     config/chores/{choreId} → { label, points, kids, keywords }
-Today's log entries:          getAllLogEntries() → filter by date === today && kid === selectedKid
-Match:                        for each chore, check if any log entry has matching choreId
-Render:                       checked if matched, unchecked if not
+┌─────────────────────────────────────┐
+│  [Alex]  [Louisa]  [Both]           │  ← kid picker (keep existing)
+├─────────────────────────────────────┤
+│                                     │
+│  ┌─────────────────────────────┐    │
+│  │ ● Weekly Progress           │    │
+│  │                             │    │
+│  │  18 / 22 pts     $3 → $7   │    │ ← points toward next tier
+│  │  ████████████░░░░  82%      │    │ ← progress bar (kid-colored)
+│  │                             │    │
+│  │  🔥 +$2 bonus at 32pts     │    │ ← bonus track teaser
+│  └─────────────────────────────┘    │
+│                                     │
+│  Today's Chores                     │
+│  ┌─────────────────────────────┐    │
+│  │ ✓  Fed the dog (AM)    +1  │    │ ← done (muted, checkmark)
+│  │ ✓  Made bed             +1  │    │
+│  │ ○  Brush teeth PM       +1  │    │ ← not done (tap to log)
+│  │ ○  Clean room           +2  │    │
+│  │ ○  Read 15 min          +2  │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  Quick Add                          │
+│  [+1]  [+2]  [+3]  [+4]            │ ← keep existing buttons
+│                                     │
+└─────────────────────────────────────┘
 ```
 
-### Visual Design
+#### Weekly Progress Card
 
-Follow the Home tab's clean aesthetic:
-- No `.panel` wrapping around each section
-- Checklist items: full-width rows with comfortable tap targets (48px+ height)
-- Checked items: muted text, line-through, green checkmark
-- Unchecked items: bold text, empty circle, point value on right
-- Kid picker stays at top (existing `quickPoints` kid row)
-- Quick add points row below the checklist (existing `+1/+2/+3/+4` buttons)
-- Weekly summary: small muted text at bottom
+New component — a compact card showing this week's trajectory:
 
-### CSS Classes Needed
+- **Points counter**: `{current} / {nextTierMin} pts` — shows progress toward the next pay tier
+  - If already at top tier, show `{current} pts · Top tier reached!`
+- **Dollar display**: `${currentTierPay} → ${nextTierPay}` — what they're earning now vs what's next
+  - At top tier: `${tierPay} earned`
+- **Progress bar**: Horizontal bar filled to `current / nextTierMin` percentage
+  - Color: `var(--alex)` or `var(--louisa)` based on selected kid
+  - Background: `var(--line)` or similar light neutral
+  - Rounded ends (`border-radius: 999px`)
+  - Height: ~8px
+- **Bonus teaser** (only shows when at or above top tier):
+  - "🔥 +$2 bonus at {topMinPts + extraPts}pts" — shows what they'll earn next
+  - "🔥 $4 bonus earned!" if they've already passed a bonus threshold
+- **When "Both" selected**: Show two mini progress rows, one per kid, stacked
 
-- `.chore-list` — container for the checklist
-- `.chore-item` — individual row (48px min-height, flex, gap)
-- `.chore-item.done` — checked state (muted, line-through)
-- `.chore-check` — checkbox indicator (circle/checkmark)
-- `.chore-label` — chore name
-- `.chore-pts` — point value badge
-- `.chore-summary` — weekly summary line
+**Data source**: Same as existing — `getAllLogEntries()` filtered by current ISO week + selected kid, summed for points. `calculateWeeklyPay()` for tier mapping. Kid config for tier thresholds and bonus settings.
+
+#### Today's Chores Checklist
+
+Keep existing `renderChoreProgress` logic but update the visual design:
+
+**CSS classes:**
+
+```css
+.chore-progress-card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.chore-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chore-item:last-child {
+  border-bottom: 0;
+}
+
+.chore-item:active {
+  background: var(--panel-alt);
+}
+
+.chore-item.done {
+  opacity: 0.55;
+}
+
+.chore-item.done .chore-label {
+  text-decoration: line-through;
+}
+
+.chore-check {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.chore-item.done .chore-check {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+/* SVG checkmark icon inside .chore-check when done */
+
+.chore-label {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.chore-pts {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--panel-alt);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.chore-item.done .chore-pts {
+  color: #22c55e;
+}
+```
+
+**Partial completion note**: When "Both" is selected and a chore is done by one kid but not the other, show "Done for Alex" in small muted text below the label (this logic already exists in `choreNote`).
+
+#### Weekly Progress Card CSS
+
+```css
+.weekly-progress-card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.weekly-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.weekly-progress-pts {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.weekly-progress-pay {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.weekly-progress-bar-track {
+  height: 8px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.weekly-progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.weekly-progress-bar-fill.alex { background: var(--alex); }
+.weekly-progress-bar-fill.louisa { background: var(--louisa); }
+
+.weekly-bonus-teaser {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+```
+
+#### Section Headers
+
+Use lightweight text labels (not card headers):
+
+```css
+.chore-section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 16px 4px 6px;
+}
+```
+
+### Rendering
+
+Update `renderChoreProgress()` to output:
+
+1. **Weekly Progress Card** — new, placed between kid picker and checklist
+2. **"Today's Chores" label** — section header
+3. **Chore checklist** — existing logic, new CSS
+4. **"Quick Add" label** — section header
+5. **Quick-add buttons** — keep existing `qp-pts` buttons
+
+The weekly progress card needs to:
+- Get current week's log entries for selected kid(s)
+- Sum points
+- Look up pay tiers to find current tier and next tier
+- Calculate progress percentage toward next tier
+- Calculate bonus if at/above top tier
 
 ### What to Keep
-- Kid picker buttons (Alex / Louisa / Both) — existing `#quickPoints` kid row
-- Quick point buttons (+1/+2/+3/+4) — existing `qp-pts` buttons
-- `renderChoreProgress()` logic for calculating weekly points/pay — reuse for the summary line
-- All existing log entry and chore config infrastructure
+- Kid picker buttons (Alex / Louisa / Both) — `#quickPoints`
+- Quick point buttons (+1/+2/+3/+4) — existing `qp-pts`
+- `toggleChoreItem()` logic
+- `saveLogEntries()` infrastructure
+- `renderChoreSettings()` for the header settings panel
+- Chat composer / voice input at bottom
 
-### What to Remove from Chores View
-- The `chores-toolbar` panel (title + gear icon) — title redundant, gear moved to header
-- The `choreProgress` progress bar cards — replaced by checklist + summary line
-- The `choresSettings` inline panel — moved to header settings
-- The `messages` panel (chat history) — if still present and not used elsewhere
+### What NOT to Change
+- Bank tab — leave `renderCardView` as-is (it still shows balance, payments, debts)
+- Home tab — no changes
+- Header — no changes
 
 ### Test
-- Select Alex → see her configured chores as unchecked list
-- Tap "Fed the dog" → logs entry, shows checked with green mark, toast confirms
-- Tap checked item → prompts undo, removes log entry
-- Tap +2 quick add → logs ad-hoc points, weekly summary updates
-- Switch to Louisa → her chores shown, different check states
-- Select Both → both kids' states shown (or logs for both)
-- Weekly summary shows correct points and dollar amount
-- Gear icon in header → chore settings (add/remove/edit chores)
+- Select Alex → weekly progress shows her points, current/next tier, progress bar in blue
+- Select Louisa → same in purple
+- Select Both → two stacked mini progress rows
+- Tap unchecked chore → logs it, progress bar updates, points tick up
+- Tap checked chore → undo prompt, progress bar adjusts down
+- At top tier → bonus teaser shows next bonus threshold
+- Past bonus threshold → shows bonus earned amount
+- Quick add +2 → points update, progress bar moves
 
 ---
+
+## Files Changed
+
+- `index.html` — both phases (bug fix + UI)
+- `sw.js` — bump cache version after Phase 10b
 
 ## Phase Order
 
 ```
-Phase 8a: Unified settings → must come first (removes per-tab toolbars)
-Phase 8b: Chores redesign  → depends on 8a (no toolbar, settings in header)
+Phase 10a: Bonus bug fix → small, standalone fix
+Phase 10b: Chores redesign → depends on 10a being correct (progress card shows bonus info)
 ```
-
-## Files Changed
-
-- `index.html` — both phases
-- `sw.js` — bump cache version after Phase 8b
 
 ## Risks
 
-1. **Settings rewiring** — the chore and bank settings render functions reference DOM elements by ID. Rewiring them to render into the header panel requires updating those references.
-2. **Chore checklist matching** — matching log entries to configured chores requires robust ID matching. The existing `choreId` field in log entries should match `config.chores` keys.
-3. **"Both" mode** — when "Both" is selected, the checklist needs to show combined state or log for both kids simultaneously. Follow existing `selectedChoreKids()` pattern.
-4. **Chat messages removal** — verify `#messages` panel isn't used by other features before removing.
+1. **Weekly pay retroactivity** — The bonus fix only applies going forward. If Alex was already shorted a bonus for a past week, her balance won't auto-correct. Consider: should we add a one-time correction? (Ask user if needed.)
+2. **Progress bar edge cases** — When a kid has 0 points, bar should show empty, not NaN%. When they exceed top tier, bar should show 100% + bonus teaser.
+3. **"Both" mode layout** — Two progress rows need to stack cleanly without feeling cramped. Use compact variant with smaller text/bar when showing both.

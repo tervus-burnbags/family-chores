@@ -1,26 +1,24 @@
-# Task State - Family Hub: Chores Redesign + Unified Settings
+# Task State - Family Hub
 
-**Task:** Chores Redesign + Unified Settings
-**Current Phase:** Phase 8b
-**Phase:** complete
-**Current Phase #:** 8b
-**Status:** Review complete
-**Next Agent:** gemini
-**Next Action:** Finalize or start new tasks
+**Task:** Phase 10 — Chores Tab Redesign + Bonus Bug Fix
+**Current Phase:** 10a
+**Status:** Ready for Codex
+**Next Agent:** codex
+**Next Action:** Implement Phase 10a (bonus bug fix) then Phase 10b (chores redesign)
 **Last Updated:** 2026-03-16
 
-## Phases
+## Completed
 
-- [x] **Phase 8a: Unified Header Settings**
-- [x] **Phase 8b: Chores Tab Redesign - Daily Tracker**
-- [x] **Phase 8c: Visual Polish & Calendar settings**
+- [x] Phase 8a: Unified Header Settings
+- [x] Phase 8b: Chores Tab Redesign - Daily Tracker
+- [x] Phase 8c: Visual Polish & Calendar settings
+- [x] Phase 9: Header/tab bar cleanup, Jameson calendar support
 
-## Notes
+## Current
 
-- Phase 8a/8b/8c are fully implemented.
-- The app now has a premium header with gradient and integrated gear icon.
-- Chores checklist and summary replace the old progress cards.
-- Calendar settings now include "Days ahead" control.
-- Cache version bumped to `hub-v12`.
-- All committed and uncommitted changes since `1efa7af` have been reviewed and approved.
+- [ ] **Phase 10a: Fix Weekly Bonus Payment Bug** — `maybeRunWeeklyPay()` doesn't include bonus in payment amount
+- [ ] **Phase 10b: Chores Tab Redesign** — Add weekly progress card, modernize checklist CSS
 
+## Pending User Action
+
+- Redeploy calendar-proxy.gs.txt to Google Apps Script (new deployment for ?days= and Jameson)
