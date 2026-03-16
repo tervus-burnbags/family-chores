@@ -1532,153 +1532,163 @@
       box-shadow: none;
     }
 
-    /* Chore checklist */
-    .chore-list {
+    /* Chore tiles */
+    .chore-grid {
       display: grid;
-      gap: 0;
-      border-radius: 16px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .chore-tile {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 64px;
+      padding: 10px 8px;
+      border: 0;
+      border-radius: 14px;
       background: var(--panel);
-      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+      box-shadow: 0 1px 6px rgba(15, 23, 42, 0.05);
+      color: var(--text);
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
       overflow: hidden;
     }
 
-    .chore-item {
-      min-height: 44px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 14px;
-      border: 0;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-      border-radius: 0;
-      background: transparent;
-      color: var(--text);
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.12s ease;
-      -webkit-tap-highlight-color: transparent;
+    .chore-tile:active {
+      transform: scale(0.95);
+      box-shadow: none;
     }
 
-    .chore-item:last-child {
-      border-bottom: 0;
+    .chore-tile.logged {
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.08) 0%, var(--panel) 100%);
+      box-shadow: 0 1px 6px rgba(34, 197, 94, 0.1);
     }
 
-    .chore-item:active {
-      background: rgba(148, 163, 184, 0.08);
-    }
-
-    .chore-item.logged {
-      background: rgba(34, 197, 94, 0.04);
-    }
-
-    .chore-item.cooldown {
-      opacity: 0.5;
+    .chore-tile.cooldown {
+      opacity: 0.45;
       pointer-events: none;
     }
 
-    .chore-count {
-      width: 22px;
-      height: 22px;
-      flex: 0 0 22px;
-      border-radius: 999px;
-      border: 2px solid rgba(148, 163, 184, 0.35);
+    .chore-tile-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      line-height: 1.2;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .chore-tile-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chore-tile-pts {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .chore-tile.logged .chore-tile-pts {
+      color: #16a34a;
+    }
+
+    .chore-tile-count {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: var(--muted);
-      background: transparent;
-      transition: all 0.2s ease;
-    }
-
-    .chore-item.logged .chore-count {
-      border-color: #22c55e;
-      background: rgba(34, 197, 94, 0.1);
-      color: #16a34a;
-    }
-
-    .chore-meta {
-      min-width: 0;
-      flex: 1 1 auto;
-      display: grid;
-      gap: 1px;
-    }
-
-    .chore-label {
-      font-size: 0.88rem;
-      font-weight: 500;
-      line-height: 1.25;
-    }
-
-    .chore-note {
-      color: var(--muted);
-      font-size: 0.75rem;
-    }
-
-    .chore-pts {
-      flex: 0 0 auto;
-      padding: 3px 10px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
       border-radius: 999px;
-      background: rgba(148, 163, 184, 0.1);
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-      white-space: nowrap;
+      background: #22c55e;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
     }
 
-    .chore-item.logged .chore-pts {
-      background: rgba(34, 197, 94, 0.1);
-      color: #16a34a;
-    }
-
+    /* Today's log */
     .chore-log {
-      border-radius: 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .chore-log-entry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
       background: var(--panel);
       box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-      overflow: hidden;
+      border-left: 3px solid var(--muted);
+      transition: background 0.12s;
     }
 
-    .chore-log-item {
+    .chore-log-entry.alex { border-left-color: var(--alex); }
+    .chore-log-entry.louisa { border-left-color: var(--louisa); }
+
+    .chore-log-main {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-      font-size: 0.82rem;
-    }
-
-    .chore-log-item:last-child {
-      border-bottom: 0;
-    }
-
-    .chore-log-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .chore-log-dot.alex { background: var(--alex); }
-    .chore-log-dot.louisa { background: var(--louisa); }
-
-    .chore-log-text {
-      flex: 1;
       min-width: 0;
+      flex: 1;
+    }
+
+    .chore-log-name {
+      font-size: 0.84rem;
+      font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: var(--text);
+      min-width: 0;
     }
 
-    .chore-log-time {
-      color: var(--muted);
-      font-size: 0.72rem;
+    .chore-log-pts-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.1);
+      color: #16a34a;
+      font-size: 0.68rem;
+      font-weight: 800;
+      white-space: nowrap;
       flex-shrink: 0;
     }
 
-    .chore-log-delete {
+    .chore-log-aside {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .chore-log-who {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .chore-log-when {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+
+    .chore-log-del {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1686,17 +1696,21 @@
       height: 28px;
       min-width: 28px;
       border: 0;
-      border-radius: 50%;
+      border-radius: 8px;
       background: transparent;
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 700;
+      color: rgba(148, 163, 184, 0.4);
       cursor: pointer;
+      transition: color 0.12s, background 0.12s;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .chore-log-delete:active {
-      background: rgba(214, 69, 69, 0.15);
+    .chore-log-del svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .chore-log-del:active {
+      background: rgba(214, 69, 69, 0.12);
       color: var(--danger);
     }
 
@@ -5504,21 +5518,6 @@
         }, { points: 0, pay: 0 });
       }
 
-      function uniqueDoneKids(entries) {
-        return Array.from(new Set(entries.map(function (entry) { return entry.kid; })));
-      }
-
-      function choreNote(phase, applicableKids, doneKids) {
-        if (!applicableKids.length) return '';
-        if (applicableKids.length === 1) {
-          return selectedKidLabel(applicableKids, phase) + ' only';
-        }
-        if (doneKids.length && doneKids.length < applicableKids.length) {
-          return 'Done for ' + selectedKidLabel(doneKids, phase);
-        }
-        return '';
-      }
-
       function renderKidCards(phase, entries, week) {
         var kidIds = Object.keys(phase.currentConfig.kids || {});
         var selectionLabel = choreSelectedKid === 'both' ? 'Everyone' : (((phase.currentConfig.kids || {})[choreSelectedKid] || {}).name || choreSelectedKid);
@@ -5542,16 +5541,26 @@
       function renderTodayLog(entries, phase) {
         if (!entries.length) return '';
         var sorted = entries.slice().sort(function (a, b) { return b.timestamp - a.timestamp; });
-        return '<div class="chore-section-label">Today\'s Log</div><div class="chore-log">' +
+        return '<div class="chore-section-label">Today</div><div class="chore-log">' +
           sorted.map(function (entry) {
             var kidName = ((phase.currentConfig.kids || {})[entry.kid] || {}).name || entry.kid;
             var time = new Date(Number(entry.timestamp || 0));
-            var timeStr = time.getHours() + ':' + String(time.getMinutes()).padStart(2, '0');
-            return '<div class="chore-log-item">' +
-              '<span class="chore-log-dot ' + escapeHtml(entry.kid) + '"></span>' +
-              '<span class="chore-log-text">' + escapeHtml(kidName) + ': ' + escapeHtml(entry.choreLabel || 'Points') + ' (+' + Number(entry.points || 0) + ')</span>' +
-              '<span class="chore-log-time">' + escapeHtml(timeStr) + '</span>' +
-              '<button type="button" class="chore-log-delete" data-chore-log-delete="' + escapeHtml(entry.id) + '" aria-label="Delete">&times;</button>' +
+            var h = time.getHours();
+            var ampm = h >= 12 ? 'pm' : 'am';
+            var h12 = h % 12 || 12;
+            var timeStr = h12 + ':' + String(time.getMinutes()).padStart(2, '0') + ampm;
+            return '<div class="chore-log-entry ' + escapeHtml(entry.kid) + '">' +
+              '<div class="chore-log-main">' +
+                '<span class="chore-log-name">' + escapeHtml(entry.choreLabel || 'Points') + '</span>' +
+                '<span class="chore-log-pts-badge">+' + Number(entry.points || 0) + '</span>' +
+              '</div>' +
+              '<div class="chore-log-aside">' +
+                '<span class="chore-log-who">' + escapeHtml(kidName) + '</span>' +
+                '<span class="chore-log-when">' + escapeHtml(timeStr) + '</span>' +
+                '<button type="button" class="chore-log-del" data-chore-log-delete="' + escapeHtml(entry.id) + '" aria-label="Delete">' +
+                  '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
+                '</button>' +
+              '</div>' +
             '</div>';
           }).join('') +
         '</div>';
@@ -5641,13 +5650,12 @@
                 return logEntry.choreId === choreId && applicableKids.indexOf(logEntry.kid) !== -1;
               });
               var count = matches.length;
-              var note = choreNote(phase, applicableKids, uniqueDoneKids(matches));
-              return '<button type="button" class="chore-item' + (count > 0 ? ' logged' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
-                '<span class="chore-count" aria-hidden="true">' + (count > 0 ? count : '') + '</span>' +
-                '<span class="chore-meta"><span class="chore-label">' + escapeHtml(chore.label || choreId) + '</span>' +
-                (note ? '<span class="chore-note">' + escapeHtml(note) + '</span>' : '') +
+              return '<button type="button" class="chore-tile' + (count > 0 ? ' logged' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
+                '<span class="chore-tile-label">' + escapeHtml(chore.label || choreId) + '</span>' +
+                '<span class="chore-tile-info">' +
+                  '<span class="chore-tile-pts">+' + Number(chore.points || 0) + '</span>' +
+                  (count > 0 ? '<span class="chore-tile-count">' + count + '</span>' : '') +
                 '</span>' +
-                '<span class="chore-pts">+' + Number(chore.points || 0) + '</span>' +
               '</button>';
             }).filter(Boolean).join('');
           } catch (checklistError) {
@@ -5657,8 +5665,8 @@
           var logMarkup = renderTodayLog(todayEntries, phase);
           if (kidCardsContainer) kidCardsContainer.innerHTML = kidCardsMarkup;
           container.innerHTML = '<div class="chore-board">' +
-            '<div class="chore-section-label">Today\'s Chores</div>' +
-            (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
+            '<div class="chore-section-label">Chores</div>' +
+            (checklistMarkup ? '<div class="chore-grid">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores configured. Use the gear icon to add chores.</p>') +
             '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
             logMarkup +
           '</div>';
