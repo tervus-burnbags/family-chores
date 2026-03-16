@@ -1480,12 +1480,16 @@
       line-height: 1.3;
     }
 
-    .chore-kid-card .chore-bar-track {
-      margin-top: 10px;
+    .chore-tier-bar {
+      margin-top: 8px;
+    }
+
+    .chore-bar-track {
+      position: relative;
       height: 5px;
       background: rgba(148, 163, 184, 0.15);
       border-radius: 999px;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .chore-bar-fill {
@@ -1496,6 +1500,39 @@
 
     .chore-bar-fill.alex { background: linear-gradient(90deg, var(--alex), #60a5fa); }
     .chore-bar-fill.louisa { background: linear-gradient(90deg, var(--louisa), #a78bfa); }
+
+    .chore-tier-mark {
+      position: absolute;
+      top: -2px;
+      width: 2px;
+      height: 9px;
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 1px;
+      transform: translateX(-1px);
+    }
+
+    .chore-bonus-zone {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #15803d);
+      border-radius: 0 999px 999px 0;
+      opacity: 0.7;
+    }
+
+    .chore-tier-labels {
+      position: relative;
+      height: 14px;
+      margin-top: 3px;
+    }
+
+    .chore-tier-labels span {
+      position: absolute;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
 
     .chore-kid-card-bonus {
       font-size: 0.7rem;
@@ -4986,41 +5023,55 @@
         });
       }
 
+      var weeklyPayRunning = false;
       async function maybeRunWeeklyPay() {
-        var phase = runtime();
-        if (!phase || !phase.familyId || !phase.configLoaded) return;
-        var now = new Date();
-        var currentWeek = phase.toIsoWeek(now);
-        var previous = new Date(now);
-        previous.setDate(previous.getDate() - 7);
-        var previousWeek = phase.toIsoWeek(previous);
-        var metaRef = phase.database.ref('families/' + phase.familyId + '/meta/lastWeeklyPayWeek');
-        var metaSnap = await metaRef.get();
-        if (metaSnap.exists() && metaSnap.val() === currentWeek) return;
-        var payments = await phase.getAllPayments();
-        var entries = await phase.getAllLogEntries();
-        var kidIds = Object.keys(phase.currentConfig.kids || {});
-        for (var i = 0; i < kidIds.length; i += 1) {
-          var kidId = kidIds[i];
-          var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === previousWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
-          var kid = (phase.currentConfig.kids[kidId] || {});
-          var payInfo = getWeeklyPayBreakdown(kid, weeklyPoints, phase.calculateWeeklyPay);
-          var bonus = payInfo.bonus;
-          var note = 'Auto weekly pay for ' + previousWeek + (bonus > 0 ? ' (includes $' + bonus.toFixed(2) + ' bonus)' : '');
-          if (payments.some(function (payment) {
-            return payment.kid === kidId &&
-              payment.type === 'weekly' &&
-              String(payment.note || '').indexOf('Auto weekly pay for ' + previousWeek) === 0;
-          })) continue;
-          var amount = payInfo.totalPay;
-          if (amount > 0) {
-            var paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: note, balanceDelta: Number(amount.toFixed(2)) };
-            var ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
-            await ref.set(paymentEntry);
-            await phase.adjustBalance(kidId, paymentEntry.balanceDelta);
+        if (weeklyPayRunning) return;
+        weeklyPayRunning = true;
+        try {
+          var phase = runtime();
+          if (!phase || !phase.familyId || !phase.configLoaded) return;
+          var now = new Date();
+          var currentWeek = phase.toIsoWeek(now);
+          var previous = new Date(now);
+          previous.setDate(previous.getDate() - 7);
+          var previousWeek = phase.toIsoWeek(previous);
+          var metaRef = phase.database.ref('families/' + phase.familyId + '/meta/lastWeeklyPayWeek');
+          var metaSnap = await metaRef.get();
+          if (metaSnap.exists() && metaSnap.val() === currentWeek) return;
+          var payments = await phase.getAllPayments();
+          var entries = await phase.getAllLogEntries();
+          var kidIds = Object.keys(phase.currentConfig.kids || {});
+          var paidCount = 0;
+          var paidNames = [];
+          for (var i = 0; i < kidIds.length; i += 1) {
+            var kidId = kidIds[i];
+            var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === previousWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
+            var kid = (phase.currentConfig.kids[kidId] || {});
+            var payInfo = getWeeklyPayBreakdown(kid, weeklyPoints, phase.calculateWeeklyPay);
+            var bonus = payInfo.bonus;
+            var note = 'Auto weekly pay for ' + previousWeek + (bonus > 0 ? ' (includes $' + bonus.toFixed(2) + ' bonus)' : '');
+            if (payments.some(function (payment) {
+              return payment.kid === kidId &&
+                payment.type === 'weekly' &&
+                String(payment.note || '').indexOf('Auto weekly pay for ' + previousWeek) === 0;
+            })) continue;
+            var amount = payInfo.totalPay;
+            if (amount > 0) {
+              var paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: note, balanceDelta: Number(amount.toFixed(2)) };
+              var ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
+              await ref.set(paymentEntry);
+              await phase.adjustBalance(kidId, paymentEntry.balanceDelta);
+              paidCount += 1;
+              paidNames.push(kid.name || kidId);
+            }
           }
+          await metaRef.set(currentWeek);
+          if (paidCount > 0 && typeof phase.showToast === 'function') {
+            phase.showToast('Weekly pay processed for ' + paidNames.join(' & ') + '.');
+          }
+        } finally {
+          weeklyPayRunning = false;
         }
-        await metaRef.set(currentWeek);
       }
       window.maybeRunWeeklyPay = maybeRunWeeklyPay;
 
@@ -5476,6 +5527,7 @@
         date: localDateString(new Date())
       };
       var choreSelectedKid = 'both';
+      var weeklyPayChecked = false;
 
       function isChoresViewActive() {
         return appShellState.currentView === 'chores' || location.hash.replace('#', '') === 'chores';
@@ -5531,6 +5583,53 @@
         }, { points: 0, pay: 0 });
       }
 
+      function renderTierBar(info) {
+        var tiers = info.tiers || [];
+        var goalPts = Number(info.goalPts || 0);
+        var points = Number(info.points || 0);
+
+        if (!tiers.length || goalPts <= 0) {
+          return '<div class="chore-tier-bar"><div class="chore-bar-track"><div class="chore-bar-fill ' + info.kidId + '" style="width:' + info.progressPct + '%;"></div></div></div>';
+        }
+
+        var maxPts = Math.max(goalPts, points, 1);
+        var fillPct = Math.min(100, Math.round((points / maxPts) * 100));
+        var markers = tiers.map(function (tier) {
+          var pct = Math.round((Number(tier.minPts || 0) / maxPts) * 100);
+          return '<div class="chore-tier-mark" style="left:' + pct + '%"></div>';
+        }).join('');
+
+        var labels = '';
+        if (tiers.length >= 2) {
+          var first = tiers[0];
+          var last = tiers[tiers.length - 1];
+          var firstPct = Math.round((Number(first.minPts || 0) / maxPts) * 100);
+          var lastPct = Math.round((Number(last.minPts || 0) / maxPts) * 100);
+          labels = '<div class="chore-tier-labels">' +
+            '<span style="left:' + firstPct + '%">$' + Number(first.pay || 0) + '</span>' +
+            '<span style="left:' + lastPct + '%">$' + Number(last.pay || 0) + '</span>' +
+          '</div>';
+        } else if (tiers.length === 1) {
+          var only = tiers[0];
+          var onlyPct = Math.round((Number(only.minPts || 0) / maxPts) * 100);
+          labels = '<div class="chore-tier-labels"><span style="left:' + onlyPct + '%">$' + Number(only.pay || 0) + '</span></div>';
+        }
+
+        var bonusZone = '';
+        if (points > goalPts && info.payInfo && info.payInfo.bonus > 0) {
+          bonusZone = '<div class="chore-bonus-zone" style="left:' + Math.round((goalPts / maxPts) * 100) + '%;width:' + Math.round(((points - goalPts) / maxPts) * 100) + '%"></div>';
+        }
+
+        return '<div class="chore-tier-bar">' +
+          '<div class="chore-bar-track">' +
+            '<div class="chore-bar-fill ' + info.kidId + '" style="width:' + fillPct + '%;"></div>' +
+            bonusZone +
+            markers +
+          '</div>' +
+          labels +
+        '</div>';
+      }
+
       function renderKidCards(phase, entries, week) {
         var kidIds = Object.keys(phase.currentConfig.kids || {});
         var selectionLabel = choreSelectedKid === 'both' ? 'Everyone' : (((phase.currentConfig.kids || {})[choreSelectedKid] || {}).name || choreSelectedKid);
@@ -5540,11 +5639,12 @@
             var isSelected = choreSelectedKid === kidId;
             var isDimmed = choreSelectedKid !== 'both' && choreSelectedKid !== kidId;
             var cardClass = 'chore-kid-card ' + kidId + (isSelected ? ' selected' : '') + (isDimmed ? ' dimmed' : '');
+            var barMarkup = renderTierBar(info);
             return '<button type="button" class="' + cardClass + '" data-chore-kid="' + kidId + '">' +
               '<div class="chore-kid-card-name">' + escapeHtml(info.kid.name || info.kidId) + '</div>' +
               '<div class="chore-kid-card-pts">' + escapeHtml(info.pointsLabel) + '</div>' +
               '<div class="chore-kid-card-pay">' + escapeHtml(info.payLabel) + '</div>' +
-              '<div class="chore-bar-track"><div class="chore-bar-fill ' + kidId + '" style="width:' + info.progressPct + '%;"></div></div>' +
+              barMarkup +
               (info.bonusLabel ? '<div class="chore-kid-card-bonus">' + escapeHtml(info.bonusLabel) + '</div>' : '') +
             '</button>';
           }).join('') +
@@ -5658,7 +5758,9 @@
           payLabel: payLabel,
           bonusLabel: bonusLabel,
           nextTier: nextTier,
-          payInfo: payInfo
+          payInfo: payInfo,
+          tiers: tiers,
+          goalPts: goalPts
         };
       }
 
@@ -5671,6 +5773,10 @@
           if (kidCardsContainer) kidCardsContainer.innerHTML = '';
           container.innerHTML = '<div class="chore-board"><p class="chore-list-note">Loading today\'s chores...</p></div>';
           return;
+        }
+        if (!weeklyPayChecked && typeof window.maybeRunWeeklyPay === 'function') {
+          weeklyPayChecked = true;
+          window.maybeRunWeeklyPay().catch(function (error) { console.error(error); });
         }
         try {
           var choresSource = phase.currentConfig.chores || {};
