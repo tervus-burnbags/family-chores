@@ -1,7 +1,8 @@
-const CACHE_NAME = 'hub-v13';
+const CACHE_NAME = 'hub-v14';
 const ASSETS = [
   './',
   './index.html',
+  './kid-fun-data.js',
   './manifest.json',
   './firebase-config.js',
   './favicon-32.png',

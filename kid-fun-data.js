@@ -1,10 +1,6 @@
-// Kid Fun Data — Jokes and Mad Libs for ages 4-7
-// This file is reference content for Codex to embed in index.html during Phase 3b.
-// Do NOT load this as a separate script — copy the arrays into the Phase 3b IIFE.
+// Kid Fun data for the Family Hub fun tab.
+// Loaded directly by index.html before the Bulletin/Fun runtime.
 
-// ============================================================
-// JOKES — 100 kid-appropriate jokes (setup + punchline)
-// ============================================================
 
 var KID_JOKES = [
   // Animals
