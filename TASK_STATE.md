@@ -1,23 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 21 — Context-Aware Voice/Chat Input
-**Current Phase:** 21
+**Task:** Phase 22 — Lists Tab Overhaul
+**Current Phase:** 22g
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 21
+**Next Action:** Review Phase 22
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–20 + Consolidation + Visual Polish
+- [x] Phases 8–21 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 21: Context-aware input** — Gate intents by current tab and show redirect toast for wrong-tab commands
+- [x] **Phase 22: Lists Tab Overhaul** — Added list types, grocery auto-categorization, template overrides, quick-create hub, grouped grocery detail view, swipe-to-dismiss, and full CSS redesign
 
 ## Notes
 
-- Global intents still work everywhere: undo, confirm, and status
-- Chores handles points/chore actions, Bank handles money, Lists handles list ops, Home handles notes
-- The shared input placeholder now updates per tab as a hint for what commands belong there
-- Validation complete: inline scripts parsed successfully after Phase 21 changes
+- List types now include grocery, costco, lakehouse, packing, todo, and custom
+- Grocery and Costco items auto-categorize into store aisles; existing uncategorized items fall back to inferred categories or `other`
+- Template overrides live in Firebase at `families/{familyId}/listTemplates/{type}`
+- The old default-list bootstrap is removed; lists now start from the quick-create tiles
+- Validation complete: inline scripts parsed successfully after Phase 22 changes
