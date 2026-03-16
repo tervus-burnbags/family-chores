@@ -4319,8 +4319,10 @@
         funLoadedFor: null,
         jokeIndex: 0,
         jokeRevealed: false,
+        jokesSeen: [],
         madLibIndex: 0,
-        madLibProgress: null
+        madLibProgress: null,
+        madLibsCompleted: 0
       };
       var calendarCache = {
         familyId: null,
@@ -4411,9 +4413,15 @@
         if (state.jokeIndex < 0) state.jokeIndex = 0;
         state.jokeIndex = state.jokeIndex % KID_JOKES.length;
         state.jokeRevealed = Boolean(readFunState('jokeRevealed', false));
+        var jokesSeen = readFunState('jokesSeen', []);
+        state.jokesSeen = Array.isArray(jokesSeen) ? jokesSeen.map(function (value) { return Number(value); }).filter(function (value, index, list) {
+          return Number.isInteger(value) && value >= 0 && value < KID_JOKES.length && list.indexOf(value) === index;
+        }) : [];
         state.madLibIndex = Number(readFunState('madLibIndex', 0)) || 0;
         if (state.madLibIndex < 0) state.madLibIndex = 0;
         state.madLibIndex = state.madLibIndex % KID_MADLIBS.length;
+        state.madLibsCompleted = Number(readFunState('madLibsCompleted', 0)) || 0;
+        if (state.madLibsCompleted < 0) state.madLibsCompleted = 0;
         var savedProgress = validateMadLibProgress(readFunState('madLibProgress', null));
         if (savedProgress && savedProgress.templateIndex === state.madLibIndex) {
           state.madLibProgress = savedProgress;
@@ -4425,11 +4433,20 @@
       function saveJokeState() {
         writeFunState('jokeIndex', state.jokeIndex);
         writeFunState('jokeRevealed', state.jokeRevealed);
+        writeFunState('jokesSeen', state.jokesSeen);
       }
 
       function saveMadLibState() {
         writeFunState('madLibIndex', state.madLibIndex);
         writeFunState('madLibProgress', state.madLibProgress);
+        writeFunState('madLibsCompleted', state.madLibsCompleted);
+      }
+
+      function markCurrentJokeSeen() {
+        if (state.jokesSeen.indexOf(state.jokeIndex) === -1) {
+          state.jokesSeen.push(state.jokeIndex);
+          writeFunState('jokesSeen', state.jokesSeen);
+        }
       }
 
       function getCurrentJoke() {
@@ -4506,6 +4523,9 @@
         progress.answers[progress.currentBlank] = answer;
         if (progress.currentBlank >= progress.answers.length - 1) {
           progress.currentBlank = progress.answers.length;
+          if (!progress.completed) {
+            state.madLibsCompleted += 1;
+          }
           progress.completed = true;
         } else {
           progress.currentBlank += 1;
@@ -4848,6 +4868,7 @@
               '<div class="bulletin-section-head"><div><h2>Kid Fun</h2><p>A playful corner with jokes and Mad Libs kids can revisit anytime.</p></div></div>' +
               '<p>Joke progress and Mad Lib progress stay saved on this device.</p>' +
             '</section>' +
+            '<section class="panel"><div class="bulletin-section-head"><div><h3>Fun stats</h3><p>Track what the kids have already explored.</p></div></div><div class="bulletin-stats-grid"><article class="bulletin-stat-card alex"><div class="bulletin-stat-label">Jokes discovered</div><div class="bulletin-stat-value">' + state.jokesSeen.length + '</div><div class="settings-note">of ' + KID_JOKES.length + ' total jokes</div></article><article class="bulletin-stat-card louisa"><div class="bulletin-stat-label">Stories created</div><div class="bulletin-stat-value">' + state.madLibsCompleted + '</div><div class="settings-note">completed mad libs</div></article></div></section>' +
             '<section class="panel">' +
               '<div class="bulletin-section-head"><div><h3>Jokes and stories</h3><p>Tap to reveal punchlines and build silly stories together.</p></div></div>' +
               '<div class="fun-section">' + renderJokeCard() + renderMadLibCard() + '</div>' +
@@ -4972,6 +4993,7 @@
 
         if (event.target.closest('#funRevealJokeBtn')) {
           state.jokeRevealed = true;
+          markCurrentJokeSeen();
           saveJokeState();
           renderFun().catch(function (error) { console.error(error); });
           return;
@@ -5075,6 +5097,546 @@
         clearInterval(bulletinWarmup);
         renderBulletin().catch(function (error) { console.error(error); });
       }, 400);
+    })();
+  </script>
+  <script>
+    (function () {
+      var listState = {
+        familyId: null,
+        currentListId: null,
+        listsById: {},
+        bound: false,
+        teardown: null
+      };
+
+      var LIST_TEMPLATES = [
+        { name: 'Weekly groceries', items: ['Milk', 'Eggs', 'Fruit', 'Bread', 'Yogurt'] },
+        { name: 'School supplies', items: ['Pencils', 'Markers', 'Notebook', 'Glue sticks'] },
+        { name: 'Chore supplies', items: ['Trash bags', 'Dish soap', 'Sponges', 'Paper towels'] }
+      ];
+
+      var DEFAULT_LISTS = [
+        { name: 'Grocery', items: [] },
+        { name: 'To-Do', items: [] }
+      ];
+
+      function runtime() {
+        return window.phaseRuntime;
+      }
+
+      function ensureBankListStyles() {
+        if (document.getElementById('bankListStyles')) return;
+        var style = document.createElement('style');
+        style.id = 'bankListStyles';
+        style.textContent = '.score-actions{display:grid;gap:10px}.score-action{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}.score-action button{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer}.score-empty{color:var(--muted);font-size:.9rem}.score-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.score-name{font-weight:700}.score-pay{font-size:.88rem;color:var(--muted)}.score-next{font-size:.82rem;color:var(--muted);font-weight:700}.progress{height:10px;border-radius:999px;background:rgba(148,163,184,.18);overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--alex),#2563eb)}.progress.louisa span{background:linear-gradient(90deg,var(--louisa),#9333ea)}.progress.bonus span{background:linear-gradient(90deg,#22c55e,#15803d)}.list-shell{display:grid;gap:12px}.list-grid{display:grid;gap:12px}.list-card{display:grid;gap:12px;padding:14px;border-radius:18px;border:1px solid var(--line);background:#fff;box-shadow:0 8px 20px rgba(15,23,42,.05)}.list-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.list-card h3,.list-card p,.list-detail-head h3,.list-detail-head p{margin:0}.list-card-actions,.list-form-row,.list-template-row,.list-item-row,.list-detail-actions{display:flex;gap:8px;flex-wrap:wrap}.list-form-row input,.list-item-input{flex:1;min-height:42px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:var(--text)}.list-card-actions button,.list-form-row button,.list-template-row button,.list-item-row button,.list-detail-actions button{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer;font:inherit}.list-card-actions button.secondary,.list-detail-actions button.secondary,.list-template-row button.secondary{background:var(--panel-alt);color:var(--text)}.list-template-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}.list-template-row button{text-align:left;justify-content:flex-start}.list-detail{display:grid;gap:12px}.list-items{display:grid;gap:8px}.list-item{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}.list-item.done .list-item-text{text-decoration:line-through;color:var(--muted)}.list-item-toggle,.list-item-delete{width:38px;min-width:38px;padding:0 !important}.list-item-toggle.done{background:#16a34a}.list-empty{padding:18px;border:1px dashed var(--line);border-radius:16px;background:var(--panel-alt);color:var(--muted)}@media (max-width:560px){.score-action,.list-card-actions,.list-form-row,.list-item-row,.list-detail-actions{align-items:stretch}.list-form-row button,.list-item-row button{flex:1}}';
+        document.head.appendChild(style);
+      }
+
+      function formatWeekRange(date) {
+        var base = new Date(date);
+        var day = base.getDay();
+        var diffToMonday = (day + 6) % 7;
+        var monday = new Date(base);
+        monday.setDate(base.getDate() - diffToMonday);
+        var sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        var fmt = function (value) {
+          return value.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        };
+        return fmt(monday) + ' - ' + fmt(sunday);
+      }
+
+      function thresholdInfo(kid, points) {
+        var tiers = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
+        var topTier = tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
+        var nextTier = tiers.find(function (tier) { return points < tier.minPts; });
+        if (nextTier) {
+          return { mode: 'tier', next: nextTier, targetPoints: Math.max(nextTier.minPts, 1), width: Math.min(100, Math.round((points / Math.max(nextTier.minPts, 1)) * 100)) };
+        }
+        var weeklyBonus = kid.weeklyBonus || {};
+        var extraPts = Math.max(1, Number(weeklyBonus.extraPts || 10));
+        var bonusPoints = Math.max(0, points - Number(topTier.minPts || 0));
+        var targetBonusPoints = (Math.floor(bonusPoints / extraPts) + 1) * extraPts;
+        return { mode: 'bonus', next: { minPts: Number(topTier.minPts || 0) + targetBonusPoints, pay: topTier.pay || 0 }, targetPoints: targetBonusPoints, bonusPoints: bonusPoints, width: Math.min(100, Math.round((bonusPoints / targetBonusPoints) * 100)) };
+      }
+
+      async function getDebts(phase) {
+        var snapshot = await phase.database.ref('families/' + phase.familyId + '/debts').get();
+        return snapshot.exists() ? Object.entries(snapshot.val()).map(function (entry) {
+          return Object.assign({ id: entry[0] }, entry[1]);
+        }) : [];
+      }
+
+      async function maybeRunWeeklyPay() {
+        var phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded) return;
+        var now = new Date();
+        var currentWeek = phase.toIsoWeek(now);
+        var previous = new Date(now);
+        previous.setDate(previous.getDate() - 7);
+        var previousWeek = phase.toIsoWeek(previous);
+        var metaRef = phase.database.ref('families/' + phase.familyId + '/meta/lastWeeklyPayWeek');
+        var metaSnap = await metaRef.get();
+        if (metaSnap.exists() && metaSnap.val() === currentWeek) return;
+        var payments = await phase.getAllPayments();
+        var entries = await phase.getAllLogEntries();
+        var kidIds = Object.keys(phase.currentConfig.kids || {});
+        for (var i = 0; i < kidIds.length; i += 1) {
+          var kidId = kidIds[i];
+          var note = 'Auto weekly pay for ' + previousWeek;
+          if (payments.some(function (payment) { return payment.kid === kidId && payment.type === 'weekly' && payment.note === note; })) continue;
+          var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === previousWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
+          var amount = phase.calculateWeeklyPay((phase.currentConfig.kids[kidId] || {}).payTiers || [], weeklyPoints);
+          if (amount > 0) {
+            var paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: note, balanceDelta: Number(amount.toFixed(2)) };
+            var ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
+            await ref.set(paymentEntry);
+            await phase.adjustBalance(kidId, paymentEntry.balanceDelta);
+          }
+        }
+        await metaRef.set(currentWeek);
+      }
+
+      window.openCardForKid = async function openCardForKid(kidId) {
+        if (typeof window.renderCardView === 'function') {
+          await window.renderCardView(kidId);
+        }
+      };
+
+      window.renderCardView = async function renderCardView(kidId) {
+        ensureBankListStyles();
+        var phase = runtime();
+        var cardContent = document.getElementById('cardContent');
+        if (!cardContent) return;
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          cardContent.innerHTML = '<p class="settings-note">Connect to a family first.</p>';
+          return;
+        }
+
+        await maybeRunWeeklyPay();
+        var balances = await phase.getBalances();
+        var debts = await getDebts(phase);
+        var entries = await phase.getAllLogEntries();
+        var payments = await phase.getAllPayments();
+        var now = new Date();
+        var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
+        var owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
+        var currentWeek = phase.toIsoWeek(now);
+        var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === currentWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
+        var weeklyPay = phase.calculateWeeklyPay(kid.payTiers || [], weeklyPoints);
+        var topTier = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
+        var topMinPts = topTier.length ? topTier[topTier.length - 1].minPts : 0;
+        var wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
+        var extraPoints = Math.max(0, weeklyPoints - topMinPts);
+        var weeklyBonus = Math.floor(extraPoints / (wb.extraPts || 10)) * (wb.bonus || 2);
+        var threshold = thresholdInfo(kid, weeklyPoints);
+        var progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
+        var progressLabel = threshold.mode === 'bonus' ? 'bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts' : 'next: ' + threshold.next.minPts + 'pts';
+        var progressStyle = threshold.mode === 'bonus' ? 'background:linear-gradient(90deg,#22c55e,#15803d)' : '';
+        var relatedDebts = debts.filter(function (debt) { return debt && !debt.settled && (debt.from === kidId || debt.to === kidId); });
+        var allTxns = [];
+        entries.filter(function (entry) { return entry.kid === kidId; }).forEach(function (entry) {
+          allTxns.push({ type: 'chore', label: entry.choreLabel || 'Chore', points: Number(entry.points || 0), date: entry.date || '', timestamp: Number(entry.timestamp || 0) });
+        });
+        payments.filter(function (payment) { return payment.kid === kidId; }).forEach(function (payment) {
+          allTxns.push({ type: payment.type || 'payment', label: payment.note || payment.type || 'Payment', amount: Number(payment.amount || 0), date: payment.date || '', timestamp: Number(payment.timestamp || 0), balanceDelta: Number(payment.balanceDelta || (payment.type === 'weekly' || payment.type === 'credit' ? payment.amount : -payment.amount)) });
+        });
+        allTxns.sort(function (a, b) { return Number(b.timestamp || 0) - Number(a.timestamp || 0); });
+
+        var debtMarkup = relatedDebts.length ? relatedDebts.map(function (debt) {
+          var otherKid = debt.from === kidId ? debt.to : debt.from;
+          var otherName = ((phase.currentConfig.kids || {})[otherKid] || {}).name || otherKid;
+          var direction = debt.from === kidId ? 'owes ' + otherName : 'is owed by ' + otherName;
+          return '<div class="score-action"><span>' + escapeHtml((kid.name || kidId) + ' ' + direction + ' ' + phase.dollars(debt.amount)) + '</span><button type="button" data-card-action="settle-debt" data-kid="' + kidId + '" data-from="' + debt.from + '" data-to="' + debt.to + '">Settle</button></div>';
+        }).join('') : '<div class="score-empty">No active debts.</div>';
+
+        var stmtRows = allTxns.slice(0, 20).map(function (item) {
+          if (item.type === 'chore') {
+            return '<div class="stmt-row"><div class="stmt-desc"><span>' + escapeHtml(item.label) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + ' · +' + item.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
+          }
+          var label = item.type === 'spend' ? 'Purchase' : item.type === 'weekly' ? 'Weekly pay' : item.type === 'credit' ? 'Credit' : 'Payment';
+          var delta = Number(item.balanceDelta || 0);
+          return '<div class="stmt-row"><div class="stmt-desc"><span>' + escapeHtml(label + (item.label && item.label !== item.type ? ': ' + item.label : '')) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + '</span></div><span class="stmt-amount ' + (delta >= 0 ? 'credit' : 'debit') + '">' + (delta >= 0 ? '+' : '-') + phase.dollars(Math.abs(delta)) + '</span></div>';
+        }).join('');
+
+        cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div><div class="card-pts">' + weeklyPoints + ' pts<br>this week</div></div></div><div class="drawer-grid"><article class="stat-card"><h3>This Week (' + formatWeekRange(now) + ')</h3><div class="score-actions"><div class="score-top"><div><div class="score-name">' + escapeHtml(kid.name || kidId) + '</div><div class="score-pay">' + weeklyPoints + 'pts | ' + phase.dollars(weeklyPay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div><div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div><div class="score-pay">bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + ' - ' + (weeklyBonus > 0 ? phase.dollars(weeklyBonus) + ' earned!' : 'none yet') + '</div></div></article><article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
+      };
+
+      function handleCardAction(button) {
+        var phase = runtime();
+        if (!button || !phase) return;
+        var action = button.dataset.cardAction;
+        if (action === 'pay-balance') {
+          var kidId = button.dataset.kid;
+          var amountText = window.prompt('Payment amount for ' + (((phase.currentConfig.kids || {})[kidId] || {}).name || kidId) + '?');
+          var amount = amountText === null ? null : Number(amountText);
+          if (!amount || Number.isNaN(amount) || amount <= 0) return;
+          phase.writePayment(kidId, amount, 'manual', 'Manual pay from bank card').then(function () {
+            phase.showToast('Payment recorded.', { kid: kidId });
+            return window.openCardForKid(kidId);
+          }).catch(function (error) {
+            console.error(error);
+            phase.showToast('Payment failed.', { type: 'error' });
+          });
+          return;
+        }
+        if (action === 'kid-spent') {
+          var spendKidId = button.dataset.kid;
+          var spendText = window.prompt((((phase.currentConfig.kids || {})[spendKidId] || {}).name || spendKidId) + ' spent how much?');
+          var spendAmount = spendText === null ? null : Number(spendText);
+          if (!spendAmount || Number.isNaN(spendAmount) || spendAmount <= 0) return;
+          var noteText = window.prompt('What was it for?', '') || '';
+          phase.writePayment(spendKidId, spendAmount, 'spend', noteText || 'Card spend').then(function () {
+            phase.showToast('Spend recorded.', { kid: spendKidId });
+            return window.openCardForKid(spendKidId);
+          }).catch(function (error) {
+            console.error(error);
+            phase.showToast('Failed to record spend.', { type: 'error' });
+          });
+          return;
+        }
+        if (action === 'settle-debt') {
+          phase.settleDebt([button.dataset.from, button.dataset.to]).then(function (debt) {
+            if (!debt) return;
+            phase.showToast('Debt settled for ' + phase.dollars(debt.amount) + '.', { kid: button.dataset.kid || button.dataset.from });
+            return window.openCardForKid(button.dataset.kid || button.dataset.from);
+          }).catch(function (error) {
+            console.error(error);
+            phase.showToast('Debt settlement failed.', { type: 'error' });
+          });
+        }
+      }
+
+      function normalizeListName(name) {
+        return String(name || '').trim().toLowerCase();
+      }
+
+      function listsRef(phase) {
+        if (!phase || !phase.database || !phase.familyId) return null;
+        return phase.database.ref('families/' + phase.familyId + '/lists');
+      }
+
+      function normalizeListData(snapshotValue) {
+        var lists = snapshotValue || {};
+        var result = {};
+        Object.keys(lists).forEach(function (listId) {
+          var list = lists[listId] || {};
+          var items = list.items || {};
+          result[listId] = {
+            id: listId,
+            name: String(list.name || ''),
+            createdAt: Number(list.createdAt || 0),
+            items: Object.keys(items).map(function (itemId) {
+              var item = items[itemId] || {};
+              return { id: itemId, text: String(item.text || ''), done: Boolean(item.done), timestamp: Number(item.timestamp || 0) };
+            }).sort(function (a, b) {
+              if (a.done !== b.done) return a.done ? 1 : -1;
+              return Number(a.timestamp || 0) - Number(b.timestamp || 0);
+            })
+          };
+        });
+        return result;
+      }
+
+      function listArray() {
+        return Object.keys(listState.listsById).map(function (listId) {
+          return listState.listsById[listId];
+        }).sort(function (a, b) {
+          return Number(a.createdAt || 0) - Number(b.createdAt || 0);
+        });
+      }
+
+      async function ensureDefaultLists() {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return;
+        var snapshot = await ref.get();
+        if (snapshot.exists()) return;
+        var updates = {};
+        DEFAULT_LISTS.forEach(function (list) {
+          var newRef = ref.push();
+          updates[newRef.key] = { name: list.name, createdAt: Date.now(), items: {} };
+        });
+        await ref.update(updates);
+      }
+
+      function subscribeLists() {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref || listState.familyId === phase.familyId) return;
+        if (typeof listState.teardown === 'function') {
+          listState.teardown();
+        }
+        listState.familyId = phase.familyId;
+        var handler = function (snapshot) {
+          listState.listsById = normalizeListData(snapshot.exists() ? snapshot.val() : {});
+          if (location.hash.replace('#', '') === 'lists' && typeof window.renderListsHome === 'function') {
+            window.renderListsHome();
+          }
+        };
+        ref.on('value', handler);
+        listState.teardown = function () {
+          ref.off('value', handler);
+        };
+      }
+
+      async function createListRecord(name, items) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return null;
+        var listName = String(name || '').trim();
+        if (!listName) return null;
+        var newRef = ref.push();
+        var payload = { name: listName, createdAt: Date.now(), items: {} };
+        (items || []).forEach(function (itemText, index) {
+          var itemRef = ref.child(newRef.key + '/items').push();
+          payload.items[itemRef.key] = { text: String(itemText || '').trim(), done: false, timestamp: Date.now() + index };
+        });
+        await newRef.set(payload);
+        return { id: newRef.key, name: listName };
+      }
+
+      function findListByName(name) {
+        var target = normalizeListName(name);
+        var lists = listArray();
+        for (var i = 0; i < lists.length; i += 1) {
+          if (normalizeListName(lists[i].name) === target) return lists[i];
+        }
+        return null;
+      }
+
+      async function findListByNameFromDb(name) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return null;
+        var target = normalizeListName(name);
+        var snapshot = await ref.get();
+        if (!snapshot.exists()) return null;
+        var found = null;
+        snapshot.forEach(function (child) {
+          if (found) return true;
+          var value = child.val() || {};
+          if (normalizeListName(value.name) === target) {
+            found = { id: child.key, name: String(value.name || '') };
+            return true;
+          }
+          return false;
+        });
+        return found;
+      }
+
+      async function createListNamed(name) {
+        var existing = findListByName(name) || await findListByNameFromDb(name);
+        if (existing) return existing;
+        return createListRecord(name, []);
+      }
+
+      async function addItemsToNamedList(listName, itemText) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return null;
+        var list = findListByName(listName) || await findListByNameFromDb(listName);
+        if (!list) list = await createListNamed(listName);
+        var parts = String(itemText || '').split(/,|\band\b/).map(function (part) { return part.trim(); }).filter(Boolean);
+        for (var i = 0; i < parts.length; i += 1) {
+          await ref.child(list.id + '/items').push().set({ text: parts[i], done: false, timestamp: Date.now() + i });
+        }
+        return { listId: list.id, count: parts.length };
+      }
+
+      async function checkOffItemByText(listName, itemText) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return null;
+        var list = findListByName(listName);
+        if (!list) {
+          var dbList = await findListByNameFromDb(listName);
+          if (dbList) {
+            var listSnap = await ref.child(dbList.id).get();
+            list = normalizeListData(listSnap.exists() ? { temp: listSnap.val() } : {}).temp || null;
+            if (list) list.id = dbList.id;
+          }
+        }
+        if (!list) return null;
+        var target = normalizeListName(itemText);
+        var item = (list.items || []).find(function (entry) { return !entry.done && normalizeListName(entry.text) === target; }) || (list.items || []).find(function (entry) { return !entry.done && normalizeListName(entry.text).indexOf(target) !== -1; });
+        if (!item) return null;
+        await ref.child(list.id + '/items/' + item.id + '/done').set(true);
+        return { listId: list.id, itemId: item.id, text: item.text };
+      }
+
+      async function toggleListItem(listId, itemId) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return;
+        var list = listState.listsById[listId];
+        var item = list && (list.items || []).find(function (entry) { return entry.id === itemId; });
+        if (!item) return;
+        await ref.child(listId + '/items/' + itemId + '/done').set(!item.done);
+      }
+
+      async function deleteListItem(listId, itemId) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return;
+        await ref.child(listId + '/items/' + itemId).remove();
+      }
+
+      async function clearDoneItems(listId) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return;
+        var list = listState.listsById[listId];
+        if (!list) return;
+        var updates = {};
+        (list.items || []).forEach(function (item) {
+          if (item.done) updates[item.id] = null;
+        });
+        if (Object.keys(updates).length) {
+          await ref.child(listId + '/items').update(updates);
+        }
+      }
+
+      async function addListItems(listId, value) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref) return;
+        var parts = String(value || '').split(/,|\band\b/).map(function (part) { return part.trim(); }).filter(Boolean);
+        for (var i = 0; i < parts.length; i += 1) {
+          await ref.child(listId + '/items').push().set({ text: parts[i], done: false, timestamp: Date.now() + i });
+        }
+      }
+
+      function renderListCards() {
+        var lists = listArray();
+        if (!lists.length) return '<div class="list-empty">No lists yet. Create one below.</div>';
+        return '<div class="list-grid">' + lists.map(function (list) {
+          var doneCount = (list.items || []).filter(function (item) { return item.done; }).length;
+          return '<article class="list-card"><div class="list-card-top"><div><h3>' + escapeHtml(list.name) + '</h3><p>' + doneCount + ' of ' + (list.items || []).length + ' done</p></div></div><div class="list-card-actions"><button type="button" data-list-open="' + list.id + '">Open</button></div></article>';
+        }).join('') + '</div>';
+      }
+
+      function renderListDetail(list) {
+        var itemsMarkup = (list.items || []).length ? '<div class="list-items">' + (list.items || []).map(function (item) {
+          return '<div class="list-item' + (item.done ? ' done' : '') + '"><button type="button" class="list-item-toggle' + (item.done ? ' done' : '') + '" data-list-item-toggle="' + item.id + '">' + (item.done ? '✓' : '') + '</button><div class="list-item-text">' + escapeHtml(item.text) + '</div><button type="button" class="list-item-delete secondary" data-list-item-delete="' + item.id + '">X</button></div>';
+        }).join('') + '</div>' : '<div class="list-empty">No items yet. Add one below.</div>';
+        return '<div class="list-detail"><div class="list-detail-head"><h3>' + escapeHtml(list.name) + '</h3><p>Shared in real time for the whole family.</p></div><div class="list-detail-actions"><button type="button" class="secondary" data-list-action="back">Back</button><button type="button" class="secondary" data-list-action="clear-done">Clear done</button></div>' + itemsMarkup + '<div class="list-item-row"><input type="text" class="list-item-input" id="listItemInput" placeholder="Add item..." autocomplete="off"><button type="button" data-list-action="add-item">Add</button></div></div>';
+      }
+
+      function renderTemplateButtons() {
+        return '<div class="list-template-row">' + LIST_TEMPLATES.map(function (template) {
+          return '<button type="button" class="secondary" data-list-template="' + escapeHtml(template.name) + '">' + escapeHtml(template.name) + '</button>';
+        }).join('') + '</div>';
+      }
+
+      async function renderListsHomeImpl() {
+        ensureBankListStyles();
+        var phase = runtime();
+        var container = document.getElementById('listsContent');
+        if (!container) return;
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          container.innerHTML = '<div class="list-shell"><div class="list-empty">Connect to a family first.</div></div>';
+          return;
+        }
+        await ensureDefaultLists();
+        subscribeLists();
+        var current = listState.currentListId ? listState.listsById[listState.currentListId] : null;
+        container.innerHTML = '<div class="list-shell"><section class="panel bulletin-hero"><div class="bulletin-section-head"><div><h2>Shared Lists</h2><p>Groceries, errands, and all the little things that need doing.</p></div></div><div class="list-form-row"><input type="text" id="listCreateInput" placeholder="Create a new list..." autocomplete="off"><button type="button" data-list-action="create">Create</button></div><div><p class="settings-note">Templates</p>' + renderTemplateButtons() + '</div></section><section class="panel">' + (current ? renderListDetail(current) : renderListCards()) + '</section></div>';
+      }
+
+      function bindBankAndLists() {
+        if (listState.bound) return;
+        listState.bound = true;
+        var cardContent = document.getElementById('cardContent');
+        if (cardContent) {
+          cardContent.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-card-action]');
+            if (button) handleCardAction(button);
+          });
+        }
+        var listsContent = document.getElementById('listsContent');
+        if (listsContent) {
+          listsContent.addEventListener('click', function (event) {
+            var target = event.target.closest('[data-list-open],[data-list-template],[data-list-item-toggle],[data-list-item-delete],[data-list-action]');
+            if (!target) return;
+            if (target.dataset.listOpen) {
+              listState.currentListId = target.dataset.listOpen;
+              renderListsHomeImpl().catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listTemplate) {
+              var template = LIST_TEMPLATES.find(function (entry) { return entry.name === target.dataset.listTemplate; });
+              if (!template) return;
+              createListRecord(template.name, template.items).then(function (created) {
+                if (created) listState.currentListId = created.id;
+                return renderListsHomeImpl();
+              }).catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listItemToggle && listState.currentListId) {
+              toggleListItem(listState.currentListId, target.dataset.listItemToggle).catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listItemDelete && listState.currentListId) {
+              deleteListItem(listState.currentListId, target.dataset.listItemDelete).catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listAction === 'back') {
+              listState.currentListId = null;
+              renderListsHomeImpl().catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listAction === 'clear-done' && listState.currentListId) {
+              clearDoneItems(listState.currentListId).catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listAction === 'create') {
+              var createInput = document.getElementById('listCreateInput');
+              var name = createInput ? String(createInput.value || '').trim() : '';
+              if (!name) return;
+              createListRecord(name, []).then(function (created) {
+                if (createInput) createInput.value = '';
+                if (created) listState.currentListId = created.id;
+                return renderListsHomeImpl();
+              }).catch(function (error) { console.error(error); });
+              return;
+            }
+            if (target.dataset.listAction === 'add-item' && listState.currentListId) {
+              var itemInput = document.getElementById('listItemInput');
+              var value = itemInput ? String(itemInput.value || '').trim() : '';
+              if (!value) return;
+              addListItems(listState.currentListId, value).then(function () {
+                if (itemInput) itemInput.value = '';
+              }).catch(function (error) { console.error(error); });
+            }
+          });
+
+          listsContent.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && event.target.id === 'listCreateInput') {
+              event.preventDefault();
+              var createBtn = listsContent.querySelector('[data-list-action="create"]');
+              if (createBtn) createBtn.click();
+            }
+            if (event.key === 'Enter' && event.target.id === 'listItemInput') {
+              event.preventDefault();
+              var addBtn = listsContent.querySelector('[data-list-action="add-item"]');
+              if (addBtn) addBtn.click();
+            }
+          });
+        }
+      }
+
+      window.renderListsHome = function () {
+        renderListsHomeImpl().catch(function (error) { console.error(error); });
+      };
+
+      window.familyLists = {
+        createListNamed: createListNamed,
+        addItemsToNamedList: addItemsToNamedList,
+        checkOffItemByText: checkOffItemByText
+      };
+
+      bindBankAndLists();
     })();
   </script>
   <script>

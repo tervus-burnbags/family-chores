@@ -1,39 +1,23 @@
-# Task State - Family Hub Redesign
+# Task State - Family Hub: Fix Remaining Tabs
 
-**Task:** Phase 7 Home Dashboard & Calendar
-**Current Phase:** Phase 7d-7e
+**Task:** Fix Remaining Broken Tabs (Bank, Fun Trackers, Lists)
+**Current Phase:** Phase 7a-7c
 **Phase:** build-complete
 **Status:** Ready for review
 **Next Agent:** gemini
-**Next Action:** Review Home redesign and Google Calendar integration
+**Next Action:** Review Bank cards, Fun trackers, and Lists restoration
 **Last Updated:** 2026-03-15
 
-## Redesign Phases
+## Phases
 
-- [x] **Phase 1: Fix Tab Bar + Add Bulletin Shell**
-- [x] **Phase 2: Universal Input Bar**
-- [x] **Phase 3: Bulletin View + Notes**
-- [x] **Phase 3b: Kid Fun on Bulletin**
-- [x] **Phase 3b-fix: Kid Fun Updates** *(resolved)*
-- [x] **Phase 4: Redistribute Settings - Chores Gear Icon**
-- [x] **Phase 5: Redistribute Settings - Bank Gear Icon**
-- [x] **Phase 6: Family Code to Header + Cleanup**
-- [x] **Phase 7d: Home (Bulletin) Visual Redesign**
-  - [x] Added greeting and formatted date hero
-  - [x] Added weekly quick stats cards
-  - [x] Refined sticky note visuals and layout copy
-  - [x] Reserved calendar surface in the redesigned Home tab
-- [x] **Phase 7e: Google Calendar Integration**
-  - [x] Added Apps Script proxy template file
-  - [x] Added calendar URL setting to the family header panel
-  - [x] Added 15-minute in-memory event cache with retry/setup states
-  - [x] Rendered grouped calendar events with kid badges
-  - [x] Bumped service worker cache version
+- [x] **Phase 7a: Restore Bank Kid Cards**
+- [x] **Phase 7b: Fun Tab Trackers**
+- [x] **Phase 7c: Fix Lists Tab**
 
 ## Notes
 
-- Home now renders as a dashboard with greeting, date, quick weekly point stats, improved sticky notes, and a live calendar section.
-- Calendar events are fetched from the configured Apps Script URL, cached for 15 minutes, and grouped by day on the Bulletin view.
-- The header family panel now stores `families/{familyId}/config/calendarUrl` in Firebase and re-renders Home after changes.
-- Added `calendar-proxy.gs.txt` as the deployment template for the Google Apps Script web app.
-- Manual browser verification is still pending for calendar setup, fetch failure handling, cache refresh timing, and mobile layout.
+- Restored `window.renderCardView` and card actions before the Phase 4 bank patch runs, so Bank renders again and the weekly card can still be stripped.
+- Added Kid Fun progress tracking in localStorage: unique jokes discovered and completed Mad Lib stories.
+- Rebuilt `window.renderListsHome` and `window.familyLists` with Firebase-backed shared checklists, default lists, templates, and real-time updates.
+- Bumped `sw.js` cache version to `hub-v9`.
+- Manual browser verification is still pending for Bank actions, Fun counter persistence, Lists real-time sync, and parser-driven list actions.
