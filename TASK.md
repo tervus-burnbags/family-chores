@@ -1,198 +1,330 @@
-# Task: Phase 13 — Chores Tab Overhaul
+# Task: Phase 14 — Chores Visual Overhaul
 
 **Task Type:** standard
 **Model Mode:** default
 
 ## Summary
 
-The Chores tab is broken and needs a full overhaul:
+The Chores tab works but needs major visual and UX improvements. This is a design-driven overhaul with specific layout changes requested by the user, plus a frontend polish pass.
 
-1. **Critical bug** — Block 6 IIFE (line ~5320) calls `toDateString(new Date())` at line ~5324, but `toDateString` is defined inside Block 3's IIFE (line ~2748) and is NOT in scope. This throws a `ReferenceError` on load, which kills the entire Block 6 IIFE — meaning `window.renderChoreProgress`, `window.renderChoreSettings`, `window.renderBankSettings`, and `window.refreshPhase4` are NEVER assigned to `window`. This cascading failure explains every symptom: blank chores tab, settings showing "Lists", no quick-add buttons.
+## User Feedback
 
-2. **Settings fallthrough** — Line ~2384 in `renderHeaderSettingsPanel` falls through to "No settings for Lists" when `currentView` is `chores` but the functions aren't defined. The fallthrough label logic should handle all 5 tab names explicitly.
-
-3. **Chores UX redesign** — New "quick tasks" feature and modern design matching the rest of the app.
-
----
-
-## Phase 13a: Fix the Critical Bug
-
-**This is a one-line fix that unblocks everything.**
-
-**File:** `index.html`, line ~5324
-
-```javascript
-// BROKEN — toDateString is not in this IIFE's scope:
-var historyState = {
-  kid: 'all',
-  date: toDateString(new Date())
-};
-
-// FIX — inline the date formatting:
-var historyState = {
-  kid: 'all',
-  date: (function () { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })()
-};
-```
-
-Or more readably, define a local helper at the top of the IIFE:
-```javascript
-(function () {
-  function localDateString(date) {
-    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-  }
-
-  var historyState = {
-    kid: 'all',
-    date: localDateString(new Date())
-  };
-  // ... rest of IIFE
-```
-
-**Also fix the settings fallthrough** at line ~2384:
-```javascript
-// BEFORE:
-var label = appShellState.currentView === 'fun' ? 'Fun' : 'Lists';
-
-// AFTER:
-var viewLabels = { fun: 'Fun', lists: 'Lists', chores: 'Chores', bank: 'Bank' };
-var label = viewLabels[appShellState.currentView] || appShellState.currentView;
-```
-
-This way if `renderChoreSettings` isn't available for any reason, the fallback at least says "Chores" not "Lists."
-
-### Test after 13a
-- Chores tab renders the full checklist, weekly progress, and quick-add buttons
-- Settings gear on Chores tab shows chore settings (add/remove/edit)
-- Bank tab still works (renderCardView, renderBankSettings are back)
-- No console errors on any tab
-- This fix should immediately restore ALL chores + bank functionality
+1. "Too many quick buttons" — reduce clutter, make quick tasks more selective
+2. "Quick points should be at the top" — move +1/+2/+3/+4 above the checklist
+3. "Both kids' goals should be shown until one is selected" — default to Both, show dual progress
 
 ---
 
-## Phase 13b: Quick Tasks Feature
+## Phase 14a: Layout Restructure
 
-**New feature:** Configurable "quick tasks" — chores pinned to the top of the Chores tab as large tap targets. Tapping a quick task immediately logs it for the currently selected kid(s) without extra steps.
-
-### How it works
-
-1. **Configuration** — Each chore in `config.chores` gets a new boolean field: `quickTask: true/false`
-   - Default: `false` for existing chores
-   - Set in chore settings (header gear → Chores tab)
-
-2. **Quick Task UI** — At the top of the chores view (below kid picker, above weekly progress):
-   - Row of large pill-shaped buttons, one per quick task
-   - Each shows: chore label + point value (e.g., "Fed Dog +1")
-   - Colored by selected kid (blue for Alex, purple for Louisa, split for Both)
-   - 48px+ height, horizontal scroll if many quick tasks
-
-3. **Tap behavior:**
-   - Tap a quick task → immediately logs it for selected kid(s) via `saveLogEntries()`
-   - Shows toast confirmation: "Logged Fed Dog for Alex"
-   - Button briefly animates (pulse/check) to confirm
-   - If already done today, shows as muted/completed with a checkmark
-   - Tapping a completed quick task prompts: "Already done. Log again?"
-
-4. **Settings UI** — In chore settings, add a toggle per chore:
-   - "Quick task" checkbox/toggle next to each chore row
-   - Saving updates `config.chores/{choreId}/quickTask` in Firebase
-
-### Quick Task Layout
+### New Chores Tab Layout (top to bottom)
 
 ```
 ┌─────────────────────────────────────┐
-│  [Alex]  [Louisa]  [Both]           │
-├─────────────────────────────────────┤
 │                                     │
-│  ┌──────────┐ ┌──────────┐ ┌─────┐ │
-│  │ Fed Dog  │ │ Made Bed │ │ ... │ │
-│  │   +1 ✓   │ │   +1     │ │     │ │
-│  └──────────┘ └──────────┘ └─────┘ │
+│  ┌──── Alex ────┐ ┌── Louisa ──┐   │  ← Kid cards (BOTH shown by default)
+│  │  14 / 22 pts │ │  8 / 12 pts│   │     Tapping one filters to that kid
+│  │  ████████░░  │ │  ██████░░  │   │     Tapping again goes back to Both
+│  │  $3 → $7     │ │  $2 → $4   │   │
+│  └──────────────┘ └────────────┘   │
 │                                     │
-│  ● Weekly Progress                  │
-│  ...                                │
+│  ┌─ Quick Points ─────────────────┐ │  ← +1/+2/+3/+4 (moved to top area)
+│  │  [+1]  [+2]  [+3]  [+4]       │ │
+│  └────────────────────────────────┘ │
+│                                     │
+│  Today's Chores                     │
+│  ┌────────────────────────────────┐ │
+│  │ ✓  Fed the dog (AM)      +1   │ │  ← Checklist (existing, polished)
+│  │ ✓  Made bed               +1   │ │
+│  │ ○  Brush teeth PM         +1   │ │
+│  │ ○  Clean room             +2   │ │
+│  └────────────────────────────────┘ │
+│                                     │
+│  8pts this week · $3.00 earned      │  ← Summary line
+│                                     │
+└─────────────────────────────────────┘
 ```
 
-### CSS for Quick Tasks
+### Key Changes
+
+**1. Replace kid picker buttons + weekly progress card with "Kid Progress Cards"**
+
+Remove the current kid picker (`#quickPoints` with Alex/Louisa/Both buttons) and the separate weekly progress card. Replace with two tappable kid cards that serve BOTH purposes — showing progress AND selecting the active kid.
+
+**Default state: Both selected.** Both cards are shown side by side, both visually "active." The checklist shows chores for both kids.
+
+**When a kid card is tapped:** That kid is selected (card is highlighted, other card is dimmed). Checklist filters to that kid only. Tapping the active card again deselects it and returns to Both mode.
+
+**Kid card content:**
+- Kid name (Alex / Louisa)
+- Points this week: `14 / 22 pts` (current / next tier min)
+- Progress bar (colored: `--alex` blue, `--louisa` purple)
+- Pay info: `$3 → $7` (current tier → next tier)
+- At top tier: `$7 earned` + bonus teaser
+- Card border/shadow uses the kid's color
+
+**2. Move quick-add points to just below the kid cards**
+
+The `+1/+2/+3/+4` buttons move from the bottom of the view to right below the kid cards. These are the primary action buttons parents use for ad-hoc points.
+
+**3. Remove the "Quick Tasks" section entirely**
+
+The separate quick tasks row added in Phase 13b is removed. The daily checklist already serves this purpose — tapping a chore logs it. The quick tasks row was redundant and cluttered.
+
+**4. Keep the daily checklist and summary line at the bottom**
+
+### HTML Structure Change
+
+Replace the static `#quickPoints` div in the HTML:
+
+**BEFORE** (line ~1972):
+```html
+<div class="view" id="viewChores">
+  <div class="panel quick-points" id="quickPoints">
+    <div class="qp-row">
+      <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
+      <button type="button" class="qp-kid louisa" data-qp-kid="louisa">Louisa</button>
+      <button type="button" class="qp-kid both" data-qp-kid="both">Both</button>
+    </div>
+  </div>
+  <section class="panel" id="choreProgress" aria-live="polite"></section>
+  <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
+</div>
+```
+
+**AFTER:**
+```html
+<div class="view" id="viewChores">
+  <div id="choreKidCards"></div>
+  <div class="chore-quick-add" id="choreQuickAdd">
+    <button type="button" class="qp-pts" data-qp-pts="1">+1</button>
+    <button type="button" class="qp-pts" data-qp-pts="2">+2</button>
+    <button type="button" class="qp-pts" data-qp-pts="3">+3</button>
+    <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
+  </div>
+  <section id="choreProgress" aria-live="polite"></section>
+  <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
+</div>
+```
+
+The `#choreKidCards` div is populated dynamically by `renderChoreProgress()` with the kid progress cards. The quick-add buttons are static HTML (always visible).
+
+### Kid Selection State
+
+Replace the current `selectedChoreKids()` function which reads from the old `#quickPoints` buttons. Instead, maintain a module-level variable:
+
+```javascript
+var choreSelectedKid = 'both'; // 'alex', 'louisa', or 'both'
+```
+
+Tapping a kid card sets `choreSelectedKid` to that kid's ID. Tapping the same card again resets to `'both'`.
+
+Update `selectedChoreKids()` to read from this variable:
+```javascript
+function selectedChoreKids() {
+  if (choreSelectedKid === 'both') return ['alex', 'louisa'];
+  return [choreSelectedKid];
+}
+```
+
+**Important:** The quick-add `+1/+2/+3/+4` buttons must still work with the selected kid(s). The existing click handler reads `selectedChoreKids()` so it will automatically use the new selection state.
+
+### Quick-Add Button Event Handling
+
+The existing quick-add point click handlers are in the main app shell (Block 2) and look for `[data-qp-pts]` inside `#quickPoints`. Since we're moving the buttons outside `#quickPoints`, the handler needs updating.
+
+Check the existing handler and update it to find buttons in `#choreQuickAdd` instead of (or in addition to) `#quickPoints`. The handler should still call `selectedChoreKids()` to determine which kid(s) to log for.
+
+---
+
+## Phase 14b: Kid Progress Card CSS
+
+### New CSS
 
 ```css
-.quick-tasks {
-  display: flex;
-  gap: 8px;
-  padding: 8px 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+.chore-kid-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 4px 0 8px;
 }
 
-.quick-tasks::-webkit-scrollbar { display: none; }
-
-.quick-task-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 90px;
-  min-height: 52px;
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 16px;
+.chore-kid-card {
   background: var(--panel);
+  border-radius: 16px;
+  padding: 14px;
   border: 2px solid var(--line);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.quick-task-btn.alex { border-color: var(--alex); color: var(--alex); }
-.quick-task-btn.louisa { border-color: var(--louisa); color: var(--louisa); }
-
-.quick-task-btn.done {
-  background: var(--panel-alt);
-  opacity: 0.55;
+.chore-kid-card:active {
+  transform: scale(0.97);
 }
 
-.quick-task-btn:active {
-  transform: scale(0.95);
+.chore-kid-card.alex { border-color: rgba(74, 144, 217, 0.3); }
+.chore-kid-card.louisa { border-color: rgba(138, 91, 209, 0.3); }
+
+/* Selected state — bolder border + subtle background tint */
+.chore-kid-card.selected.alex {
+  border-color: var(--alex);
+  background: rgba(74, 144, 217, 0.06);
+  box-shadow: 0 4px 16px rgba(74, 144, 217, 0.15);
 }
 
-.quick-task-pts {
-  font-size: 0.75rem;
+.chore-kid-card.selected.louisa {
+  border-color: var(--louisa);
+  background: rgba(138, 91, 209, 0.06);
+  box-shadow: 0 4px 16px rgba(138, 91, 209, 0.15);
+}
+
+/* Dimmed state — when OTHER kid is selected */
+.chore-kid-card.dimmed {
+  opacity: 0.45;
+  border-color: var(--line);
+}
+
+.chore-kid-card-name {
+  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--muted);
+  margin-bottom: 6px;
 }
+
+.chore-kid-card-pts {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.chore-kid-card-pay {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.chore-kid-card .weekly-progress-bar-track {
+  margin-top: 8px;
+  height: 6px;
+}
+
+.chore-kid-card-bonus {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+```
+
+### Quick-Add Buttons Styling
+
+```css
+.chore-quick-add {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+.chore-quick-add .qp-pts {
+  flex: 1;
+}
+```
+
+The `qp-pts` base styles already exist — this just makes them fill the row evenly.
+
+---
+
+## Phase 14c: Render Function Update
+
+Update `renderChoreProgress()` to output the new layout:
+
+```javascript
+// 1. Build kid cards (always show both)
+var kidCardMarkup = renderKidCards(phase, entries, week);
+
+// 2. Build checklist (filtered by selected kid)
+// ... existing checklist logic ...
+
+// 3. Assemble
+container.innerHTML = '<div class="chore-board">' +
+  kidCardMarkup +
+  '<div class="chore-section-label">Today\'s Chores</div>' +
+  (checklistMarkup || emptyMessage) +
+  '<div class="chore-summary">' + summary + '</div>' +
+'</div>';
+```
+
+### `renderKidCards(phase, entries, week)` function
+
+New function that builds two kid progress cards:
+
+```javascript
+function renderKidCards(phase, entries, week) {
+  var kidIds = Object.keys(phase.currentConfig.kids || {});
+  return '<div class="chore-kid-cards">' +
+    kidIds.map(function (kidId) {
+      var info = getWeeklyProgressInfo(phase, kidId, entries, week);
+      var isSelected = choreSelectedKid === kidId;
+      var isDimmed = choreSelectedKid !== 'both' && choreSelectedKid !== kidId;
+      var cardClass = 'chore-kid-card ' + kidId +
+        (isSelected ? ' selected' : '') +
+        (isDimmed ? ' dimmed' : '');
+      return '<button type="button" class="' + cardClass + '" data-chore-kid="' + kidId + '">' +
+        '<div class="chore-kid-card-name">' + escapeHtml(info.kid.name || kidId) + '</div>' +
+        '<div class="chore-kid-card-pts">' + escapeHtml(info.pointsLabel) + '</div>' +
+        '<div class="chore-kid-card-pay">' + escapeHtml(info.payLabel) + '</div>' +
+        '<div class="weekly-progress-bar-track"><div class="weekly-progress-bar-fill ' + kidId + '" style="width:' + info.progressPct + '%;"></div></div>' +
+        (info.bonusLabel ? '<div class="chore-kid-card-bonus">' + escapeHtml(info.bonusLabel) + '</div>' : '') +
+      '</button>';
+    }).join('') +
+  '</div>';
+}
+```
+
+### Kid card click handler
+
+Add a click handler for `[data-chore-kid]` buttons:
+
+```javascript
+document.addEventListener('click', function (event) {
+  var kidCard = event.target.closest('[data-chore-kid]');
+  if (kidCard) {
+    var kidId = kidCard.dataset.choreKid;
+    if (choreSelectedKid === kidId) {
+      choreSelectedKid = 'both';  // Deselect → back to Both
+    } else {
+      choreSelectedKid = kidId;   // Select this kid
+    }
+    renderChoreProgress().catch(function (e) { console.error(e); });
+    return;
+  }
+  // ... existing click handlers ...
+});
 ```
 
 ---
 
-## Phase 13c: Visual Polish
+## Phase 14d: Cleanup
 
-Apply the same design language as the Home tab and header to the Chores view.
+1. **Remove the Quick Tasks section** — delete `renderQuickTasks()` function, the `quickTaskFlashId` variable, and the Quick Tasks CSS (`.quick-tasks`, `.quick-task-btn`, etc.)
+2. **Remove `quickTask` field handling** from chore settings (the toggle added in Phase 13b)
+3. **Remove the old `#quickPoints` kid picker** from the static HTML
+4. **Remove the old `weekly-progress-card` wrapper** — progress is now inside the kid cards
+5. **Remove the "Chores" header** (`chore-board-header`) — the tab bar already says "Chores"
+6. **Bump `sw.js`** cache to `hub-v16`
 
-### Chore checklist items
-- Use SVG checkmark icon (not Unicode ✓) inside `.chore-check` for consistency with tab bar icons
-- Checked state: green fill (#22c55e) with white SVG check
-- Unchecked state: empty circle with `var(--line)` border
+### CSS to Remove
 
-### Weekly progress card
-- Ensure the progress bar animates smoothly on updates
-- Kid-colored fills (blue for Alex, purple for Louisa)
-- Bonus teaser uses 🔥 emoji as originally specified
+- `.quick-tasks`, `.quick-task-btn`, `.quick-task-label`, `.quick-task-pts`, `.quick-task-check`, `.quick-task-btn.flash`
+- `.chore-board-header` (the "Chores" title + subtitle)
+- `.weekly-progress-card` wrapper (progress bars move into kid cards)
 
-### Section labels
-- Uppercase, small, muted — matching existing `.chore-section-label` style
-- Sections: "Quick Tasks" (if any configured), "Weekly Progress", "Today's Chores", "Quick Add"
+### CSS to Keep
 
-### Quick-add buttons
-- Match the existing `qp-pts` button style
-- Keep at bottom of the view
-
-### Bump SW cache
-- Bump to `hub-v16` after all changes
+- `.chore-board`, `.chore-section-label`, `.chore-list`, `.chore-item`, `.chore-check`, `.chore-label`, `.chore-pts`, `.chore-note`, `.chore-summary`
+- `.weekly-progress-bar-track`, `.weekly-progress-bar-fill` (reused inside kid cards)
+- `.qp-pts` button styles
+- `.weekly-bonus-teaser` renamed to `.chore-kid-card-bonus`
 
 ---
 
@@ -200,40 +332,30 @@ Apply the same design language as the Home tab and header to the Chores view.
 
 | File | Phase | Changes |
 |------|-------|---------|
-| `index.html` | 13a, 13b, 13c | Bug fix, quick tasks feature, visual polish |
-| `sw.js` | 13c | Bump cache to hub-v16 |
+| `index.html` | 14a-d | Layout restructure, kid cards, CSS, cleanup |
+| `sw.js` | 14d | Bump cache to hub-v16 |
 
 ## What NOT to Change
 
-- Home tab, Fun tab, Lists tab, Bank tab — no changes
-- Parser logic — no changes
-- Firebase data model — only addition is `quickTask` boolean on chore config
-- No new files, no new dependencies
-
-## Phase Order
-
-```
-13a first (critical bug fix — unblocks everything)
-13b second (quick tasks feature)
-13c last (visual polish)
-```
-
-## Risks
-
-1. **13a is the key** — if the `toDateString` reference error is the real root cause, fixing it should immediately restore all Chores + Bank functionality. If the tab is still broken after 13a, there's a deeper issue and Codex should halt and report.
-2. **Quick task config migration** — existing chores in Firebase won't have `quickTask` field. Code must default to `false` when the field is missing.
-3. **Horizontal scroll on quick tasks** — may feel odd on desktop/wide screens. Consider wrapping to grid on wider viewports.
+- Bank tab — leave untouched
+- Home tab — leave untouched
+- Parser, voice, Firebase data model — untouched
+- `chore.quickTask` field can stay in Firebase (harmless) — just remove the UI for setting it
 
 ## Validation Checklist
 
-After all phases:
-1. No console errors on any tab
-2. Chores tab shows: quick tasks (if configured), weekly progress, daily checklist, quick-add buttons
-3. Tapping a quick task logs it immediately, toast shows
-4. Quick task shows as done after logging
-5. Settings gear on Chores tab shows chore settings with quick task toggles
-6. Settings gear does NOT show "Lists" on Chores tab
-7. Bank tab renders kid cards, balance, transactions
-8. Weekly progress card shows correct points and tier
-9. Both mode works for quick tasks and checklist
-10. Offline works (SW cache updated)
+1. On load, Chores tab shows BOTH kid progress cards side by side
+2. Both cards show current points, tier progress, pay info
+3. Tapping Alex card → filters checklist to Alex only, Alex card highlighted, Louisa dimmed
+4. Tapping Alex card again → back to Both mode, both cards active
+5. Quick-add buttons (+1/+2/+3/+4) visible below kid cards
+6. Quick-add logs for currently selected kid(s)
+7. Daily checklist shows chores with SVG checkmarks
+8. Tapping a chore logs it, toast confirms
+9. Undo works on checked chores
+10. Summary line shows correct weekly points and pay
+11. No Quick Tasks section visible
+12. No "Chores" header (tab bar handles this)
+13. Settings gear on Chores tab still works
+14. Bank tab still works
+15. No console errors
