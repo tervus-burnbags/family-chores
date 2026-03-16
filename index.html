@@ -6289,50 +6289,72 @@
           container.innerHTML = '<div class="chore-board"><p class="chore-list-note">Loading today\'s chores...</p></div>';
           return;
         }
-        var chores = Object.entries(phase.currentConfig.chores || {}).sort(function (a, b) {
-          return String((a[1] && a[1].label) || a[0]).localeCompare(String((b[1] && b[1].label) || b[0]));
-        });
-        var entries = await phase.getAllLogEntries();
-        var now = new Date();
-        var today = phase.toDateString(now);
-        var week = phase.toIsoWeek(now);
-        var kids = selectedChoreKids();
-        var todayEntries = entries.filter(function (entry) {
-          return entry.date === today && kids.indexOf(entry.kid) !== -1;
-        });
-        var summary = summarizeWeek(entries, phase, kids, week);
-        var checklistMarkup = chores.map(function (entry) {
-          var choreId = entry[0];
-          var chore = entry[1] || {};
-          var applicableKids = choreAppliesToSelectedKids(chore, kids);
-          if (!applicableKids.length) {
-            return '';
+        try {
+          var chores = Object.entries(phase.currentConfig.chores || {}).sort(function (a, b) {
+            return String((a[1] && a[1].label) || a[0]).localeCompare(String((b[1] && b[1].label) || b[0]));
+          });
+          var entries = await phase.getAllLogEntries();
+          var now = new Date();
+          var today = phase.toDateString(now);
+          var week = phase.toIsoWeek(now);
+          var kids = selectedChoreKids();
+          var todayEntries = entries.filter(function (entry) {
+            return entry.date === today && kids.indexOf(entry.kid) !== -1;
+          });
+          var summary = summarizeWeek(entries, phase, kids, week);
+          var progressMarkup = '';
+          try {
+            progressMarkup = renderWeeklyProgressCard(phase, entries, week, kids);
+          } catch (progressError) {
+            console.error(progressError);
+            progressMarkup = '<p class="chore-list-note">Weekly progress is unavailable right now.</p>';
           }
-          var matches = todayEntries.filter(function (logEntry) {
-            return logEntry.choreId === choreId && applicableKids.indexOf(logEntry.kid) !== -1;
-          });
-          var doneKids = uniqueDoneKids(matches);
-          var done = applicableKids.every(function (kidId) {
-            return doneKids.indexOf(kidId) !== -1;
-          });
-          var note = choreNote(phase, applicableKids, doneKids);
-          return '<button type="button" class="chore-item' + (done ? ' done' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
-            '<span class="chore-check" aria-hidden="true">' + (done ? '&#10003;' : '') + '</span>' +
-            '<span class="chore-meta"><span class="chore-label">' + escapeHtml(chore.label || choreId) + '</span>' +
-            (note ? '<span class="chore-note">' + escapeHtml(note) + '</span>' : '') +
-            '</span>' +
-            '<span class="chore-pts">+' + Number(chore.points || 0) + '</span>' +
-          '</button>';
-        }).filter(Boolean).join('');
-        container.innerHTML = '<div class="chore-board">' +
-          '<div class="chore-board-header"><h2>Chores</h2><p>' + escapeHtml(selectedKidLabel(kids, phase)) + '</p></div>' +
-          '<div class="chore-section-label">Weekly Progress</div>' +
-          renderWeeklyProgressCard(phase, entries, week, kids) +
-          '<div class="chore-section-label">Today\'s Chores</div>' +
-          (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
-          '<div class="panel quick-points"><div class="chore-section-label">Quick Add</div><div class="qp-row"><button type="button" class="qp-pts" data-qp-pts="1">+1</button><button type="button" class="qp-pts" data-qp-pts="2">+2</button><button type="button" class="qp-pts" data-qp-pts="3">+3</button><button type="button" class="qp-pts" data-qp-pts="4">+4</button></div></div>' +
-          '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
-        '</div>';
+          var checklistMarkup = '';
+          try {
+            checklistMarkup = chores.map(function (entry) {
+              var choreId = entry[0];
+              var chore = entry[1] || {};
+              var applicableKids = choreAppliesToSelectedKids(chore, kids);
+              if (!applicableKids.length) {
+                return '';
+              }
+              var matches = todayEntries.filter(function (logEntry) {
+                return logEntry.choreId === choreId && applicableKids.indexOf(logEntry.kid) !== -1;
+              });
+              var doneKids = uniqueDoneKids(matches);
+              var done = applicableKids.every(function (kidId) {
+                return doneKids.indexOf(kidId) !== -1;
+              });
+              var note = choreNote(phase, applicableKids, doneKids);
+              return '<button type="button" class="chore-item' + (done ? ' done' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
+                '<span class="chore-check" aria-hidden="true">' + (done ? '&#10003;' : '') + '</span>' +
+                '<span class="chore-meta"><span class="chore-label">' + escapeHtml(chore.label || choreId) + '</span>' +
+                (note ? '<span class="chore-note">' + escapeHtml(note) + '</span>' : '') +
+                '</span>' +
+                '<span class="chore-pts">+' + Number(chore.points || 0) + '</span>' +
+              '</button>';
+            }).filter(Boolean).join('');
+          } catch (checklistError) {
+            console.error(checklistError);
+            checklistMarkup = '';
+          }
+          container.innerHTML = '<div class="chore-board">' +
+            '<div class="chore-board-header"><h2>Chores</h2><p>' + escapeHtml(selectedKidLabel(kids, phase)) + '</p></div>' +
+            '<div class="chore-section-label">Weekly Progress</div>' +
+            progressMarkup +
+            '<div class="chore-section-label">Today\'s Chores</div>' +
+            (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
+            '<div class="panel quick-points"><div class="chore-section-label">Quick Add</div><div class="qp-row"><button type="button" class="qp-pts" data-qp-pts="1">+1</button><button type="button" class="qp-pts" data-qp-pts="2">+2</button><button type="button" class="qp-pts" data-qp-pts="3">+3</button><button type="button" class="qp-pts" data-qp-pts="4">+4</button></div></div>' +
+            '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
+          '</div>';
+        } catch (error) {
+          console.error(error);
+          container.innerHTML = '<div class="chore-board">' +
+            '<div class="chore-board-header"><h2>Chores</h2><p>Could not load right now</p></div>' +
+            '<p class="chore-list-note">The Chores view hit an error. You can still use quick add below.</p>' +
+            '<div class="panel quick-points"><div class="chore-section-label">Quick Add</div><div class="qp-row"><button type="button" class="qp-pts" data-qp-pts="1">+1</button><button type="button" class="qp-pts" data-qp-pts="2">+2</button><button type="button" class="qp-pts" data-qp-pts="3">+3</button><button type="button" class="qp-pts" data-qp-pts="4">+4</button></div></div>' +
+          '</div>';
+        }
       }
 
       async function toggleChoreItem(choreId) {
