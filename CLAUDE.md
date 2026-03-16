@@ -3,14 +3,12 @@
 ## Shared Instructions
 
 Before starting any work, read and follow:
-- `../AI_COMMAND/BOOT.md` — quick-start context (roles, workflow, file map)
-- `../AI_COMMAND/core/roles.md` — roles and override rules
-- `../AI_COMMAND/core/workflow.md` — collaboration pipeline
+- `../AI_COMMAND/BOOT.md` — entry point, precedence, modes, file map
+- `../AI_COMMAND/core/roles.md` — roles, artifact ownership, override rules
+- `../AI_COMMAND/core/workflow.md` — pipeline, modes, phase loop
 - `../AI_COMMAND/core/coding_standards.md` — standards
-- `../AI_COMMAND/core/claude_usage.md` — token efficiency
-- `../AI_COMMAND/core/task_system.md` — TASK.md system
 
-Your default role is **Architect / Planner**. See `../AI_COMMAND/templates/CLAUDE.md` for full instructions.
+Your default role is **Architect / Planner / Orchestrator**. See `../AI_COMMAND/templates/CLAUDE_ROLE.md` for full instructions.
 
 **User overrides always apply.** If told to implement directly, do so.
 
