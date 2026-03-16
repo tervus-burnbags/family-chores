@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where python:*)",
+      "Bash(cd \"G:/My Drive/Software Projects/Claude Experiments/chores\" && unzip -p alex_chart_v2.docx word/document.xml | sed 's/<[^>]*>//g' | tr -s ' \\\\n' '\\\\n' | head -200)",
+      "Bash(cd \"G:/My Drive/Software Projects/Claude Experiments/chores\" && unzip -p louisa_2page.odt content.xml | sed 's/<[^>]*>//g' | tr -s ' \\\\n' '\\\\n' | head -200)",
+      "Bash(which gh:*)",
+      "Bash(cd \"G:/My Drive/Software Projects/Claude Experiments/chores\" && gh repo create family-chores --private --source=. --description \"Voice-first family chore tracker PWA\" --push)",
+      "Bash(cd \"G:/My Drive/Software Projects/Claude Experiments/chores\" && gh api repos/tervus-burnbags/family-chores/pages -X POST -f source.branch=master -f source.path=\"/\" 2>&1 || gh api repos/tervus-burnbags/family-chores/pages -X PUT -f source.branch=master -f source.path=\"/\" 2>&1)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Skill(commit-commands:commit)"
+    ]
+  }
+}

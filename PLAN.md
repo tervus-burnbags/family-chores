@@ -1,8 +1,560 @@
-# Family Chore Tracker — PWA Implementation Plan
+# Family Hub - Implementation Plans
+
+---
+
+# CURRENT TASK: Family Hub Redesign (March 2026)
 
 ## Context
 
-Two parents (Android + iPhone) track chores for two kids using paper charts. The goal is a voice-first, chat-style Progressive Web App that minimizes friction — speak naturally to log chores, award points, track balances, and manage what's owed. No LLM APIs; the domain is narrow enough for rule-based NLP. Firebase provides free real-time sync between devices. This plan is designed for Codex to implement.
+The Family Hub PWA started as a chore tracker and has evolved into a multi-tool home management app (Chores, Lists, Bank). The current UI has two problems: (1) a monolithic Settings tab that mixes concerns from every tool, and (2) the voice/text input is trapped inside the Chores tab even though commands like "add milk to costco list" should work from anywhere. This redesign fixes both, adds a Bulletin board as the new home screen, and integrates Google Calendar events for the kids.
+
+All changes happen in `index.html` (single-file PWA). No build tools. Firebase backend. Hosted on GitHub Pages. Primary devices: Android phone + iPhone.
+
+---
+
+## New Tab Bar (4 tabs, always visible)
+
+```text
++--------------------------------------+
+|  Family Hub                   [link] |
++--------------------------------------+
+|                                      |
+|   (active view content)              |
+|                                      |
++--------------------------------------+
+| [Type or speak...]      [Send] [Mic] |
++--------------------------------------+
+| Home   Chores   Fun   Lists   Bank   |
++--------------------------------------+
+```
+
+- Bulletin (home) is the new default landing tab — family notes + calendar.
+- Chores keeps chore logging, quick points, and weekly progress.
+- Fun is the kids' space — jokes and mad libs.
+- Lists keeps the shared lists module.
+- Bank keeps kid cards, pay, balances, and debt flows.
+- Settings is removed only after its replacements are live.
+
+---
+
+## Phase 1: Fix Tab Bar + Add Bulletin Shell
+
+Goal: fixed bottom nav, Bulletin placeholder, and no loss of access to existing settings.
+
+Important rollout rule: do not strand chore/pay/history management during the phased rollout. Until Phases 4-6 land, keep the existing settings surface reachable via either the current Settings tab or a temporary non-tab entry point such as a header button or `#settings` route. The final 4-tab UI is the end state, not the requirement for the first isolated deploy.
+
+### Changes
+
+CSS (~lines 162-172): change `.tab-bar` from `position: sticky` to `position: fixed; bottom: 0; left: 0; right: 0; max-width: 720px; margin: 0 auto; z-index: 100;`. Remove bottom corner radius. Add `padding-bottom: 72px` to `.app` to account for fixed bar height.
+
+HTML (~lines 840-857): add Bulletin as the first primary tab with a house icon. Add Bulletin view div (`id="viewBulletin"`) before `viewChores`. Keep Settings reachable during this phase, even if it is no longer part of the final tab bar design.
+
+JS (~lines 1149-1213): update `views` to add `bulletin`. Change the default view from `chores` to `bulletin` in `switchView()` fallback, hashchange handling, and initial load. Add a Bulletin render trigger in `switchView()`. Do not remove the `settings` route or render trigger until the replacement settings UIs are live.
+
+### Test
+
+- Tab bar stays fixed while scrolling long content.
+- Bulletin, Chores, Lists, and Bank navigate correctly, and Settings remains reachable during the transition.
+- App opens to Bulletin (empty placeholder).
+- Hash routing works for `#bulletin`, `#chores`, `#lists`, `#bank`, and transitional `#settings`.
+- No JS errors.
+
+---
+
+## Phase 2: Universal Input Bar
+
+Goal: move the composer from Chores-only to a persistent bar above the tab bar that works on every view. Redesign the intent parser as an extensible router without dropping any live commands.
+
+### HTML Changes
+
+Move the composer form (`#composer`, around line 807) out of `viewChores` and place it between the views and the tab bar as a sibling of the view divs, just above `<nav class="tab-bar">`. This makes it visible on all tabs.
+
+Remove the composer from inside `viewChores`. Keep the quick-points panel in Chores.
+
+### CSS Changes
+
+Make the composer fixed above the tab bar:
+
+```css
+.composer {
+  position: fixed;
+  bottom: 56px;
+  left: 0;
+  right: 0;
+  max-width: 720px;
+  margin: 0 auto;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+}
+```
+
+Increase `.app` bottom padding to about 128px (composer + tab bar).
+
+### JS Changes - Intent Router Architecture
+
+Replace the monolithic `parseIntent()` with an extensible intent router:
+
+```js
+var intentRegistry = [];
+
+function registerIntent(config) {
+  intentRegistry.push(config);
+  intentRegistry.sort(function (a, b) {
+    return (b.priority || 0) - (a.priority || 0);
+  });
+}
+
+function routeIntent(text) {
+  var normalized = normalize(text);
+  var kids = extractKids(normalized);
+
+  for (var i = 0; i < intentRegistry.length; i++) {
+    var intent = intentRegistry[i];
+    var match = intent.patterns(normalized, kids);
+    if (match && match.confidence > 0.5) {
+      return { intent: intent, match: match, kids: kids };
+    }
+  }
+
+  return null;
+}
+```
+
+Each tool registers its intents at startup.
+
+Chore/runtime intents migrated from the live parser:
+- `log-chore`
+- `free-points`
+- `adhoc-chore`
+- `change-points`
+- `check-status`
+- `undo`
+- `confirm-yes`
+- `confirm-no`
+- `confirm-chore`
+- `missing-kid`
+
+Bank intents migrated from the live parser:
+- `record-payment`
+- `kid-spent`
+- `parent-owes-kid`
+- `kid-owes-parent`
+- `record-debt`
+- `settle-debt`
+
+List intents:
+- `add-to-list`
+- `check-off-list`
+- `create-list`
+
+Bulletin intents:
+- `add-note`
+- `remove-note`
+
+Parser design principles:
+- Higher priority intents are checked first, including undo and confirmation responses.
+- Kid name extraction is shared across all intents.
+- Each intent's `patterns()` returns `{ confidence, ...extractedData }` or `null`.
+- Each intent's `execute()` performs the Firebase writes and returns a user-facing result.
+- Shared normalization should map to the current `normalizeText()` and `extractKidIds()` behavior unless intentionally changed.
+- `pendingAction`, duplicate detection, and yes/no follow-up behavior remain first-class after the router migration.
+
+### Gemini Fallback Decision
+
+The live app currently has an optional Gemini parser fallback behind feature flags. Phase 2 must make this explicit:
+- Either remove `askGemini()` and its config flags as part of the router migration.
+- Or keep Gemini as an optional low-confidence fallback behind `routeIntent()`.
+
+Do not describe the parser as rule-based only unless the Gemini path is actually removed from `index.html`.
+
+### Composer Behavior
+
+The composer submit handler calls `routeIntent(text)`:
+- If a match is found, execute it and show a toast/snackbar at the top of the current view.
+- If no match or low confidence, show a toast with "I didn't catch that. Try again?"
+- If medium confidence, preserve the current confirmation flow with toast actions or equivalent yes/no affordances.
+- Speech input works the same way: final transcript goes to `routeIntent()`.
+
+### Toast/Feedback System
+
+Replace chat-style message bubbles with a toast notification system since the input is now global.
+
+```text
++------------------------------+
+| OK Alex - Feed dog (AM) +1pt |
+|                       [Undo] |
++------------------------------+
+```
+
+Toasts should use kid accent colors, include an Undo affordance, and stack if multiple commands are given quickly.
+
+### Test
+
+- Input bar visible on all 4 tabs.
+- "Alex fed the dog" works from Bulletin tab and logs to Firebase.
+- "add milk to costco list" works from Chores tab and adds to the list.
+- Speech input works from any tab.
+- Quick points still works on Chores.
+- No regressions in chore, confirmation, payment, spend, debt, and parent-owes flows.
+
+---
+
+## Phase 3: Bulletin View + Notes
+
+Goal: build the Bulletin as the home dashboard with pinnable family notes.
+
+### Firebase Data Model
+
+New path: `families/{familyId}/bulletin/notes/{noteId}`
+
+```json
+{
+  "text": "Picture day Tuesday!",
+  "timestamp": 1710500000000,
+  "color": "neutral"
+}
+```
+
+`color` is optional: `alex`, `louisa`, or `neutral`.
+
+### HTML
+
+```html
+<div class="view active" id="viewBulletin">
+  <div id="bulletinContent" class="view-content"></div>
+</div>
+```
+
+### Rendering
+
+`renderBulletin()` fetches notes from Firebase and renders:
+
+1. Notes section as colored post-it cards in a grid.
+   - Each note has text, timestamp, and delete button.
+   - Add note button opens a simple inline form, or use the universal input.
+   - Notes sort newest first.
+   - Limit display to about 10 notes, with a Show older link.
+
+2. Calendar section placeholder for Phase 7.
+
+### Test
+
+- Bulletin renders on app open.
+- Can add notes via universal input.
+- Can add notes via a button in Bulletin view.
+- Notes persist across reloads.
+- Can delete notes.
+- Notes display in a responsive grid.
+
+---
+
+## Phase 3b: Kid Fun — Own Tab
+
+Goal: Kid Fun gets its own tab in the bottom nav bar (5 tabs total). This gives the kids a dedicated space and keeps the Bulletin focused on family notes and calendar.
+
+**IMPORTANT — Codex migration note:** Kid Fun was initially built as a section inside the Bulletin view. It needs to be extracted into its own view (`viewFun`) with its own tab. The joke/mad lib data arrays and rendering logic stay the same — just move the container and rendering from the Bulletin IIFE into a new Fun view and IIFE.
+
+### Tab Bar Update (5 tabs)
+
+```text
++--------------------------------------+
+| Home   Chores   Fun   Lists   Bank   |
++--------------------------------------+
+```
+
+- Add a **Fun** tab (star icon &#9733; or game controller &#127918;) as the middle tab
+- Add `<div class="view" id="viewFun"><div id="funContent" class="view-content"></div></div>` to HTML
+- Add `fun: document.getElementById('viewFun')` to the `views` object
+- Add `renderFun()` trigger in `switchView()` when `name === 'fun'`
+- Remove the Kid Fun section from `renderBulletin()` output
+- Tab label font may need to shrink slightly for 5 tabs on narrow phones (test at 320px width)
+
+### Architecture
+
+Kid Fun lives in its own view, rendered when the Fun tab is selected. No Firebase needed — jokes and mad lib templates are embedded as JS arrays in the code. State (current joke index, in-progress mad lib) uses `localStorage` only.
+
+### Jokes Module
+
+A large array of 250 kid-appropriate jokes (ages 4-7) in `kid-fun-data.js`. Each joke is a `{ setup, punchline }` object.
+
+**IMPORTANT design changes from the current implementation:**
+- **Random, not sequential.** "Next Joke" picks a random joke from the array. Do NOT cycle sequentially. Use `Math.floor(Math.random() * KID_JOKES.length)` to pick the next index.
+- **Designed for verbal delivery.** These jokes are meant to be **read aloud by a parent or older sibling** to a 4-year-old who can't read yet. The setup/punchline format works perfectly for this — parent reads the setup, kid says "what?", parent delivers the punchline. The UI should NOT require reading comprehension to enjoy.
+- **250 jokes.** Replace the current 100-joke array with the 250-joke array from `kid-fun-data.js`.
+- **No "X of Y" counter.** Remove the "Joke 5 of 100" label — it's meaningless with random order and makes kids feel like they're running out.
+
+```text
++-------------------------------+
+|  Kid Fun                      |
++-------------------------------+
+|  Why did the teddy bear say   |
+|  no to dessert?               |
+|                               |
+|  [Tap to reveal!]             |
+|                               |
+|  [Next Joke]                  |
++-------------------------------+
+```
+
+When "Tap to reveal" is pressed, show punchline with a fun animation (scale bounce). "Next Joke" advances the index and hides the punchline again.
+
+### Mad Libs Module
+
+An array of ~50 kid-friendly Mad Libs templates. Each template has:
+- `title` — name of the story (e.g., "The Silly Zoo Trip")
+- `blanks` — ordered array of `{ label, hint }` where `label` is the part of speech ("noun", "adjective", "animal", "color", "name", "number", "verb", "food", "place") and `hint` is a kid-friendly example
+- `story` — the template string with `{0}`, `{1}`, etc. placeholders
+
+**Age-appropriate design:**
+- For Louisa (age 4): the labels show simple words and pictures. "A color" with a hint like "red, blue, green". She can dictate answers or a parent types.
+- For Alex (age 7): the labels teach parts of speech. "An adjective (a describing word)" with a hint like "silly, tall, sparkly". This is educational — he learns what nouns, adjectives, and verbs are through play.
+
+**UI flow:**
+1. Show current Mad Lib title and a "Start" button
+2. Step through each blank one at a time: show the label + hint, input field, "Next" button
+3. After all blanks filled, show the completed story with the kid's words highlighted in their accent color
+4. "New Mad Lib" button picks a **random** template (not sequential). Use `Math.floor(Math.random() * KID_MADLIBS.length)` — avoid repeating the same one just played
+
+```text
++-------------------------------+
+|  Mad Libs: The Silly Zoo Trip |
++-------------------------------+
+|  Fill in blank 3 of 8:       |
+|                               |
+|  An adjective                 |
+|  (a describing word, like     |
+|   "silly" or "sparkly")       |
+|                               |
+|  [________________]  [Next >] |
++-------------------------------+
+```
+
+State stored in `localStorage`:
+- `funMadLibIndex` — current template index
+- `funMadLibProgress` — `{ templateIndex, currentBlank, answers[] }` for resuming
+
+### Bulletin Layout After This Phase
+
+```text
++-------------------------------+
+|  Sticky Notes (grid)          |
++-------------------------------+
+|  Kid Fun                      |
+|  +--joke--+  +--mad libs----+ |
+|  | setup  |  | The Silly    | |
+|  | [tap]  |  | Zoo Trip     | |
+|  | [next] |  | [Start]      | |
+|  +--------+  +--------------+ |
++-------------------------------+
+|  Coming Up (calendar - Ph 7)  |
++-------------------------------+
+```
+
+Kid Fun renders as two side-by-side cards on wider screens, stacked on narrow phones.
+
+### CSS
+
+```css
+.fun-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .fun-section { grid-template-columns: 1fr; }
+}
+.fun-card {
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.fun-card h3 { margin: 0 0 8px; font-size: 1rem; }
+.joke-punchline {
+  font-weight: 700;
+  animation: jokeBounce 0.3s ease-out;
+}
+@keyframes jokeBounce {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.madlib-highlight {
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.madlib-highlight.alex { background: rgba(74, 144, 217, 0.15); color: var(--alex); }
+.madlib-highlight.louisa { background: rgba(138, 91, 209, 0.15); color: var(--louisa); }
+```
+
+### Test
+
+- Fun tab appears in the bottom nav bar between Chores and Lists.
+- Tapping Fun tab shows the Kid Fun view with jokes and mad libs.
+- Bulletin no longer contains the Kid Fun section.
+- 5 tabs fit cleanly on phone screens (test at 320px and 375px width).
+- Joke shows setup, tap reveals punchline with animation.
+- Next Joke advances and wraps around after seeing all jokes.
+- Current joke index persists across page reloads.
+- Mad Libs: can step through blanks, see completed story with highlighted words.
+- Mad Lib progress persists if page is reloaded mid-game.
+- Both modules work on phone screens (stacked layout on narrow).
+- Joke and Mad Lib content is age-appropriate for ages 4-7.
+
+---
+
+## Phase 4: Chores Gear Icon + Move Weekly Progress to Chores
+
+Goal: move chore management into the Chores tab AND move the weekly progress dashboard out of Bank and into Chores. Chores and Bank are separate tools — Chores tracks effort (points, progress toward tiers, bonus track), Bank tracks money (balances, payments, debts, transactions).
+
+### Weekly Progress Move
+
+Currently `renderCardView()` in Bank renders a "This Week" stat card with weekly points, progress bar, tier progress label, and bonus track info (lines ~2801-2809). This belongs in Chores because it's about chore effort, not money.
+
+**Add to Chores view** (below quick-points, above messages):
+- A `#choreProgress` container that renders a compact weekly progress card per kid
+- Kid picker in Chores already exists (Alex / Louisa / Both) — reuse it or show both kids' progress side by side
+- Show: weekly points, progress bar toward next tier, bonus track progress
+- Extract the progress rendering logic from `renderCardView()` into a shared `renderWeeklyProgress(kidId)` function that both views can call if needed
+
+**Remove from Bank view**:
+- Delete the "This Week" stat card from `renderCardView()` output (lines ~2801-2809)
+- Bank's kid card (`.kid-card`) can still show `weeklyPoints` as a small label for context, but the full progress dashboard moves to Chores
+
+**After this change:**
+
+| Chores View | Bank View |
+|---|---|
+| Kid picker (Alex / Louisa / Both) | Kid picker (Alex / Louisa) |
+| Quick points buttons | Kid card (balance + kid name) |
+| **Weekly progress** (points, bar, tier, bonus) | Balance card (Pay / Spent) |
+| Chat/message history | Debts card (Settle) |
+| Gear icon → chore settings | Recent Activity (financial ledger) |
+
+### Chores Gear Icon
+
+- Add a Chores toolbar with a gear button.
+- Toggle an inline `#choresSettings` panel.
+- Move chore point editing, add chore, and remove chore flows out of `settingsContent` delegation into `choresSettings` delegation.
+- Move shared settings CSS out of runtime injection and into the main style block.
+
+### Test
+
+- Chores tab shows weekly progress for selected kid(s) with progress bar and bonus info.
+- Bank tab no longer shows the "This Week" progress card — only balance, debts, activity.
+- Gear icon visible in Chores.
+- Clicking toggles the chore editor.
+- Add/remove/edit chore points work and persist.
+- Clicking gear again collapses the panel.
+- Logging a chore from any tab updates the Chores progress when you navigate there.
+
+---
+
+## Phase 5: Redistribute Settings - Bank Gear Icon
+
+Goal: move pay tiers, bonus settings, history log, and transactions into Bank. Bank focuses purely on money: what's owed, what's been paid, and the financial rules (pay tiers, bonuses).
+
+- Add a Bank toolbar with a gear button.
+- Toggle an inline `#bankSettings` panel.
+- Move pay tiers, bonus settings, history filters, and transaction deletion out of `settingsContent` delegation into `bankSettings` delegation.
+
+### Test
+
+- Gear icon visible in Bank.
+- Pay tiers editable per kid and persist.
+- Bonus settings editable.
+- History filters work.
+- Transaction delete works.
+- Kid card renders with balance focus (no weekly progress bar — that's in Chores now).
+
+---
+
+## Phase 6: Family Code to Header + Cleanup
+
+Goal: move family code/share to the header and remove all Settings remnants.
+
+- Add a header share/info button that shows family code, copy link, and online/offline status.
+- Delete `viewSettings` from HTML.
+- Delete `settings` from `views` only after the replacement settings surfaces are live.
+- Promote shared helpers such as `safeName()`, `paymentBalanceDelta()`, `waitForRuntimeReady()`, `keepPathsSynced()`, and online indicator helpers before deleting the Phase 5 IIFE.
+- Move shared settings CSS classes into the main style block.
+- Bump the service worker cache version in `sw.js`.
+
+### Test
+
+- Family code accessible from header on any tab.
+- Copy link works.
+- Online indicator works.
+- No Settings tab or orphaned Settings route remains after cleanup.
+- No JS errors from missing references.
+- Full regression: log chore, add to list, make payment, add bulletin note.
+
+---
+
+## Phase 7: Google Calendar Integration
+
+Goal: show upcoming kid-related Google Calendar events on the Bulletin.
+
+Part A: create a Google Apps Script web app that reads the family calendar, filters events for Alex and Louisa, and returns JSON.
+
+Part B: in the PWA, fetch that JSON, cache it for 15 minutes, and render events grouped by day with kid color badges.
+
+### Test
+
+- Deploy Apps Script and set the URL in Firebase.
+- Bulletin shows upcoming events for Alex and Louisa.
+- Events group by day and are kid color coded.
+- Graceful fallback if fetch fails.
+- Cache prevents excessive API calls.
+- Works on Android Chrome and iOS Safari.
+
+---
+
+## Phase Dependency Order
+
+```text
+Phase 1  -> Fix tab bar + bulletin shell, keep settings reachable          [DONE]
+Phase 2  -> Universal input + intent router                                [DONE]
+Phase 3  -> Bulletin view + notes                                          [DONE]
+Phase 3b -> Kid Fun as its own tab (extract from Bulletin, add 5th tab)    [NEXT]
+Phase 4  -> Chores gear icon + move weekly progress from Bank to Chores    [DONE]
+Phase 5  -> Bank gear icon
+Phase 6  -> Header family code + cleanup, remove settings only after replacements are live
+Phase 7  -> Google Calendar
+```
+
+---
+
+## Risk Mitigation
+
+1. Shared utilities: before deleting the Phase 5 IIFE in Phase 6, promote `safeName()`, `paymentBalanceDelta()`, `waitForRuntimeReady()`, `keepPathsSynced()`, and online indicator functions to global/core scope.
+2. Intent router migration: migrate every live intent and follow-up state, including yes/no confirmations, duplicate prompts, spend flows, and parent/child debt variants. Run the full test matrix from the original plan after Phase 2.
+3. Service worker: bump `CACHE_NAME` in `sw.js` after each phase to ensure users get fresh code.
+4. Event delegation: do not remove `settingsContent` delegation until `#choresSettings` and `#bankSettings` replacements exist.
+5. Mobile keyboard: test the fixed composer + fixed tab bar interaction on Android Chrome and iOS Safari. Use `visualViewport` adjustments if needed.
+
+---
+
+## Critical Files
+
+- `index.html` - all HTML/CSS/JS changes.
+- `sw.js` - bump cache version after changes.
+- `manifest.json` - verify `start_url` works with the new default hash.
+- Google Apps Script - new file, deployed separately for Phase 7.
+
+---
+---
+# ORIGINAL SPEC: Family Chore Tracker (Phases 1-5, completed)
+
+The sections below are the original implementation plan. All 5 phases are complete. Preserved for reference â€” the data model, parser spec, and UI spec are still the canonical source of truth for existing functionality.
+
+---
+
+## Context
+
+Two parents (Android + iPhone) track chores for two kids using paper charts. The goal is a voice-first, chat-style Progressive Web App that minimizes friction â€” speak naturally to log chores, award points, track balances, and manage what's owed. No LLM APIs; the domain is narrow enough for rule-based NLP. Firebase provides free real-time sync between devices. This plan is designed for Codex to implement.
 
 ### Kids
 - **Alex**: born Feb 15, 2019 (age 7). Pay: 12pts=$3/wk, 20pts=$6/wk. Monthly bonus: 100pts=+$6
@@ -21,7 +573,7 @@ Pay is age-based and recalibrates as they age. Point values per chore are adjust
 | Data sync | Firebase Realtime Database (free Spark plan) | Real-time sync between 2 devices, built-in offline persistence |
 | Auth | Firebase Anonymous Auth + shared family code | No login forms. One parent creates, shares code with the other |
 | Voice | Web Speech API | Free, built into Chrome (Android) and Safari (iOS 14.5+) |
-| NLP | Rule-based intent parser | Constrained domain (~2 kids, ~20 chores) — no LLM needed |
+| NLP | Rule-based intent parser | Constrained domain (~2 kids, ~20 chores) â€” no LLM needed |
 | Hosting | GitHub Pages | Free, HTTPS (required for PWA + Speech API) |
 | CSS | Embedded in index.html, mobile-first | Single file keeps things simple |
 
@@ -31,15 +583,15 @@ Pay is age-based and recalibrates as they age. Point values per chore are adjust
 
 ```
 chores/
-├── index.html          # Entire app (HTML + CSS + JS)
-├── manifest.json       # PWA manifest
-├── sw.js               # Service worker for offline caching
-├── firebase-config.js  # Firebase project config (separate for easy swapping)
-├── icons/
-│   ├── icon-192.png
-│   └── icon-512.png
-├── alex_chart_v2.docx  # (existing reference)
-└── louisa_2page.odt    # (existing reference)
+â”œâ”€â”€ index.html          # Entire app (HTML + CSS + JS)
+â”œâ”€â”€ manifest.json       # PWA manifest
+â”œâ”€â”€ sw.js               # Service worker for offline caching
+â”œâ”€â”€ firebase-config.js  # Firebase project config (separate for easy swapping)
+â”œâ”€â”€ icons/
+â”‚   â”œâ”€â”€ icon-192.png
+â”‚   â””â”€â”€ icon-512.png
+â”œâ”€â”€ alex_chart_v2.docx  # (existing reference)
+â””â”€â”€ louisa_2page.odt    # (existing reference)
 ```
 
 ---
@@ -183,25 +735,25 @@ chores/
 ### Key decisions:
 - `choreId: "freepoints"` is used when a parent says "Alex gets 3 points" without tying to a specific chore
 - `choreId: "adhoc"` is used for one-off chores not in the menu, with `choreLabel` and `note` describing what it was
-- Chore `points` values are stored in config and editable — when a parent says "change feed dog to 2 points", the config is updated and future logs use the new value
+- Chore `points` values are stored in config and editable â€” when a parent says "change feed dog to 2 points", the config is updated and future logs use the new value
 - `date` and `week` strings are pre-computed on write so Firebase queries stay simple
 
 ---
 
-## Intent Parser — Full Specification
+## Intent Parser â€” Full Specification
 
 The parser is the core of the conversational UX. It must handle these intent categories:
 
 ### Intent 1: Log a known chore
-- "Alex fed the dog this morning" → `{ kids: ["alex"], choreId: "feed_dog_am", points: 1 }`
-- "Both kids made their beds" → two entries
-- "Louisa wiped surfaces and matched socks" → two entries for Louisa
+- "Alex fed the dog this morning" â†’ `{ kids: ["alex"], choreId: "feed_dog_am", points: 1 }`
+- "Both kids made their beds" â†’ two entries
+- "Louisa wiped surfaces and matched socks" â†’ two entries for Louisa
 
 **Parsing steps:**
 1. Normalize: lowercase, strip filler words (um, uh, like, so, well)
-2. Extract kid names: "alex", "louisa", "lou", "both", "both kids", "the kids", "everyone" → resolve to kid ID(s). If none found, ask "Which kid?"
-3. Match chore: tokenize utterance, score against each chore's keyword list using token-overlap (fraction of keyword phrase tokens found in utterance). Best match > 0.5 threshold = match. If 0.3–0.5, ask to confirm. Below 0.3, try ad-hoc or free-points patterns.
-4. Time inference: "this morning" / before noon → AM chores; "tonight" / "this evening" / after noon → PM chores; "yesterday" → adjust date
+2. Extract kid names: "alex", "louisa", "lou", "both", "both kids", "the kids", "everyone" â†’ resolve to kid ID(s). If none found, ask "Which kid?"
+3. Match chore: tokenize utterance, score against each chore's keyword list using token-overlap (fraction of keyword phrase tokens found in utterance). Best match > 0.5 threshold = match. If 0.3â€“0.5, ask to confirm. Below 0.3, try ad-hoc or free-points patterns.
+4. Time inference: "this morning" / before noon â†’ AM chores; "tonight" / "this evening" / after noon â†’ PM chores; "yesterday" â†’ adjust date
 5. Multi-chore: split on "and", "also", "plus" when connecting independent actions
 
 ### Intent 2: Free points (no specific chore)
@@ -258,7 +810,7 @@ The parser is the core of the conversational UX. It must handle these intent cat
 - Removes the most recent log entry and adjusts points
 
 ### Parser response behavior:
-- **High confidence** (all fields resolved): "Got it! Alex fed the dog this morning — 1pt. [Undo]"
+- **High confidence** (all fields resolved): "Got it! Alex fed the dog this morning â€” 1pt. [Undo]"
 - **Medium confidence**: "Did you mean Alex fed the dog? [Yes / No]"
 - **Missing info**: "Which kid?" or "How many points?"
 - **No match**: "I didn't catch that. Try again or type it out?"
@@ -271,52 +823,52 @@ The parser is the core of the conversational UX. It must handle these intent cat
 ### Layout (mobile-first, single screen)
 
 ```
-┌──────────────────────────────────┐
-│  Family Chores    [📊] [⚙️]      │  ← Header: app name, scoreboard toggle, settings
-├──────────────────────────────────┤
-│                                  │
-│  Chat history (scrollable)       │  ← Messages from system + user utterances
-│                                  │
-│  ┌─ system ─────────────────┐    │
-│  │ Good morning! What chores │    │
-│  │ have been done today?     │    │
-│  └──────────────────────────┘    │
-│                                  │
-│  ┌─ you ────────────────────┐    │
-│  │ Alex fed the dog          │    │
-│  └──────────────────────────┘    │
-│                                  │
-│  ┌─ system ─────────────────┐    │
-│  │ ✓ Alex — Feed dog (AM)    │    │
-│  │   1pt                [Undo]│   │
-│  └──────────────────────────┘    │
-│                                  │
-├──────────────────────────────────┤
-│  [Type or speak...    ]  [🎤]   │  ← Input bar: text field + mic button
-└──────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  Family Chores    [ðŸ“Š] [âš™ï¸]      â”‚  â† Header: app name, scoreboard toggle, settings
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                  â”‚
+â”‚  Chat history (scrollable)       â”‚  â† Messages from system + user utterances
+â”‚                                  â”‚
+â”‚  â”Œâ”€ system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”‚
+â”‚  â”‚ Good morning! What chores â”‚    â”‚
+â”‚  â”‚ have been done today?     â”‚    â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â”‚
+â”‚                                  â”‚
+â”‚  â”Œâ”€ you â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”‚
+â”‚  â”‚ Alex fed the dog          â”‚    â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â”‚
+â”‚                                  â”‚
+â”‚  â”Œâ”€ system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”    â”‚
+â”‚  â”‚ âœ“ Alex â€” Feed dog (AM)    â”‚    â”‚
+â”‚  â”‚   1pt                [Undo]â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜    â”‚
+â”‚                                  â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  [Type or speak...    ]  [ðŸŽ¤]   â”‚  â† Input bar: text field + mic button
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-### Scoreboard panel (slides down from header when 📊 tapped)
+### Scoreboard panel (slides down from header when ðŸ“Š tapped)
 
 ```
-┌──────────────────────────────────┐
-│  This Week (Mar 9–15)           │
-│                                  │
-│  Alex     14pts    $3 earned     │
-│  ████████░░░░░░    next: 20pts   │
-│                                  │
-│  Louisa    9pts    $2 earned     │
-│  █████████░░░░░    next: 12pts   │
-├──────────────────────────────────┤
-│  Balances                        │
-│  Alex owed: $12.00      [Pay]    │
-│  Louisa owed: $8.00     [Pay]    │
-│                                  │
-│  Louisa owes Alex: $2  [Settle]  │
-└──────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  This Week (Mar 9â€“15)           â”‚
+â”‚                                  â”‚
+â”‚  Alex     14pts    $3 earned     â”‚
+â”‚  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘â–‘    next: 20pts   â”‚
+â”‚                                  â”‚
+â”‚  Louisa    9pts    $2 earned     â”‚
+â”‚  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–‘â–‘â–‘â–‘â–‘    next: 12pts   â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Balances                        â”‚
+â”‚  Alex owed: $12.00      [Pay]    â”‚
+â”‚  Louisa owed: $8.00     [Pay]    â”‚
+â”‚                                  â”‚
+â”‚  Louisa owes Alex: $2  [Settle]  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-### Settings panel (⚙️)
+### Settings panel (âš™ï¸)
 
 - Edit chore list (add/remove/rename chores, change point values)
 - Edit pay tiers per kid
@@ -328,7 +880,7 @@ The parser is the core of the conversational UX. It must handle these intent cat
 ### Visual design guidelines
 - Clean, light theme with good contrast
 - Kid-specific accent colors (e.g., blue for Alex, purple for Louisa)
-- Large tap targets (48px minimum) — parents are using this one-handed on phones
+- Large tap targets (48px minimum) â€” parents are using this one-handed on phones
 - System messages use a subtle background; user messages align right
 - [Undo] buttons are inline, visible for 60 seconds then fade (but available in history)
 - Progress bars for weekly point thresholds use kid accent colors
@@ -386,7 +938,7 @@ function calculateMonthlyBonus(bonusConfig, fourWeekPoints) {
 }
 ```
 
-- Weekly pay calculated when the week rolls over (detected on app open — check if summary exists for prior week, if not, compute and write it)
+- Weekly pay calculated when the week rolls over (detected on app open â€” check if summary exists for prior week, if not, compute and write it)
 - Monthly bonus checked every 4 weeks from a configurable start date
 - On a kid's birthday, the app shows a chat message: "Louisa turned 5! Want to update her pay tiers?" with a link to settings
 
@@ -396,7 +948,7 @@ function calculateMonthlyBonus(bonusConfig, fourWeekPoints) {
 
 1. Go to console.firebase.google.com, create project "family-chores"
 2. Enable **Realtime Database** (start in test mode, then apply rules below)
-3. Enable **Authentication** → Sign-in method → **Anonymous** (enable it)
+3. Enable **Authentication** â†’ Sign-in method â†’ **Anonymous** (enable it)
 4. Copy the Firebase config object into `firebase-config.js`
 5. Database security rules:
 ```json
@@ -473,7 +1025,7 @@ self.addEventListener('fetch', e => {
 
 **What to build:**
 1. Create `index.html` with the full chat UI layout (header with app name + scoreboard toggle + settings gear, scrollable message area, input bar with text field + mic button)
-2. Mobile-first CSS embedded in `<style>` — clean, light theme, kid accent colors (blue for Alex, purple for Louisa), 48px min tap targets
+2. Mobile-first CSS embedded in `<style>` â€” clean, light theme, kid accent colors (blue for Alex, purple for Louisa), 48px min tap targets
 3. Load Firebase SDK via CDN `<script>` tags (firebase-app-compat, firebase-auth-compat, firebase-database-compat v10.12.0)
 4. Import config from `firebase-config.js`, initialize Firebase app, auth, and database
 5. Anonymous auth sign-in on app load
@@ -493,7 +1045,7 @@ self.addEventListener('fetch', e => {
 **What to build:**
 1. Text input: when user submits text (Enter key or send button), pass it to `parseIntent(text)`
 2. `parseIntent(text)` returns a structured result: `{ intent, kids[], choreId, choreLabel, points, amount, note, confidence }`
-3. Implement all 9 intent types from the "Intent Parser — Full Specification" section:
+3. Implement all 9 intent types from the "Intent Parser â€” Full Specification" section:
    - **Log chore**: token-overlap match against chore keywords from Firebase config. Score = fraction of keyword phrase tokens found in utterance. >0.5 = match, 0.3-0.5 = ask confirmation, <0.3 = no match.
    - **Free points**: pattern `/<number>\s*points?\s*(for\s+)?<kid>/i` or `/<kid>\s*(gets?|earns?|earned)\s*<number>\s*points?/i`. Log as `choreId: "freepoints"`.
    - **Ad-hoc chore**: no chore match + explicit points mentioned. Extract description. Log as `choreId: "adhoc"`.
@@ -509,7 +1061,7 @@ self.addEventListener('fetch', e => {
 7. Each log entry writes to Firebase at `/families/{familyId}/log/{pushId}` with: kid, choreId, choreLabel, points, timestamp, date (YYYY-MM-DD), week (YYYY-Wnn), note
 8. Duplicate detection: before logging, check if same kid+choreId was already logged today. If so, ask "Already logged today. Log again?"
 
-**Test it:** Type "Alex fed the dog" → see confirmation with 1pt. Type "both kids made beds" → see two confirmations. Type "Alex gets 3 points" → see freepoints entry. Type "change feed dog to 2 points" → check Firebase config updated. Type "undo" → see entry removed.
+**Test it:** Type "Alex fed the dog" â†’ see confirmation with 1pt. Type "both kids made beds" â†’ see two confirmations. Type "Alex gets 3 points" â†’ see freepoints entry. Type "change feed dog to 2 points" â†’ check Firebase config updated. Type "undo" â†’ see entry removed.
 
 ---
 
@@ -524,7 +1076,7 @@ self.addEventListener('fetch', e => {
 5. `onerror` / `onend`: stop pulse animation, clear "Listening..." state.
 6. Second tap while listening stops recognition.
 
-**Test it:** On Android Chrome, tap mic, say "Alex fed the dog" → see it transcribed and logged. On iPhone Safari, same test (requires iOS 14.5+).
+**Test it:** On Android Chrome, tap mic, say "Alex fed the dog" â†’ see it transcribed and logged. On iPhone Safari, same test (requires iOS 14.5+).
 
 ---
 
@@ -532,7 +1084,7 @@ self.addEventListener('fetch', e => {
 **Files to modify:** `index.html` (add JS + HTML panel)
 
 **What to build:**
-1. Scoreboard panel: hidden by default, slides down when 📊 header button is tapped
+1. Scoreboard panel: hidden by default, slides down when ðŸ“Š header button is tapped
 2. Query Firebase `/families/{familyId}/log` entries where `week` equals current ISO week, group by kid, sum points
 3. For each kid: show points, a progress bar toward their pay tier thresholds, and current earned pay (using `calculateWeeklyPay`)
 4. Monthly section: sum points for current 4-week period, show progress toward bonus threshold
@@ -553,7 +1105,7 @@ self.addEventListener('fetch', e => {
    - List all chores with editable point values (inline number input)
    - Add new chore button (name, points, which kids)
    - Remove chore button (with confirmation)
-   - Edit pay tiers per kid (table of minPts → $amount)
+   - Edit pay tiers per kid (table of minPts â†’ $amount)
    - Edit monthly bonus threshold and amount per kid
    - Display family code with a "Copy link" button
 2. Log history view: scrollable list of recent entries with filter chips (Alex / Louisa / All) and date picker
@@ -569,17 +1121,18 @@ self.addEventListener('fetch', e => {
 
 ## Verification / Testing Plan
 
-1. **Text input**: Type "Alex fed the dog" → verify log entry appears in Firebase and chat confirms
-2. **Voice input**: Tap mic, say "Both kids made their beds" → verify two entries logged
-3. **Free points**: Type "Alex gets 3 points" → verify freepoints entry, 3pts added to weekly tally
-4. **Ad-hoc chore**: "Louisa swept the porch, 2 points" → verify adhoc entry with label
-5. **Change points**: "Change feed dog to 2 points" → verify config updated in Firebase, next log uses 2pts
+1. **Text input**: Type "Alex fed the dog" â†’ verify log entry appears in Firebase and chat confirms
+2. **Voice input**: Tap mic, say "Both kids made their beds" â†’ verify two entries logged
+3. **Free points**: Type "Alex gets 3 points" â†’ verify freepoints entry, 3pts added to weekly tally
+4. **Ad-hoc chore**: "Louisa swept the porch, 2 points" â†’ verify adhoc entry with label
+5. **Change points**: "Change feed dog to 2 points" â†’ verify config updated in Firebase, next log uses 2pts
 6. **Scoreboard**: Check weekly tally matches logged entries
 7. **Balance**: Log enough points for weekly pay, verify balance increases
-8. **Payment**: "I paid Alex $6" → verify balance decreases
-9. **Debt**: "Louisa owes Alex $2" → verify debt record; "settle" → verify marked settled
-10. **Undo**: Log a chore, say "undo" → verify entry removed
+8. **Payment**: "I paid Alex $6" â†’ verify balance decreases
+9. **Debt**: "Louisa owes Alex $2" â†’ verify debt record; "settle" â†’ verify marked settled
+10. **Undo**: Log a chore, say "undo" â†’ verify entry removed
 11. **Cross-device sync**: Open on two devices with same family code, log on one, verify appears on other
 12. **Offline**: Turn off network, log a chore, turn network back on, verify it syncs
 13. **PWA install**: On Android Chrome and iOS Safari, verify "Add to Home Screen" works
 14. **Birthday**: Set a kid's birthday to today's date, reload app, verify birthday prompt appears
+
