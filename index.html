@@ -217,6 +217,23 @@
       flex-wrap: wrap;
     }
 
+    .family-calendar-form {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .family-calendar-form input {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      font: inherit;
+      color: var(--text);
+    }
+
     .view {
       display: none;
       flex-direction: column;
@@ -415,6 +432,140 @@
     .bulletin-calendar {
       display: grid;
       gap: 8px;
+    }
+
+    .bulletin-date-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    .bulletin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .bulletin-stat-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, #fff, #f8fbff);
+    }
+
+    .bulletin-stat-card.alex {
+      background: linear-gradient(180deg, #eef7ff, #d9ecff);
+    }
+
+    .bulletin-stat-card.louisa {
+      background: linear-gradient(180deg, #f6ecff, #ead8ff);
+    }
+
+    .bulletin-stat-label,
+    .calendar-day-label,
+    .calendar-item-time,
+    .calendar-empty p {
+      color: var(--muted);
+    }
+
+    .bulletin-stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .calendar-groups {
+      display: grid;
+      gap: 14px;
+    }
+
+    .calendar-day-group {
+      display: grid;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.22);
+    }
+
+    .calendar-day-group:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .calendar-day-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .calendar-item {
+      display: grid;
+      gap: 6px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .calendar-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-item-title {
+      font-weight: 700;
+    }
+
+    .calendar-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .calendar-badge.alex {
+      background: rgba(74, 144, 217, 0.16);
+      color: var(--alex);
+    }
+
+    .calendar-badge.louisa {
+      background: rgba(138, 91, 209, 0.16);
+      color: var(--louisa);
+    }
+
+    .calendar-badge.both {
+      background: rgba(15, 23, 42, 0.08);
+      color: var(--text);
+    }
+
+    .calendar-empty {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+      border-radius: 18px;
+      background: var(--panel-alt);
+      border: 1px dashed var(--line);
     }
 
     .tab {
@@ -1706,6 +1857,8 @@
 
     function renderHeaderFamilyPanel() {
       const panel = elements.headerFamilyPanel;
+      const runtime = window.phaseRuntime;
+      const calendarUrl = runtime && runtime.currentConfig ? String(runtime.currentConfig.calendarUrl || '') : '';
       if (!panel) return;
       panel.hidden = !appShellState.familyPanelOpen;
       if (panel.hidden) {
@@ -1736,7 +1889,17 @@
             '<button type="button" class="settings-btn" data-family-action="copy">Copy link</button>' +
             '<button type="button" class="settings-btn" data-family-action="manage">Switch family</button>' +
           '</div>' +
-        '</div>';
+        '</div>' +
+        '<form id="familyCalendarForm" class="family-calendar-form">' +
+          '<div class="family-panel-copy">' +
+            '<strong>Calendar URL</strong>' +
+            '<p class="family-panel-note">Paste the deployed Google Apps Script web app URL to show upcoming events on Home.</p>' +
+          '</div>' +
+          '<input type="url" id="familyCalendarUrl" name="familyCalendarUrl" placeholder="https://script.google.com/macros/s/..." value="' + escapeHtml(calendarUrl) + '">' +
+          '<div class="family-panel-actions">' +
+            '<button type="submit" class="settings-btn">Save calendar URL</button>' +
+          '</div>' +
+        '</form>';
     }
 
     async function copyFamilyLink() {
@@ -1932,6 +2095,50 @@
             }
           });
         }
+      });
+
+      document.addEventListener('submit', (event) => {
+        if (event.target.id !== 'familyCalendarForm') return;
+        event.preventDefault();
+        if (!database || !familyId) return;
+
+        const input = document.getElementById('familyCalendarUrl');
+        const calendarUrl = input ? String(input.value || '').trim() : '';
+        if (calendarUrl) {
+          try {
+            new URL(calendarUrl);
+          } catch (error) {
+            if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
+              window.phaseRuntime.showToast('Enter a valid calendar URL.', { type: 'error' });
+            }
+            return;
+          }
+        }
+
+        database.ref('families/' + familyId + '/config/calendarUrl').set(calendarUrl || null).then(() => {
+          if (window.phaseRuntime && window.phaseRuntime.currentConfig) {
+            if (calendarUrl) {
+              window.phaseRuntime.currentConfig.calendarUrl = calendarUrl;
+            } else {
+              delete window.phaseRuntime.currentConfig.calendarUrl;
+            }
+          }
+          if (window.familyBulletin && typeof window.familyBulletin.invalidateCalendarCache === 'function') {
+            window.familyBulletin.invalidateCalendarCache();
+          }
+          renderHeaderFamilyPanel();
+          if (typeof window.renderBulletin === 'function') {
+            window.renderBulletin().catch((error) => console.error(error));
+          }
+          if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
+            window.phaseRuntime.showToast(calendarUrl ? 'Saved calendar URL.' : 'Removed calendar URL.');
+          }
+        }).catch((error) => {
+          console.error(error);
+          if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
+            window.phaseRuntime.showToast('Could not save the calendar URL.', { type: 'error' });
+          }
+        });
       });
 
       window.addEventListener('online', () => {
@@ -4115,6 +4322,14 @@
         madLibIndex: 0,
         madLibProgress: null
       };
+      var calendarCache = {
+        familyId: null,
+        url: '',
+        fetchedAt: 0,
+        events: null,
+        pending: null,
+        error: ''
+      };
 
       function ensureKidFunStyles() {
         if (document.getElementById('kidFunStyles')) return;
@@ -4359,6 +4574,180 @@
         });
       }
 
+      function getBulletinGreeting(date) {
+        var hour = date.getHours();
+        if (hour < 12) return 'Good morning, family!';
+        if (hour < 18) return 'Good afternoon, family!';
+        return 'Good evening, family!';
+      }
+
+      function formatBulletinDate(date) {
+        return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+      }
+
+      function getWeeklyStats(phase, date) {
+        return phase.getAllLogEntries().then(function (entries) {
+          var week = phase.toIsoWeek(date);
+          return Object.keys((phase.currentConfig && phase.currentConfig.kids) || {}).map(function (kidId) {
+            var kid = phase.currentConfig.kids[kidId] || { name: kidId };
+            var points = entries.filter(function (entry) {
+              return entry.kid === kidId && entry.week === week;
+            }).reduce(function (sum, entry) {
+              return sum + Number(entry.points || 0);
+            }, 0);
+            return { id: kidId, name: kid.name || kidId, points: points };
+          });
+        });
+      }
+
+      function getNoteRotation(note, index) {
+        var seed = Number(note && note.timestamp ? note.timestamp : index + 1);
+        return ((seed + index * 17) % 5) - 2;
+      }
+
+      function normalizeCalendarEvents(payload) {
+        var events = payload && Array.isArray(payload.events) ? payload.events : [];
+        return events.map(function (event) {
+          return {
+            title: String(event && event.title ? event.title : 'Untitled event'),
+            start: String(event && event.start ? event.start : ''),
+            end: String(event && event.end ? event.end : ''),
+            kids: Array.isArray(event && event.kids) ? event.kids.filter(Boolean) : [],
+            allDay: Boolean(event && event.allDay)
+          };
+        }).filter(function (event) {
+          return Boolean(event.start);
+        }).sort(function (a, b) {
+          return new Date(a.start).getTime() - new Date(b.start).getTime();
+        });
+      }
+
+      function invalidateCalendarCache() {
+        calendarCache.familyId = null;
+        calendarCache.url = '';
+        calendarCache.fetchedAt = 0;
+        calendarCache.events = null;
+        calendarCache.pending = null;
+        calendarCache.error = '';
+      }
+
+      function fetchCalendarEvents(phase, options) {
+        var url = String(phase && phase.currentConfig && phase.currentConfig.calendarUrl || '').trim();
+        if (!url) {
+          return Promise.resolve({ status: 'missing-url', events: [] });
+        }
+
+        var forceRefresh = Boolean(options && options.force);
+        var sameSource = calendarCache.familyId === phase.familyId && calendarCache.url === url;
+        var fresh = sameSource && calendarCache.events && (Date.now() - calendarCache.fetchedAt) < 15 * 60 * 1000;
+        if (!forceRefresh && fresh) {
+          return Promise.resolve({ status: 'ready', events: calendarCache.events });
+        }
+        if (!forceRefresh && sameSource && calendarCache.pending) {
+          return calendarCache.pending;
+        }
+
+        calendarCache.familyId = phase.familyId;
+        calendarCache.url = url;
+        calendarCache.pending = fetch(url, { cache: 'no-store' })
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error('Calendar request failed with status ' + response.status + '.');
+            }
+            return response.json();
+          })
+          .then(function (payload) {
+            var events = normalizeCalendarEvents(payload);
+            calendarCache.events = events;
+            calendarCache.fetchedAt = Date.now();
+            calendarCache.error = '';
+            return { status: 'ready', events: events };
+          })
+          .catch(function (error) {
+            console.error(error);
+            calendarCache.error = error.message || 'Calendar unavailable.';
+            if (sameSource && calendarCache.events) {
+              return { status: 'ready', events: calendarCache.events, stale: true, error: calendarCache.error };
+            }
+            return { status: 'error', events: [], error: calendarCache.error };
+          })
+          .finally(function () {
+            calendarCache.pending = null;
+          });
+
+        return calendarCache.pending;
+      }
+
+      function formatCalendarDayLabel(date) {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        var tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        if (target.getTime() === today.getTime()) return 'Today - ' + formatBulletinDate(date);
+        if (target.getTime() === tomorrow.getTime()) return 'Tomorrow - ' + formatBulletinDate(date);
+        return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+      }
+
+      function formatCalendarTime(event) {
+        var start = new Date(event.start);
+        var end = event.end ? new Date(event.end) : null;
+        if (event.allDay) return 'All day';
+        if (Number.isNaN(start.getTime())) return '';
+        var startText = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        if (!end || Number.isNaN(end.getTime())) return startText;
+        return startText + ' - ' + end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      }
+
+      function renderCalendarBadges(kids) {
+        var normalized = Array.isArray(kids) ? kids.filter(Boolean) : [];
+        if (!normalized.length) {
+          return '<span class="calendar-badge both">Family</span>';
+        }
+        if (normalized.length > 1) {
+          return '<span class="calendar-badge both">Both</span>';
+        }
+        return normalized.map(function (kidId) {
+          var label = kidId === 'louisa' ? 'Louisa' : kidId === 'alex' ? 'Alex' : kidId;
+          return '<span class="calendar-badge ' + escapeBulletinHtml(kidId) + '">' + escapeBulletinHtml(label) + '</span>';
+        }).join('');
+      }
+
+      function renderCalendarSection(calendarState) {
+        if (calendarState.status === 'missing-url') {
+          return '<div class="calendar-empty"><strong>Set up calendar in family settings.</strong><p>Paste your deployed Apps Script URL in the header panel to show the next 7 days of events here.</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="open-settings">Open settings</button></div></div>';
+        }
+        if (calendarState.status === 'error') {
+          return '<div class="calendar-empty"><strong>Calendar unavailable.</strong><p>' + escapeBulletinHtml(calendarState.error || 'We could not load events right now.') + '</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="retry">Retry</button></div></div>';
+        }
+        if (!calendarState.events.length) {
+          return '<div class="calendar-empty"><strong>No upcoming events.</strong><p>The next 7 days are clear right now.</p></div>';
+        }
+
+        var groups = {};
+        calendarState.events.forEach(function (event) {
+          var startDate = new Date(event.start);
+          if (Number.isNaN(startDate.getTime())) return;
+          var key = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(event);
+        });
+
+        return '<div class="calendar-groups">' + Object.keys(groups).sort().map(function (key) {
+          var firstEvent = groups[key][0];
+          var date = new Date(firstEvent.start);
+          return '<section class="calendar-day-group">' +
+            '<div class="calendar-day-label">' + escapeBulletinHtml(formatCalendarDayLabel(date)) + '</div>' +
+            groups[key].map(function (event) {
+              return '<article class="calendar-item">' +
+                '<div class="calendar-item-top"><div class="calendar-item-title">' + escapeBulletinHtml(event.title) + '</div><div class="calendar-badges">' + renderCalendarBadges(event.kids) + '</div></div>' +
+                '<div class="calendar-item-time">' + escapeBulletinHtml(formatCalendarTime(event)) + '</div>' +
+              '</article>';
+            }).join('') +
+          '</section>';
+        }).join('') + '</div>' + (calendarState.stale ? '<p class="settings-note">Showing saved events while the latest refresh is unavailable.</p>' : '');
+      }
+
       async function addNote(text, color) {
         var phase = runtime();
         var ref = bulletinNotesRef(phase);
@@ -4481,11 +4870,14 @@
           return;
         }
 
+        var now = new Date();
         var notes = await getNotes();
+        var weeklyStats = await getWeeklyStats(phase, now);
+        var calendarState = await fetchCalendarEvents(phase);
         var visibleNotes = notes.slice(0, 10);
         var extraCount = Math.max(0, notes.length - visibleNotes.length);
-        var notesMarkup = visibleNotes.length ? '<div class="bulletin-notes-grid">' + visibleNotes.map(function (note) {
-          return '<article class="bulletin-note-card ' + escapeBulletinHtml(note.color || 'neutral') + '">' +
+        var notesMarkup = visibleNotes.length ? '<div class="bulletin-notes-grid">' + visibleNotes.map(function (note, index) {
+          return '<article class="bulletin-note-card ' + escapeBulletinHtml(note.color || 'neutral') + '" style="transform:rotate(' + getNoteRotation(note, index) + 'deg)">' +
             '<div class="bulletin-note-top">' +
             '<div class="bulletin-note-meta">Pinned ' + escapeBulletinHtml(formatTimestamp(note.timestamp)) + '</div>' +
             '<button type="button" class="bulletin-note-delete" data-note-delete="' + escapeBulletinHtml(note.id) + '" aria-label="Delete note">X</button>' +
@@ -4493,6 +4885,13 @@
             '<div class="bulletin-note-text">' + escapeBulletinHtml(note.text) + '</div>' +
             '</article>';
         }).join('') + '</div>' : '<div class="bulletin-empty"><h3>No notes yet</h3><p>Pin reminders, school updates, or anything the whole family should see.</p></div>';
+        var statsMarkup = '<div class="bulletin-stats-grid">' + weeklyStats.map(function (item) {
+          return '<article class="bulletin-stat-card ' + escapeBulletinHtml(item.id) + '">' +
+            '<div class="bulletin-stat-label">' + escapeBulletinHtml(item.name) + '</div>' +
+            '<div class="bulletin-stat-value">' + escapeBulletinHtml(String(item.points)) + 'pts</div>' +
+            '<div class="settings-note">this week</div>' +
+          '</article>';
+        }).join('') + '</div>';
 
         var composeMarkup = state.composeOpen ?
           '<section class="panel"><div class="bulletin-section-head"><div><h3>New note</h3><p>Use neutral for family-wide reminders or pick a kid color.</p></div></div><form id="bulletinNoteForm" class="bulletin-note-form"><textarea id="bulletinNoteInput" placeholder="Picture day Tuesday. Return library books. Alex needs cleats." maxlength="240">' + escapeBulletinHtml(state.draftText) + '</textarea><select id="bulletinNoteColor"><option value="neutral"' + (state.draftColor === 'neutral' ? ' selected' : '') + '>Family</option><option value="alex"' + (state.draftColor === 'alex' ? ' selected' : '') + '>Alex</option><option value="louisa"' + (state.draftColor === 'louisa' ? ' selected' : '') + '>Louisa</option></select><div class="bulletin-form-actions"><button type="submit" class="bulletin-btn">Pin note</button><button type="button" class="bulletin-btn secondary" id="bulletinCancelNoteBtn">Cancel</button></div></form></section>' : '';
@@ -4500,17 +4899,18 @@
         container.innerHTML =
           '<div class="bulletin-shell">' +
             '<section class="panel bulletin-hero">' +
-              '<div class="bulletin-section-head"><div><h2>Bulletin</h2><p>The family landing page for notes now, calendar next.</p></div><button type="button" class="bulletin-btn" id="bulletinNewNoteBtn">New note</button></div>' +
-              '<p>Use the global input for commands like <strong>note picture day Tuesday</strong> or pin notes directly here.</p>' +
+              '<div class="bulletin-date-chip">' + escapeBulletinHtml(formatBulletinDate(now)) + '</div>' +
+              '<div class="bulletin-section-head"><div><h2>' + escapeBulletinHtml(getBulletinGreeting(now)) + '</h2><p>Your family dashboard for notes, weekly points, and what is coming up next.</p></div><button type="button" class="bulletin-btn" id="bulletinNewNoteBtn">New note</button></div>' +
             '</section>' +
+            '<section class="panel"><div class="bulletin-section-head"><div><h3>Quick Stats</h3><p>Weekly points at a glance</p></div></div>' + statsMarkup + '</section>' +
             composeMarkup +
             '<section class="panel">' +
               '<div class="bulletin-section-head"><div><h3>Sticky Notes</h3><p>' + notes.length + ' total note' + (notes.length === 1 ? '' : 's') + (extraCount ? ' - showing newest 10' : '') + '</p></div></div>' +
               notesMarkup +
             '</section>' +
             '<section class="panel bulletin-calendar">' +
-              '<div class="bulletin-section-head"><div><h3>Calendar</h3><p>Google Calendar integration is still queued for Phase 7.</p></div></div>' +
-              '<p>Once that lands, upcoming kid-filtered events will render here.</p>' +
+              '<div class="bulletin-section-head"><div><h3>Calendar</h3><p>Upcoming family events for the next 7 days</p></div></div>' +
+              renderCalendarSection(calendarState) +
             '</section>' +
           '</div>';
 
@@ -4553,6 +4953,21 @@
             }
           });
           return;
+        }
+
+        var calendarBtn = event.target.closest('[data-calendar-action]');
+        if (calendarBtn) {
+          if (calendarBtn.dataset.calendarAction === 'retry') {
+            invalidateCalendarCache();
+            renderBulletin().catch(function (error) { console.error(error); });
+            return;
+          }
+          if (calendarBtn.dataset.calendarAction === 'open-settings') {
+            appShellState.familyPanelOpen = true;
+            renderHeaderFamilyPanel();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
         }
 
         if (event.target.closest('#funRevealJokeBtn')) {
@@ -4648,6 +5063,7 @@
         removeNoteById: removeNoteById,
         removeNoteByText: removeNoteByText,
         getNotes: getNotes,
+        invalidateCalendarCache: invalidateCalendarCache,
         renderBulletin: renderBulletin
       };
 

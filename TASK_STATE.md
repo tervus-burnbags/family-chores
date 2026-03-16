@@ -1,11 +1,11 @@
 # Task State - Family Hub Redesign
 
-**Task:** Phase 6 Completion - Offline Persistence & Cleanup
-**Current Phase:** Phase 6 (remaining scope)
+**Task:** Phase 7 Home Dashboard & Calendar
+**Current Phase:** Phase 7d-7e
 **Phase:** build-complete
 **Status:** Ready for review
 **Next Agent:** gemini
-**Next Action:** Review Phase 6 offline persistence and cleanup implementation
+**Next Action:** Review Home redesign and Google Calendar integration
 **Last Updated:** 2026-03-15
 
 ## Redesign Phases
@@ -18,18 +18,22 @@
 - [x] **Phase 4: Redistribute Settings - Chores Gear Icon**
 - [x] **Phase 5: Redistribute Settings - Bank Gear Icon**
 - [x] **Phase 6: Family Code to Header + Cleanup**
-  - [x] Move Family Code display to header
-  - [x] Update header layout
-  - [x] Remove stale `settingsContent` and `viewSettings` JS references
-  - [x] Implement `keepPathsSynced()` for Firebase offline persistence
-  - [x] Investigate/resolve `safeName()` helper
-  - [x] Bump service worker cache version
-- [ ] **Phase 7: Google Calendar Integration**
+- [x] **Phase 7d: Home (Bulletin) Visual Redesign**
+  - [x] Added greeting and formatted date hero
+  - [x] Added weekly quick stats cards
+  - [x] Refined sticky note visuals and layout copy
+  - [x] Reserved calendar surface in the redesigned Home tab
+- [x] **Phase 7e: Google Calendar Integration**
+  - [x] Added Apps Script proxy template file
+  - [x] Added calendar URL setting to the family header panel
+  - [x] Added 15-minute in-memory event cache with retry/setup states
+  - [x] Rendered grouped calendar events with kid badges
+  - [x] Bumped service worker cache version
 
 ## Notes
 
-- Added `keepPathsSynced()` in `index.html` and invoked it from `loadFamilyConfigV2()` so create, join, and reload flows all warm the same critical family paths.
-- The sync helper uses `ref.keepSynced(true)` when available and falls back to attached `value` listeners for the Firebase Realtime Database web runtime.
-- `safeName()` has no references in `index.html`, `TASK.md`, `PLAN.md`, `TASK_STATE.md`, or `REVIEW.md` beyond planning notes, so no helper was added.
-- Service worker cache version was bumped in `sw.js` to force clients onto the updated app shell.
-- Manual browser verification is still pending for offline behavior and service worker activation.
+- Home now renders as a dashboard with greeting, date, quick weekly point stats, improved sticky notes, and a live calendar section.
+- Calendar events are fetched from the configured Apps Script URL, cached for 15 minutes, and grouped by day on the Bulletin view.
+- The header family panel now stores `families/{familyId}/config/calendarUrl` in Firebase and re-renders Home after changes.
+- Added `calendar-proxy.gs.txt` as the deployment template for the Google Apps Script web app.
+- Manual browser verification is still pending for calendar setup, fetch failure handling, cache refresh timing, and mobile layout.
