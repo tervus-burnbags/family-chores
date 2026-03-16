@@ -1404,6 +1404,23 @@
     .chore-kid-card.alex { border-color: rgba(74, 144, 217, 0.2); }
     .chore-kid-card.louisa { border-color: rgba(138, 91, 209, 0.2); }
 
+    .chore-kid-selector {
+      display: grid;
+      gap: 6px;
+    }
+
+    .chore-kid-selector-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0 0;
+    }
+
+    .chore-kid-selector-label strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
     /* Selected state */
     .chore-kid-card.selected {
       box-shadow: 0 8px 28px rgba(15, 23, 42, 0.12);
@@ -1551,11 +1568,16 @@
       background: rgba(148, 163, 184, 0.08);
     }
 
-    .chore-item.done {
-      opacity: 0.5;
+    .chore-item.logged {
+      background: rgba(34, 197, 94, 0.04);
     }
 
-    .chore-check {
+    .chore-item.cooldown {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .chore-count {
       width: 22px;
       height: 22px;
       flex: 0 0 22px;
@@ -1564,27 +1586,17 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--muted);
       background: transparent;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
     }
 
-    .chore-check svg {
-      width: 12px;
-      height: 12px;
-      opacity: 0;
-      transform: scale(0.5) rotate(-20deg);
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .chore-item.done .chore-check {
+    .chore-item.logged .chore-count {
       border-color: #22c55e;
-      background: #22c55e;
-    }
-
-    .chore-item.done .chore-check svg {
-      opacity: 1;
-      transform: scale(1) rotate(0);
-      color: #fff;
+      background: rgba(34, 197, 94, 0.1);
+      color: #16a34a;
     }
 
     .chore-meta {
@@ -1598,11 +1610,6 @@
       font-size: 0.88rem;
       font-weight: 500;
       line-height: 1.25;
-    }
-
-    .chore-item.done .chore-label {
-      text-decoration: line-through;
-      text-decoration-color: rgba(148, 163, 184, 0.5);
     }
 
     .chore-note {
@@ -1621,9 +1628,76 @@
       white-space: nowrap;
     }
 
-    .chore-item.done .chore-pts {
+    .chore-item.logged .chore-pts {
       background: rgba(34, 197, 94, 0.1);
       color: #16a34a;
+    }
+
+    .chore-log {
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+      overflow: hidden;
+    }
+
+    .chore-log-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      font-size: 0.82rem;
+    }
+
+    .chore-log-item:last-child {
+      border-bottom: 0;
+    }
+
+    .chore-log-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .chore-log-dot.alex { background: var(--alex); }
+    .chore-log-dot.louisa { background: var(--louisa); }
+
+    .chore-log-text {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+
+    .chore-log-time {
+      color: var(--muted);
+      font-size: 0.72rem;
+      flex-shrink: 0;
+    }
+
+    .chore-log-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .chore-log-delete:active {
+      background: rgba(214, 69, 69, 0.15);
+      color: var(--danger);
     }
 
     /* Legacy qp styles kept for bank picker */
@@ -5403,6 +5477,7 @@
           return ((phase.currentConfig.kids || {})[kidId] || {}).name || kidId;
         }).join(' and ');
       }
+      var choreCooldowns = {};
 
       function choreAppliesToSelectedKids(chore, kidIds) {
         var allowedKids = Array.isArray(chore.kids) && chore.kids.length ? chore.kids : ['alex', 'louisa'];
@@ -5444,16 +5519,13 @@
         return '';
       }
 
-      function makeCheckIcon() {
-        return '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      }
-
       function renderKidCards(phase, entries, week) {
         var kidIds = Object.keys(phase.currentConfig.kids || {});
-        return '<div class="chore-kid-cards">' +
+        var selectionLabel = choreSelectedKid === 'both' ? 'Everyone' : (((phase.currentConfig.kids || {})[choreSelectedKid] || {}).name || choreSelectedKid);
+        return '<div class="chore-kid-selector"><div class="chore-kid-selector-label">Logging for <strong>' + escapeHtml(selectionLabel) + '</strong></div><div class="chore-kid-cards">' +
           kidIds.map(function (kidId) {
             var info = getWeeklyProgressInfo(phase, kidId, entries, week);
-            var isSelected = choreSelectedKid === 'both' || choreSelectedKid === kidId;
+            var isSelected = choreSelectedKid === kidId;
             var isDimmed = choreSelectedKid !== 'both' && choreSelectedKid !== kidId;
             var cardClass = 'chore-kid-card ' + kidId + (isSelected ? ' selected' : '') + (isDimmed ? ' dimmed' : '');
             return '<button type="button" class="' + cardClass + '" data-chore-kid="' + kidId + '">' +
@@ -5463,6 +5535,24 @@
               '<div class="chore-bar-track"><div class="chore-bar-fill ' + kidId + '" style="width:' + info.progressPct + '%;"></div></div>' +
               (info.bonusLabel ? '<div class="chore-kid-card-bonus">' + escapeHtml(info.bonusLabel) + '</div>' : '') +
             '</button>';
+          }).join('') +
+        '</div></div>';
+      }
+
+      function renderTodayLog(entries, phase) {
+        if (!entries.length) return '';
+        var sorted = entries.slice().sort(function (a, b) { return b.timestamp - a.timestamp; });
+        return '<div class="chore-section-label">Today\'s Log</div><div class="chore-log">' +
+          sorted.map(function (entry) {
+            var kidName = ((phase.currentConfig.kids || {})[entry.kid] || {}).name || entry.kid;
+            var time = new Date(Number(entry.timestamp || 0));
+            var timeStr = time.getHours() + ':' + String(time.getMinutes()).padStart(2, '0');
+            return '<div class="chore-log-item">' +
+              '<span class="chore-log-dot ' + escapeHtml(entry.kid) + '"></span>' +
+              '<span class="chore-log-text">' + escapeHtml(kidName) + ': ' + escapeHtml(entry.choreLabel || 'Points') + ' (+' + Number(entry.points || 0) + ')</span>' +
+              '<span class="chore-log-time">' + escapeHtml(timeStr) + '</span>' +
+              '<button type="button" class="chore-log-delete" data-chore-log-delete="' + escapeHtml(entry.id) + '" aria-label="Delete">&times;</button>' +
+            '</div>';
           }).join('') +
         '</div>';
       }
@@ -5550,13 +5640,10 @@
               var matches = todayEntries.filter(function (logEntry) {
                 return logEntry.choreId === choreId && applicableKids.indexOf(logEntry.kid) !== -1;
               });
-              var doneKids = uniqueDoneKids(matches);
-              var done = applicableKids.every(function (kidId) {
-                return doneKids.indexOf(kidId) !== -1;
-              });
-              var note = choreNote(phase, applicableKids, doneKids);
-              return '<button type="button" class="chore-item' + (done ? ' done' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
-                '<span class="chore-check" aria-hidden="true">' + makeCheckIcon() + '</span>' +
+              var count = matches.length;
+              var note = choreNote(phase, applicableKids, uniqueDoneKids(matches));
+              return '<button type="button" class="chore-item' + (count > 0 ? ' logged' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
+                '<span class="chore-count" aria-hidden="true">' + (count > 0 ? count : '') + '</span>' +
                 '<span class="chore-meta"><span class="chore-label">' + escapeHtml(chore.label || choreId) + '</span>' +
                 (note ? '<span class="chore-note">' + escapeHtml(note) + '</span>' : '') +
                 '</span>' +
@@ -5567,11 +5654,13 @@
             console.error(checklistError);
             checklistMarkup = '';
           }
+          var logMarkup = renderTodayLog(todayEntries, phase);
           if (kidCardsContainer) kidCardsContainer.innerHTML = kidCardsMarkup;
           container.innerHTML = '<div class="chore-board">' +
             '<div class="chore-section-label">Today\'s Chores</div>' +
             (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
             '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
+            logMarkup +
           '</div>';
         } catch (error) {
           console.error(error);
@@ -5582,7 +5671,10 @@
         }
       }
 
-      async function toggleChoreItem(choreId) {
+      async function logChoreItem(choreId) {
+        var now = Date.now();
+        if (choreCooldowns[choreId] && (now - choreCooldowns[choreId]) < 5000) return;
+        choreCooldowns[choreId] = now;
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
         var chore = (phase.currentConfig.chores || {})[choreId];
@@ -5590,44 +5682,36 @@
         var kids = selectedChoreKids();
         var applicableKids = choreAppliesToSelectedKids(chore, kids);
         if (!applicableKids.length) return;
-        var now = new Date();
-        var today = phase.toDateString(now);
-        var todayEntries = (await phase.getAllLogEntries()).filter(function (entry) {
-          return entry.date === today && entry.choreId === choreId && applicableKids.indexOf(entry.kid) !== -1;
-        });
-        var doneKids = uniqueDoneKids(todayEntries);
-        var isDone = applicableKids.every(function (kidId) {
-          return doneKids.indexOf(kidId) !== -1;
-        });
-        if (isDone) {
-          if (!window.confirm('Remove this entry?')) return;
-          await Promise.all(todayEntries.map(function (entry) {
-            return phase.database.ref('families/' + phase.familyId + '/log/' + entry.id).remove();
-          }));
-          phase.showToast('Removed ' + (chore.label || 'chore') + ' for ' + selectedKidLabel(applicableKids, phase) + '.');
-        } else {
-          var missingKids = applicableKids.filter(function (kidId) {
-            return doneKids.indexOf(kidId) === -1;
-          });
-          await phase.saveLogEntries(missingKids.map(function (kidId) {
-            return {
-              kid: kidId,
-              choreId: choreId,
-              choreLabel: chore.label,
-              points: Number(chore.points || 0),
-              timestamp: Date.now(),
-              date: today,
-              week: phase.toIsoWeek(now),
-              note: ''
-            };
-          }));
-          phase.showToast('Logged ' + (chore.label || 'chore') + ' for ' + selectedKidLabel(missingKids, phase) + '.', {
-            kid: missingKids.length === 1 ? missingKids[0] : null,
-            onUndo: function () {
-              phase.undoLastAction().catch(function (error) { console.error(error); });
-            }
-          });
+        var dateNow = new Date();
+        var today = phase.toDateString(dateNow);
+        var week = phase.toIsoWeek(dateNow);
+
+        await phase.saveLogEntries(applicableKids.map(function (kidId) {
+          return {
+            kid: kidId,
+            choreId: choreId,
+            choreLabel: chore.label,
+            points: Number(chore.points || 0),
+            timestamp: Date.now(),
+            date: today,
+            week: week,
+            note: ''
+          };
+        }));
+
+        var btn = document.querySelector('[data-chore-item="' + choreId + '"]');
+        if (btn) {
+          btn.classList.add('cooldown');
+          setTimeout(function () { btn.classList.remove('cooldown'); }, 5000);
         }
+
+        var names = selectedKidLabel(applicableKids, phase);
+        phase.showToast('+' + Number(chore.points || 0) + ' ' + (chore.label || 'chore') + ' for ' + names, {
+          kid: applicableKids.length === 1 ? applicableKids[0] : null,
+          onUndo: function () {
+            phase.undoLastAction().catch(function (error) { console.error(error); });
+          }
+        });
         renderChoreProgress().catch(function (error) { console.error(error); });
         if (shouldRenderSettings('bank')) {
           renderBankSettings().catch(function (error) { console.error(error); });
@@ -5764,9 +5848,20 @@
           renderChoreProgress().catch(function (error) { console.error(error); });
           return;
         }
+        var logDeleteBtn = event.target.closest('[data-chore-log-delete]');
+        if (logDeleteBtn) {
+          var logId = logDeleteBtn.dataset.choreLogDelete;
+          var phase = runtime();
+          if (!phase || !logId) return;
+          phase.database.ref('families/' + phase.familyId + '/log/' + logId).remove().then(function () {
+            phase.showToast('Entry removed.');
+            renderChoreProgress().catch(function (error) { console.error(error); });
+          }).catch(function (error) { console.error(error); });
+          return;
+        }
         var choreItem = event.target.closest('[data-chore-item]');
         if (choreItem) {
-          toggleChoreItem(choreItem.dataset.choreItem).catch(function (error) {
+          logChoreItem(choreItem.dataset.choreItem).catch(function (error) {
             console.error(error);
             var phase = runtime();
             if (phase && typeof phase.showToast === 'function') {
