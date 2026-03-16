@@ -272,32 +272,427 @@
       z-index: 100;
     }
 
+    /* ── Home / Bulletin ── */
+
     .bulletin-shell {
       display: grid;
-      gap: 12px;
+      gap: 0;
     }
 
+    .bulletin-shell h2,
+    .bulletin-shell h3,
+    .bulletin-shell p {
+      margin: 0;
+    }
+
+    .bulletin-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 2px;
+    }
+
+    .bulletin-toolbar h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .bulletin-add-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--alex);
+      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 300;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(74, 144, 217, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      line-height: 1;
+    }
+
+    .bulletin-add-btn:active {
+      transform: scale(0.92);
+      box-shadow: 0 2px 8px rgba(74, 144, 217, 0.25);
+    }
+
+    /* compose */
+    .bulletin-compose {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      margin: 8px 0;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+      animation: composeSlide 0.2s ease-out;
+    }
+
+    @keyframes composeSlide {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bulletin-compose textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg);
+      font: inherit;
+      color: var(--text);
+      resize: vertical;
+    }
+
+    .bulletin-compose textarea:focus {
+      outline: 2px solid var(--alex);
+      outline-offset: -1px;
+      border-color: transparent;
+    }
+
+    .bulletin-compose-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bulletin-compose select {
+      flex: 1;
+      min-height: 44px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      font: inherit;
+      color: var(--text);
+    }
+
+    .bulletin-compose-pin {
+      min-height: 44px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--alex);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .bulletin-compose-pin:active {
+      opacity: 0.85;
+    }
+
+    .bulletin-compose-cancel {
+      min-height: 44px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* notes grid */
+    .bulletin-notes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 8px 0 16px;
+    }
+
+    @media (min-width: 520px) {
+      .bulletin-notes-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .bulletin-note-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 130px;
+      padding: 14px 14px 10px;
+      border-radius: 4px;
+      box-shadow:
+        2px 3px 8px rgba(0, 0, 0, 0.08),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+      transition: transform 0.15s ease;
+    }
+
+    .bulletin-note-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 32px;
+      height: 6px;
+      border-radius: 0 0 4px 4px;
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .bulletin-note-card.neutral {
+      background: #fff9c4;
+    }
+
+    .bulletin-note-card.alex {
+      background: #dbeeff;
+    }
+
+    .bulletin-note-card.louisa {
+      background: #eedcff;
+    }
+
+    .bulletin-note-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: rgba(0, 0, 0, 0.78);
+      padding-top: 4px;
+    }
+
+    .bulletin-note-foot {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 6px;
+      padding-top: 6px;
+    }
+
+    .bulletin-note-meta {
+      font-size: 0.72rem;
+      color: rgba(0, 0, 0, 0.35);
+      font-weight: 500;
+    }
+
+    .bulletin-note-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.06);
+      color: rgba(0, 0, 0, 0.4);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .bulletin-note-delete:active {
+      background: rgba(214, 69, 69, 0.18);
+      color: var(--danger);
+    }
+
+    .bulletin-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .bulletin-empty-icon {
+      font-size: 2rem;
+      opacity: 0.4;
+      margin-bottom: 4px;
+    }
+
+    .bulletin-empty p {
+      font-size: 0.88rem;
+    }
+
+    /* divider */
+    .bulletin-divider {
+      height: 1px;
+      background: var(--line);
+      margin: 4px 0;
+    }
+
+    /* calendar section */
+    .bulletin-calendar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 2px 6px;
+    }
+
+    .bulletin-calendar-head h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .calendar-groups {
+      display: grid;
+      gap: 2px;
+    }
+
+    .calendar-day-group {
+      display: grid;
+      gap: 2px;
+    }
+
+    .calendar-day-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      padding: 10px 0 4px;
+    }
+
+    .calendar-day-group:first-child .calendar-day-label {
+      padding-top: 4px;
+    }
+
+    .calendar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .calendar-item-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .calendar-item-dot.alex { background: var(--alex); }
+    .calendar-item-dot.louisa { background: var(--louisa); }
+    .calendar-item-dot.both { background: linear-gradient(135deg, var(--alex), var(--louisa)); }
+
+    .calendar-item-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .calendar-item-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .calendar-item-time {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .calendar-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-badges {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .calendar-badge.alex {
+      background: rgba(74, 144, 217, 0.14);
+      color: var(--alex);
+    }
+
+    .calendar-badge.louisa {
+      background: rgba(138, 91, 209, 0.14);
+      color: var(--louisa);
+    }
+
+    .calendar-badge.both {
+      background: rgba(15, 23, 42, 0.06);
+      color: var(--text);
+    }
+
+    .calendar-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .calendar-empty strong {
+      color: var(--text);
+    }
+
+    .calendar-empty p {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* shared btn used by bulletin + calendar */
+    .bulletin-btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--alex);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .bulletin-btn.secondary {
+      background: var(--panel-alt);
+      color: var(--text);
+    }
+
+    /* shared section styles (used by Fun tab and others) */
     .bulletin-hero {
       display: grid;
       gap: 12px;
-      background: linear-gradient(135deg, #fdf6e9, #fffdf8);
-      border: 1px solid #f0d9ac;
     }
 
     .bulletin-hero h2,
     .bulletin-hero p,
     .bulletin-section-head h3,
-    .bulletin-section-head p,
-    .bulletin-empty h3,
-    .bulletin-empty p {
+    .bulletin-section-head p {
       margin: 0;
     }
 
     .bulletin-hero p,
-    .bulletin-section-head p,
-    .bulletin-empty p,
-    .bulletin-calendar p,
-    .bulletin-note-meta {
+    .bulletin-section-head p {
       color: var(--muted);
     }
 
@@ -309,264 +704,25 @@
       margin-bottom: 12px;
     }
 
-    .bulletin-note-form {
-      display: grid;
-      gap: 10px;
-    }
-
-    .bulletin-note-form textarea,
-    .bulletin-note-form select {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #fff;
-      font: inherit;
-      color: var(--text);
-    }
-
-    .bulletin-note-form textarea {
-      min-height: 96px;
-      padding: 12px 14px;
-      resize: vertical;
-    }
-
-    .bulletin-note-form select {
-      min-height: 44px;
-      padding: 0 12px;
-    }
-
-    .bulletin-form-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .bulletin-btn,
-    .bulletin-note-delete {
-      min-height: 42px;
-      border: 0;
-      border-radius: 12px;
-      cursor: pointer;
-      font: inherit;
-    }
-
-    .bulletin-btn {
-      padding: 0 14px;
-      background: var(--alex);
-      color: #fff;
-      font-weight: 700;
-    }
-
-    .bulletin-btn.secondary {
-      background: var(--panel-alt);
-      color: var(--text);
-    }
-
-    .bulletin-notes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-    }
-
-    .bulletin-note-card {
-      display: grid;
-      gap: 12px;
-      align-content: space-between;
-      min-height: 170px;
-      padding: 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-      transform: rotate(-1deg);
-    }
-
-    .bulletin-note-card:nth-child(even) {
-      transform: rotate(1deg);
-    }
-
-    .bulletin-note-card.neutral {
-      background: linear-gradient(180deg, #fff8b8, #f7ec8a);
-    }
-
-    .bulletin-note-card.alex {
-      background: linear-gradient(180deg, #dff1ff, #bddfff);
-    }
-
-    .bulletin-note-card.louisa {
-      background: linear-gradient(180deg, #f3e5ff, #e1c9ff);
-    }
-
-    .bulletin-note-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .bulletin-note-text {
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-weight: 600;
-      line-height: 1.45;
-    }
-
-    .bulletin-note-delete {
-      width: 34px;
-      min-width: 34px;
-      padding: 0;
-      background: rgba(255, 255, 255, 0.68);
-      color: var(--text);
-      font-weight: 700;
-    }
-
-    .bulletin-empty {
-      display: grid;
-      gap: 8px;
-      padding: 24px 18px;
-      text-align: center;
-      border: 1px dashed var(--line);
-      border-radius: 18px;
-      background: var(--panel-alt);
-    }
-
-    .bulletin-calendar {
-      display: grid;
-      gap: 8px;
-    }
-
-    .bulletin-date-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--muted);
-      font-weight: 600;
-      width: fit-content;
-    }
-
     .bulletin-stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
     }
 
     .bulletin-stat-card {
       display: grid;
-      gap: 8px;
+      gap: 6px;
       padding: 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      background: linear-gradient(180deg, #fff, #f8fbff);
-    }
-
-    .bulletin-stat-card.alex {
-      background: linear-gradient(180deg, #eef7ff, #d9ecff);
-    }
-
-    .bulletin-stat-card.louisa {
-      background: linear-gradient(180deg, #f6ecff, #ead8ff);
-    }
-
-    .bulletin-stat-label,
-    .calendar-day-label,
-    .calendar-item-time,
-    .calendar-empty p {
-      color: var(--muted);
-    }
-
-    .bulletin-stat-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .calendar-groups {
-      display: grid;
-      gap: 14px;
-    }
-
-    .calendar-day-group {
-      display: grid;
-      gap: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(148, 163, 184, 0.22);
-    }
-
-    .calendar-day-group:first-child {
-      padding-top: 0;
-      border-top: 0;
-    }
-
-    .calendar-day-label {
-      font-size: 0.9rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .calendar-item {
-      display: grid;
-      gap: 6px;
-      padding: 12px 14px;
-      border-radius: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(15, 23, 42, 0.06);
       background: #fff;
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
     }
 
-    .calendar-item-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .calendar-item-title {
-      font-weight: 700;
-    }
-
-    .calendar-badges {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .calendar-badge {
-      display: inline-flex;
-      align-items: center;
-      min-height: 26px;
-      padding: 0 10px;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-
-    .calendar-badge.alex {
-      background: rgba(74, 144, 217, 0.16);
-      color: var(--alex);
-    }
-
-    .calendar-badge.louisa {
-      background: rgba(138, 91, 209, 0.16);
-      color: var(--louisa);
-    }
-
-    .calendar-badge.both {
-      background: rgba(15, 23, 42, 0.08);
-      color: var(--text);
-    }
-
-    .calendar-empty {
-      display: grid;
-      gap: 10px;
-      padding: 18px;
-      border-radius: 18px;
-      background: var(--panel-alt);
-      border: 1px dashed var(--line);
-    }
+    .bulletin-stat-card.alex { background: #eef7ff; }
+    .bulletin-stat-card.louisa { background: #f6ecff; }
+    .bulletin-stat-label { color: var(--muted); font-size: 0.85rem; }
+    .bulletin-stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; }
 
     .tab {
       flex: 1;
@@ -4759,9 +4915,14 @@
           return '<section class="calendar-day-group">' +
             '<div class="calendar-day-label">' + escapeBulletinHtml(formatCalendarDayLabel(date)) + '</div>' +
             groups[key].map(function (event) {
+              var dotClass = event.kids && event.kids.length === 1 ? event.kids[0] : 'both';
               return '<article class="calendar-item">' +
-                '<div class="calendar-item-top"><div class="calendar-item-title">' + escapeBulletinHtml(event.title) + '</div><div class="calendar-badges">' + renderCalendarBadges(event.kids) + '</div></div>' +
-                '<div class="calendar-item-time">' + escapeBulletinHtml(formatCalendarTime(event)) + '</div>' +
+                '<span class="calendar-item-dot ' + escapeBulletinHtml(dotClass) + '"></span>' +
+                '<div class="calendar-item-body">' +
+                  '<div class="calendar-item-title">' + escapeBulletinHtml(event.title) + '</div>' +
+                  '<div class="calendar-item-time">' + escapeBulletinHtml(formatCalendarTime(event)) + '</div>' +
+                '</div>' +
+                '<div class="calendar-badges">' + renderCalendarBadges(event.kids) + '</div>' +
               '</article>';
             }).join('') +
           '</section>';
@@ -4887,59 +5048,58 @@
         var container = document.getElementById('bulletinContent');
         if (!container) return;
         if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
-          container.innerHTML = '<div class="bulletin-shell"><section class="panel bulletin-hero"><h2>Bulletin</h2><p>Connect to a family to load notes and the shared home view.</p></section></div>';
+          container.innerHTML = '<div class="bulletin-shell" style="padding:40px 16px;text-align:center;color:var(--muted)"><p>Connect to a family to get started.</p></div>';
           return;
         }
 
-        var now = new Date();
         var notes = await getNotes();
-        var weeklyStats = await getWeeklyStats(phase, now);
         var calendarState = await fetchCalendarEvents(phase);
         var visibleNotes = notes.slice(0, 10);
-        var extraCount = Math.max(0, notes.length - visibleNotes.length);
-        var notesMarkup = visibleNotes.length ? '<div class="bulletin-notes-grid">' + visibleNotes.map(function (note, index) {
-          return '<article class="bulletin-note-card ' + escapeBulletinHtml(note.color || 'neutral') + '" style="transform:rotate(' + getNoteRotation(note, index) + 'deg)">' +
-            '<div class="bulletin-note-top">' +
-            '<div class="bulletin-note-meta">Pinned ' + escapeBulletinHtml(formatTimestamp(note.timestamp)) + '</div>' +
-            '<button type="button" class="bulletin-note-delete" data-note-delete="' + escapeBulletinHtml(note.id) + '" aria-label="Delete note">X</button>' +
-            '</div>' +
-            '<div class="bulletin-note-text">' + escapeBulletinHtml(note.text) + '</div>' +
-            '</article>';
-        }).join('') + '</div>' : '<div class="bulletin-empty"><h3>No notes yet</h3><p>Pin reminders, school updates, or anything the whole family should see.</p></div>';
-        var statsMarkup = '<div class="bulletin-stats-grid">' + weeklyStats.map(function (item) {
-          return '<article class="bulletin-stat-card ' + escapeBulletinHtml(item.id) + '">' +
-            '<div class="bulletin-stat-label">' + escapeBulletinHtml(item.name) + '</div>' +
-            '<div class="bulletin-stat-value">' + escapeBulletinHtml(String(item.points)) + 'pts</div>' +
-            '<div class="settings-note">this week</div>' +
-          '</article>';
-        }).join('') + '</div>';
 
-        var composeMarkup = state.composeOpen ?
-          '<section class="panel"><div class="bulletin-section-head"><div><h3>New note</h3><p>Use neutral for family-wide reminders or pick a kid color.</p></div></div><form id="bulletinNoteForm" class="bulletin-note-form"><textarea id="bulletinNoteInput" placeholder="Picture day Tuesday. Return library books. Alex needs cleats." maxlength="240">' + escapeBulletinHtml(state.draftText) + '</textarea><select id="bulletinNoteColor"><option value="neutral"' + (state.draftColor === 'neutral' ? ' selected' : '') + '>Family</option><option value="alex"' + (state.draftColor === 'alex' ? ' selected' : '') + '>Alex</option><option value="louisa"' + (state.draftColor === 'louisa' ? ' selected' : '') + '>Louisa</option></select><div class="bulletin-form-actions"><button type="submit" class="bulletin-btn">Pin note</button><button type="button" class="bulletin-btn secondary" id="bulletinCancelNoteBtn">Cancel</button></div></form></section>' : '';
+        var notesMarkup = visibleNotes.length
+          ? '<div class="bulletin-notes-grid">' + visibleNotes.map(function (note, index) {
+              return '<article class="bulletin-note-card ' + escapeBulletinHtml(note.color || 'neutral') + '" style="transform:rotate(' + getNoteRotation(note, index) + 'deg)">' +
+                '<div class="bulletin-note-text">' + escapeBulletinHtml(note.text) + '</div>' +
+                '<div class="bulletin-note-foot">' +
+                  '<span class="bulletin-note-meta">' + escapeBulletinHtml(formatTimestamp(note.timestamp)) + '</span>' +
+                  '<button type="button" class="bulletin-note-delete" data-note-delete="' + escapeBulletinHtml(note.id) + '" aria-label="Delete note">&times;</button>' +
+                '</div>' +
+              '</article>';
+            }).join('') + '</div>'
+          : '<div class="bulletin-empty"><div class="bulletin-empty-icon">&#128204;</div><p>Tap + to pin a note</p></div>';
+
+        var composeMarkup = state.composeOpen
+          ? '<form id="bulletinNoteForm" class="bulletin-compose">' +
+              '<textarea id="bulletinNoteInput" placeholder="Picture day Tuesday..." maxlength="240">' + escapeBulletinHtml(state.draftText) + '</textarea>' +
+              '<div class="bulletin-compose-row">' +
+                '<select id="bulletinNoteColor">' +
+                  '<option value="neutral"' + (state.draftColor === 'neutral' ? ' selected' : '') + '>Family</option>' +
+                  '<option value="alex"' + (state.draftColor === 'alex' ? ' selected' : '') + '>Alex</option>' +
+                  '<option value="louisa"' + (state.draftColor === 'louisa' ? ' selected' : '') + '>Louisa</option>' +
+                '</select>' +
+                '<button type="submit" class="bulletin-compose-pin">Pin</button>' +
+                '<button type="button" class="bulletin-compose-cancel" id="bulletinCancelNoteBtn">Cancel</button>' +
+              '</div>' +
+            '</form>'
+          : '';
 
         container.innerHTML =
           '<div class="bulletin-shell">' +
-            '<section class="panel bulletin-hero">' +
-              '<div class="bulletin-date-chip">' + escapeBulletinHtml(formatBulletinDate(now)) + '</div>' +
-              '<div class="bulletin-section-head"><div><h2>' + escapeBulletinHtml(getBulletinGreeting(now)) + '</h2><p>Your family dashboard for notes, weekly points, and what is coming up next.</p></div><button type="button" class="bulletin-btn" id="bulletinNewNoteBtn">New note</button></div>' +
-            '</section>' +
-            '<section class="panel"><div class="bulletin-section-head"><div><h3>Quick Stats</h3><p>Weekly points at a glance</p></div></div>' + statsMarkup + '</section>' +
+            '<div class="bulletin-toolbar">' +
+              '<h2>Notes</h2>' +
+              '<button type="button" class="bulletin-add-btn" id="bulletinNewNoteBtn" aria-label="New note">+</button>' +
+            '</div>' +
             composeMarkup +
-            '<section class="panel">' +
-              '<div class="bulletin-section-head"><div><h3>Sticky Notes</h3><p>' + notes.length + ' total note' + (notes.length === 1 ? '' : 's') + (extraCount ? ' - showing newest 10' : '') + '</p></div></div>' +
-              notesMarkup +
-            '</section>' +
-            '<section class="panel bulletin-calendar">' +
-              '<div class="bulletin-section-head"><div><h3>Calendar</h3><p>Upcoming family events for the next 7 days</p></div></div>' +
-              renderCalendarSection(calendarState) +
-            '</section>' +
+            notesMarkup +
+            '<div class="bulletin-divider"></div>' +
+            '<div class="bulletin-calendar-head"><h3>Coming Up</h3></div>' +
+            renderCalendarSection(calendarState) +
           '</div>';
 
         var noteInput = document.getElementById('bulletinNoteInput');
         if (noteInput && state.composeOpen) {
           noteInput.focus();
           noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
-          return;
         }
       }
 
