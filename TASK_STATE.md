@@ -1,25 +1,25 @@
 # Task State - Family Hub
 
-**Task:** Phase 14 — Chores Visual Overhaul
-**Current Phase:** 14d
+**Task:** Phase 15 — Chores UX Simplification & Polish
+**Current Phase:** 15d
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 14a through 14d
+**Next Action:** Review phases 15a–15d
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–13 + Consolidation
+- [x] Phases 8–14 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 14a: Layout restructure** — Kid progress cards replace picker, quick-add moves to top
-- [x] **Phase 14b: Kid card CSS** — New card styles, selection/dimming states
-- [x] **Phase 14c: Render function update** — New renderKidCards(), selection state, click handling
-- [x] **Phase 14d: Cleanup** — Removed quick tasks, old picker, old progress card; chores layout now uses the new card host
+- [x] **Phase 15a: Remove dead space** — Removed the chores `#messages` section and guarded message-container refs
+- [x] **Phase 15b: Fix progress tracking** — Kid cards now track toward the top tier goal
+- [x] **Phase 15c: Compact UI** — Tightened checklist items, quick-add buttons, and kid cards
+- [x] **Phase 15d: Cleanup** — Bumped service worker cache and re-validated inline script parsing
 
 ## Notes
 
-- Default state is BOTH kids shown — no pre-selected kid
-- Quick tasks section is removed; the daily checklist is now the only chore logging surface besides quick-add
-- Validation complete: inline scripts parsed successfully after Phase 14 changes
+- The vestigial chores chat container is removed; message code is now guarded when the container is absent
+- Progress now targets the top tier goal and only shows a short bonus label after the goal is reached
+- Validation complete: inline scripts parsed successfully after Phase 15 changes

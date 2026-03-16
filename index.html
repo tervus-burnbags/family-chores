@@ -1048,50 +1048,6 @@
       line-height: 1.4;
     }
 
-    .messages {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 200px;
-    }
-
-    @keyframes msgIn {
-      from { opacity: 0; transform: translateY(12px) scale(0.97); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .message {
-      max-width: 88%;
-      padding: 12px 14px;
-      border-radius: 18px;
-      line-height: 1.4;
-      word-break: break-word;
-      animation: msgIn 0.3s ease-out both;
-    }
-
-    .message.system {
-      align-self: flex-start;
-      background: linear-gradient(135deg, #eef5ff 0%, #f0f0ff 100%);
-      border: 1px solid #d5e4fb;
-      border-bottom-left-radius: 6px;
-    }
-
-    .message.user {
-      align-self: flex-end;
-      background: linear-gradient(135deg, rgba(74, 144, 217, 0.15), rgba(138, 91, 209, 0.18));
-      border: 1px solid rgba(111, 135, 195, 0.22);
-      border-bottom-right-radius: 6px;
-    }
-
-    .message-meta {
-      margin-top: 6px;
-      font-size: 0.78rem;
-      color: var(--muted);
-    }
-
     .composer {
       padding: 12px;
       display: grid;
@@ -1414,8 +1370,8 @@
     .chore-kid-card {
       position: relative;
       background: var(--panel);
-      border-radius: 18px;
-      padding: 16px 14px 14px;
+      border-radius: 14px;
+      padding: 12px 12px 10px;
       border: 2px solid transparent;
       cursor: pointer;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1432,7 +1388,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      border-radius: 18px 18px 0 0;
+      border-radius: 14px 14px 0 0;
       transition: height 0.25s ease, opacity 0.25s ease;
       opacity: 0.7;
     }
@@ -1492,7 +1448,7 @@
     .chore-kid-card.louisa .chore-kid-card-name { color: var(--louisa); }
 
     .chore-kid-card-pts {
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       line-height: 1;
@@ -1535,17 +1491,17 @@
     .chore-quick-add {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      padding: 10px 0 4px;
+      gap: 6px;
+      padding: 6px 0 4px;
     }
 
     .chore-quick-add .qp-pts {
-      min-height: 42px;
+      min-height: 36px;
       border: 0;
-      border-radius: 12px;
+      border-radius: 10px;
       background: var(--panel);
       color: var(--text);
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 700;
       cursor: pointer;
       transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
@@ -1570,12 +1526,12 @@
     }
 
     .chore-item {
-      min-height: 54px;
+      min-height: 44px;
       width: 100%;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 10px;
+      padding: 8px 14px;
       border: 0;
       border-bottom: 1px solid rgba(148, 163, 184, 0.12);
       border-radius: 0;
@@ -1600,9 +1556,9 @@
     }
 
     .chore-check {
-      width: 24px;
-      height: 24px;
-      flex: 0 0 24px;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
       border-radius: 999px;
       border: 2px solid rgba(148, 163, 184, 0.35);
       display: inline-flex;
@@ -1613,8 +1569,8 @@
     }
 
     .chore-check svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       opacity: 0;
       transform: scale(0.5) rotate(-20deg);
       transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1639,7 +1595,7 @@
     }
 
     .chore-label {
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       font-weight: 500;
       line-height: 1.25;
     }
@@ -1937,10 +1893,6 @@
         min-width: 0;
       }
 
-      .message {
-        max-width: 94%;
-      }
-
       .tab {
         min-height: 52px;
         font-size: 0.68rem;
@@ -1987,7 +1939,6 @@
         <button type="button" class="qp-pts" data-qp-pts="4">+4</button>
       </div>
       <section id="choreProgress" aria-live="polite"></section>
-      <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
     </div>
 
     <!-- Fun View -->
@@ -2302,8 +2253,10 @@
         });
         message.appendChild(row);
       }
-      elements.messages.appendChild(message);
-      elements.messages.scrollTop = elements.messages.scrollHeight;
+      if (elements.messages) {
+        elements.messages.appendChild(message);
+        elements.messages.scrollTop = elements.messages.scrollHeight;
+      }
     }
 
     function escapeHtml(value) {
@@ -3953,36 +3906,38 @@
             addMessage('system', 'Something went wrong while handling that request.', error.message);
           });
         });
-        elements.messages.addEventListener('click', (event) => {
-          const button = event.target.closest('button[data-action]');
-          if (!button) return;
-          const action = button.dataset.action;
-          if (action === 'prefill') {
-            elements.messageInput.value = button.dataset.value || '';
-            elements.messageInput.focus();
-            return;
-          }
-          if (action === 'undo') {
-            undoLastAction().catch((error) => {
-              console.error(error);
-              addMessage('system', 'Undo failed.', error.message);
-            });
-            return;
-          }
-          if (action === 'pending_yes') {
-            executeIntent({ intent: 'confirm_yes' }).catch((error) => {
-              console.error(error);
-              addMessage('system', 'Confirmation failed.', error.message);
-            });
-            return;
-          }
-          if (action === 'pending_no') {
-            executeIntent({ intent: 'confirm_no' }).catch((error) => {
-              console.error(error);
-              addMessage('system', 'Cancellation failed.', error.message);
-            });
-          }
-        });
+        if (elements.messages) {
+          elements.messages.addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+            const action = button.dataset.action;
+            if (action === 'prefill') {
+              elements.messageInput.value = button.dataset.value || '';
+              elements.messageInput.focus();
+              return;
+            }
+            if (action === 'undo') {
+              undoLastAction().catch((error) => {
+                console.error(error);
+                addMessage('system', 'Undo failed.', error.message);
+              });
+              return;
+            }
+            if (action === 'pending_yes') {
+              executeIntent({ intent: 'confirm_yes' }).catch((error) => {
+                console.error(error);
+                addMessage('system', 'Confirmation failed.', error.message);
+              });
+              return;
+            }
+            if (action === 'pending_no') {
+              executeIntent({ intent: 'confirm_no' }).catch((error) => {
+                console.error(error);
+                addMessage('system', 'Cancellation failed.', error.message);
+              });
+            }
+          });
+        }
         elements.micButton.textContent = 'Mic';
         elements.micButton.addEventListener('click', () => {
           toggleSpeechRecognition();
@@ -5522,25 +5477,26 @@
         var tiers = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
         var currentTierPay = Number(phase.calculateWeeklyPay(kid.payTiers || [], points) || 0);
         var nextTier = tiers.find(function (tier) { return points < Number(tier.minPts || 0); }) || null;
+        var topTier = tiers.length ? tiers[tiers.length - 1] : null;
         var payInfo = typeof window.getWeeklyPayBreakdown === 'function'
           ? window.getWeeklyPayBreakdown(kid, points, phase.calculateWeeklyPay)
           : { totalPay: currentTierPay, bonus: 0, bonusAmount: 2, extraPts: 10, topMinPts: 0, extraPoints: 0 };
-        var progressPct = nextTier
-          ? Math.max(0, Math.min(100, Math.round((points / Math.max(Number(nextTier.minPts || 0), 1)) * 100)))
+        var goalPts = topTier ? Number(topTier.minPts || 0) : 0;
+        var goalPay = topTier ? Number(topTier.pay || 0) : 0;
+        var progressPct = goalPts > 0
+          ? Math.max(0, Math.min(100, Math.round((points / goalPts) * 100)))
           : 100;
-        var pointsLabel = nextTier
-          ? points + ' / ' + Number(nextTier.minPts || 0) + ' pts'
-          : points + ' pts · Top tier reached!';
-        var payLabel = nextTier
-          ? phase.dollars(currentTierPay) + ' -> ' + phase.dollars(Number(nextTier.pay || currentTierPay))
+        var pointsLabel = goalPts > 0 && points < goalPts
+          ? points + ' / ' + goalPts + ' pts'
+          : points + ' pts';
+        var payLabel = goalPts > 0 && points < goalPts
+          ? phase.dollars(currentTierPay) + ' -> ' + phase.dollars(goalPay)
           : phase.dollars(payInfo.totalPay) + ' earned';
         var bonusLabel = '';
-        if (!nextTier) {
-          if (payInfo.bonus > 0) {
-            bonusLabel = '🔥 Bonus +' + phase.dollars(payInfo.bonusAmount) + ' every ' + payInfo.extraPts + 'pts over ' + payInfo.topMinPts + ' · ' + phase.dollars(payInfo.bonus) + ' earned';
-          } else {
-            bonusLabel = '🔥 Bonus +' + phase.dollars(payInfo.bonusAmount) + ' at ' + (payInfo.topMinPts + payInfo.extraPts) + 'pts';
-          }
+        if (progressPct >= 100 && payInfo.bonus > 0) {
+          bonusLabel = '+' + phase.dollars(payInfo.bonus) + ' bonus';
+        } else if (progressPct >= 100) {
+          bonusLabel = 'Goal reached!';
         }
         return {
           kid: kid,
