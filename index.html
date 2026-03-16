@@ -5526,7 +5526,7 @@
         kid: 'all',
         date: localDateString(new Date())
       };
-      var choreSelectedKid = 'both';
+      var choreSelectedKid = null;
       var weeklyPayChecked = false;
 
       function isChoresViewActive() {
@@ -5546,7 +5546,6 @@
       }
 
       function selectedChoreKids() {
-        if (choreSelectedKid === 'both') return ['alex', 'louisa'];
         return [choreSelectedKid];
       }
       window.getSelectedChoreKids = selectedChoreKids;
@@ -5632,12 +5631,12 @@
 
       function renderKidCards(phase, entries, week) {
         var kidIds = Object.keys(phase.currentConfig.kids || {});
-        var selectionLabel = choreSelectedKid === 'both' ? 'Everyone' : (((phase.currentConfig.kids || {})[choreSelectedKid] || {}).name || choreSelectedKid);
+        var selectionLabel = (((phase.currentConfig.kids || {})[choreSelectedKid] || {}).name || choreSelectedKid);
         return '<div class="chore-kid-selector"><div class="chore-kid-selector-label">Logging for <strong>' + escapeHtml(selectionLabel) + '</strong></div><div class="chore-kid-cards">' +
           kidIds.map(function (kidId) {
             var info = getWeeklyProgressInfo(phase, kidId, entries, week);
             var isSelected = choreSelectedKid === kidId;
-            var isDimmed = choreSelectedKid !== 'both' && choreSelectedKid !== kidId;
+            var isDimmed = choreSelectedKid !== kidId;
             var cardClass = 'chore-kid-card ' + kidId + (isSelected ? ' selected' : '') + (isDimmed ? ' dimmed' : '');
             var barMarkup = renderTierBar(info);
             return '<button type="button" class="' + cardClass + '" data-chore-kid="' + kidId + '">' +
@@ -5773,6 +5772,10 @@
           if (kidCardsContainer) kidCardsContainer.innerHTML = '';
           container.innerHTML = '<div class="chore-board"><p class="chore-list-note">Loading today\'s chores...</p></div>';
           return;
+        }
+        if (!choreSelectedKid) {
+          var kidIds = Object.keys(phase.currentConfig.kids || {});
+          choreSelectedKid = kidIds[0] || 'alex';
         }
         if (!weeklyPayChecked && typeof window.maybeRunWeeklyPay === 'function') {
           weeklyPayChecked = true;
@@ -6013,7 +6016,7 @@
         var kidCard = event.target.closest('[data-chore-kid]');
         if (kidCard) {
           var kidId = kidCard.dataset.choreKid;
-          choreSelectedKid = choreSelectedKid === kidId ? 'both' : kidId;
+          choreSelectedKid = kidId;
           renderChoreProgress().catch(function (error) { console.error(error); });
           return;
         }
