@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -142,6 +142,79 @@
 
     .icon-btn {
       transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    .header-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sync-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #94a3b8;
+      flex: 0 0 auto;
+    }
+
+    .sync-dot.online {
+      background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+    }
+
+    .family-panel[hidden] {
+      display: none;
+    }
+
+    .family-panel {
+      margin-top: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(247, 250, 255, 0.95);
+      border: 1px solid rgba(215, 224, 238, 0.9);
+    }
+
+    .family-panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .family-panel-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .family-panel-copy strong {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .family-panel-copy code {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .family-panel-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .family-panel-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .view {
@@ -1182,9 +1255,10 @@
           <small id="familyLabel"></small>
         </div>
         <div class="header-actions">
-          <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Open settings">&#9881;</button>
+          <button type="button" class="icon-btn" id="headerFamilyButton" aria-label="Open family info and sharing">&#128279;</button>
         </div>
       </div>
+      <section class="family-panel" id="headerFamilyPanel" hidden></section>
     </section>
 
     <!-- Bulletin View -->
@@ -1218,6 +1292,11 @@
       <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
     </div>
 
+    <!-- Fun View -->
+    <div class="view" id="viewFun">
+      <div id="funContent" class="view-content"></div>
+    </div>
+
     <!-- Lists View -->
     <div class="view" id="viewLists">
       <div id="listsContent" class="view-content">
@@ -1227,6 +1306,13 @@
 
     <!-- Bank View -->
     <div class="view" id="viewBank">
+      <section class="panel">
+        <div class="chores-toolbar">
+          <div class="chores-title">Bank</div>
+          <button type="button" class="icon-btn" id="bankSettingsToggle" aria-label="Open bank settings">&#9881;</button>
+        </div>
+      </section>
+      <section class="panel bank-settings" id="bankSettings" hidden></section>
       <div class="bank-kid-picker" id="bankKidPicker">
         <button type="button" class="qp-kid alex active" data-bank-kid="alex">Alex</button>
         <button type="button" class="qp-kid louisa" data-bank-kid="louisa">Louisa</button>
@@ -1237,10 +1323,6 @@
       </section>
     </div>
 
-    <!-- Settings View -->
-    <div class="view" id="viewSettings">
-      <div id="settingsContent"></div>
-    </div>
 
     <form class="panel composer" id="composer">
       <label class="visually-hidden" for="messageInput">Type a chore update</label>
@@ -1253,11 +1335,15 @@
     <nav class="tab-bar" id="tabBar">
       <a class="tab active" href="#bulletin" data-tab="bulletin">
         <span class="tab-icon">&#127968;</span>
-        <span class="tab-label">Bulletin</span>
+        <span class="tab-label">Home</span>
       </a>
       <a class="tab" href="#chores" data-tab="chores">
         <span class="tab-icon">&#9998;</span>
         <span class="tab-label">Chores</span>
+      </a>
+      <a class="tab" href="#fun" data-tab="fun">
+        <span class="tab-icon">&#127880;</span>
+        <span class="tab-label">Fun</span>
       </a>
       <a class="tab" href="#lists" data-tab="lists">
         <span class="tab-icon">&#9776;</span>
@@ -1420,7 +1506,8 @@
       familyLabel: document.getElementById('familyLabel'),
       familyModal: document.getElementById('familyModal'),
       familyModalStatus: document.getElementById('familyModalStatus'),
-      headerSettingsButton: document.getElementById('headerSettingsButton'),
+      headerFamilyButton: document.getElementById('headerFamilyButton'),
+      headerFamilyPanel: document.getElementById('headerFamilyPanel'),
       createFamilyButton: document.getElementById('createFamilyButton'),
       joinFamilyButton: document.getElementById('joinFamilyButton'),
       joinFamilyInput: document.getElementById('joinFamilyInput'),
@@ -1429,7 +1516,6 @@
       micButton: document.getElementById('micButton'),
       cardContent: document.getElementById('cardContent'),
       scoreboardPanel: document.getElementById('scoreboardPanel'),
-      settingsContent: document.getElementById('settingsContent'),
       bulletinContent: document.getElementById('bulletinContent'),
       listsContent: document.getElementById('listsContent'),
       tabBar: document.getElementById('tabBar')
@@ -1439,6 +1525,10 @@
     let database;
     let familyId = null;
     let currentUser = null;
+    const appShellState = {
+      familyPanelOpen: false,
+      online: navigator.onLine !== false
+    };
 
     function buildDefaultConfig() {
       return {
@@ -1551,22 +1641,88 @@
     function updateFamilyLabel() {
       if (!currentUser) {
         elements.familyLabel.textContent = '';
+        renderHeaderFamilyPanel();
         return;
       }
       if (!familyId) {
-        elements.familyLabel.textContent = 'Choose a family code to continue';
+        elements.familyLabel.innerHTML = '<span class="header-meta"><span class="sync-dot"></span><span>Choose a family code to continue</span></span>';
+        renderHeaderFamilyPanel();
         return;
       }
-      elements.familyLabel.textContent = 'Family code: ' + familyId + ' | Sync ready';
+      elements.familyLabel.innerHTML = '<span class="header-meta"><span class="sync-dot ' + (appShellState.online ? 'online' : '') + '"></span><span>' + (appShellState.online ? 'Sync ready' : 'Offline mode') + '</span></span>';
+      renderHeaderFamilyPanel();
+    }
+
+    function getFamilyShareUrl() {
+      const url = new URL(window.location.href);
+      if (familyId) {
+        url.searchParams.set('family', familyId);
+      } else {
+        url.searchParams.delete('family');
+      }
+      url.hash = '#bulletin';
+      return url.toString();
+    }
+
+    function renderHeaderFamilyPanel() {
+      const panel = elements.headerFamilyPanel;
+      if (!panel) return;
+      panel.hidden = !appShellState.familyPanelOpen;
+      if (panel.hidden) {
+        panel.innerHTML = '';
+        return;
+      }
+      if (!familyId) {
+        panel.innerHTML =
+          '<div class="family-panel-row">' +
+            '<div class="family-panel-copy">' +
+              '<strong>Family</strong>' +
+              '<p class="family-panel-note">Create or join a family to sync notes, chores, and balances across devices.</p>' +
+            '</div>' +
+            '<div class="family-panel-actions">' +
+              '<button type="button" class="settings-btn" data-family-action="manage">Choose family</button>' +
+            '</div>' +
+          '</div>';
+        return;
+      }
+      panel.innerHTML =
+        '<div class="family-panel-row">' +
+          '<div class="family-panel-copy">' +
+            '<strong>Family Code</strong>' +
+            '<code>' + escapeHtml(familyId) + '</code>' +
+            '<p class="family-panel-note">' + (appShellState.online ? 'Online and syncing.' : 'Offline now. Changes sync when you reconnect.') + '</p>' +
+          '</div>' +
+          '<div class="family-panel-actions">' +
+            '<button type="button" class="settings-btn" data-family-action="copy">Copy link</button>' +
+            '<button type="button" class="settings-btn" data-family-action="manage">Switch family</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    async function copyFamilyLink() {
+      const shareUrl = getFamilyShareUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        return;
+      }
+      const input = document.createElement('textarea');
+      input.value = shareUrl;
+      input.setAttribute('readonly', 'readonly');
+      input.style.position = 'absolute';
+      input.style.left = '-9999px';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      input.remove();
     }
 
     function setupRouter() {
       var views = {
         bulletin: document.getElementById('viewBulletin'),
         chores: document.getElementById('viewChores'),
+        fun: document.getElementById('viewFun'),
         lists: document.getElementById('viewLists'),
         bank: document.getElementById('viewBank'),
-        settings: document.getElementById('viewSettings')
       };
       var tabs = elements.tabBar.querySelectorAll('.tab');
       var currentView = 'bulletin';
@@ -1583,6 +1739,9 @@
         if (name === 'bulletin' && typeof window.renderBulletin === 'function') {
           window.renderBulletin().catch(function (e) { console.error(e); });
         }
+        if (name === 'fun' && typeof window.renderFun === 'function') {
+          window.renderFun().catch(function (e) { console.error(e); });
+        }
         if (name === 'bank') {
           var selectedKid = document.getElementById('bankKidPicker').querySelector('.active');
           var kidId = selectedKid ? selectedKid.dataset.bankKid : 'alex';
@@ -1596,9 +1755,7 @@
         if (name === 'lists' && typeof window.renderListsHome === 'function') {
           window.renderListsHome();
         }
-        if (name === 'settings' && typeof window.renderSettingsPanel === 'function') {
-          window.renderSettingsPanel().catch(function (e) { console.error(e); });
-        }
+
       }
 
       window.addEventListener('hashchange', function () {
@@ -1613,8 +1770,9 @@
         location.hash = '#' + name;
       });
 
-      elements.headerSettingsButton.addEventListener('click', function () {
-        location.hash = '#settings';
+      elements.headerFamilyButton.addEventListener('click', function () {
+        appShellState.familyPanelOpen = !appShellState.familyPanelOpen;
+        renderHeaderFamilyPanel();
       });
 
       // Bank kid picker
@@ -1711,6 +1869,40 @@
           elements.joinFamilyButton.click();
         }
       });
+
+      document.addEventListener('click', (event) => {
+        const actionButton = event.target.closest('[data-family-action]');
+        if (!actionButton) return;
+        const action = actionButton.dataset.familyAction;
+        if (action === 'manage') {
+          appShellState.familyPanelOpen = false;
+          renderHeaderFamilyPanel();
+          openModal();
+          return;
+        }
+        if (action === 'copy') {
+          copyFamilyLink().then(() => {
+            if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
+              window.phaseRuntime.showToast('Copied family link.');
+            }
+          }).catch((error) => {
+            console.error(error);
+            if (window.phaseRuntime && typeof window.phaseRuntime.showToast === 'function') {
+              window.phaseRuntime.showToast('Could not copy the family link.', { type: 'error' });
+            }
+          });
+        }
+      });
+
+      window.addEventListener('online', () => {
+        appShellState.online = true;
+        updateFamilyLabel();
+      });
+
+      window.addEventListener('offline', () => {
+        appShellState.online = false;
+        updateFamilyLabel();
+      });
     }
 
     setupRouter();
@@ -1719,6 +1911,7 @@
     initFirebase().catch((error) => {
       console.error(error);
       elements.familyLabel.textContent = 'Firebase connection failed';
+      renderHeaderFamilyPanel();
       addMessage('system', 'Firebase setup failed. Check your config and project settings.', error.message);
     });
   </script>
@@ -3059,7 +3252,7 @@
   { setup: "Knock knock! Who's there? Boo.", punchline: "Boo who? Don't cry, it's just a joke!" },
   { setup: "Knock knock! Who's there? Lettuce.", punchline: "Lettuce who? Lettuce in, it's cold out here!" },
   { setup: "Knock knock! Who's there? Cow says.", punchline: "Cow says who? No silly, cow says MOOO!" },
-  { setup: "Knock knock! Who's there? Interrupting cow.", punchline: "Interrupting cow wh— MOOO!" },
+  { setup: "Knock knock! Who's there? Interrupting cow.", punchline: "Interrupting cow whâ€” MOOO!" },
   { setup: "Knock knock! Who's there? Banana. Banana who? Knock knock! Who's there? Orange.", punchline: "Orange who? Orange you glad I didn't say banana?" },
   { setup: "Knock knock! Who's there? Tank.", punchline: "Tank who? You're welcome!" },
   { setup: "Knock knock! Who's there? Atch.", punchline: "Atch who? Bless you!" },
@@ -3125,7 +3318,164 @@
   { setup: "What did one hat say to the other?", punchline: "Stay here, I'm going on ahead!" },
   { setup: "What do elves learn in school?", punchline: "The elf-abet!" },
   { setup: "Why was the broom late?", punchline: "It over-swept!" },
-  { setup: "What did the zero say to the eight?", punchline: "Nice belt!" }
+  { setup: "What did the zero say to the eight?", punchline: "Nice belt!" },
+
+  // === 150 MORE JOKES (total: 250) ===
+
+  // Animals round 2
+  { setup: "What do you call a cold dog?", punchline: "A chili dog!" },
+  { setup: "Why do seagulls fly over the sea?", punchline: "Because if they flew over the bay, they'd be bagels!" },
+  { setup: "What do you call a dinosaur that never gives up?", punchline: "A try-try-try-ceratops!" },
+  { setup: "What do you call a cow in an earthquake?", punchline: "A milkshake!" },
+  { setup: "What do you call a pony with a sore throat?", punchline: "A little hoarse!" },
+  { setup: "Why are teddy bears never hungry?", punchline: "Because they're always stuffed!" },
+  { setup: "What do you call a snake that's 3 feet long?", punchline: "A yard snake!" },
+  { setup: "What do you call a dinosaur with a big vocabulary?", punchline: "A thesaurus!" },
+  { setup: "What did the duck say when it bought lipstick?", punchline: "Put it on my bill!" },
+  { setup: "What do you call a fish that needs help with its singing?", punchline: "Autotuna!" },
+  { setup: "Why do hummingbirds hum?", punchline: "Because they forgot the words!" },
+  { setup: "What is a shark's favorite sandwich?", punchline: "Peanut butter and jellyfish!" },
+  { setup: "What do you call a sleeping T-Rex?", punchline: "A dino-snore!" },
+  { setup: "Why did the cat sit on the computer?", punchline: "To keep an eye on the mouse!" },
+  { setup: "What do you call a chicken staring at lettuce?", punchline: "Chicken sees a salad!" },
+  { setup: "Why do pandas like old movies?", punchline: "Because they're in black and white!" },
+  { setup: "What do you call a gorilla with bananas in its ears?", punchline: "Anything you want â€” it can't hear you!" },
+  { setup: "What do you get if you cross a cat with a dark horse?", punchline: "Kitty Perry!" },
+  { setup: "How do you make an octopus laugh?", punchline: "With ten-tickles!" },
+  { setup: "What did the horse say when it fell down?", punchline: "Help! I've fallen and I can't giddyup!" },
+
+  // Food round 2
+  { setup: "What do you call a sad strawberry?", punchline: "A blueberry!" },
+  { setup: "Why did the grape stop in the middle of the road?", punchline: "Because it ran out of juice!" },
+  { setup: "What's a pirate's favorite letter?", punchline: "You'd think it's R, but it's really the C!" },
+  { setup: "What did the plate say to the other plate?", punchline: "Dinner's on me!" },
+  { setup: "What did the cupcake say to the frosting?", punchline: "I'd be muffin without you!" },
+  { setup: "What do you call a sleeping pizza?", punchline: "A piZZZZa!" },
+  { setup: "What vegetable is the coolest?", punchline: "A rad-ish!" },
+  { setup: "What is a computer's favorite snack?", punchline: "Microchips!" },
+  { setup: "Why did the orange lose the race?", punchline: "It ran out of juice!" },
+  { setup: "What did the mayo say when someone opened the fridge?", punchline: "Close the door, I'm dressing!" },
+
+  // School round 2
+  { setup: "Why did the music teacher need a ladder?", punchline: "To reach the high notes!" },
+  { setup: "What did the calculator say to the math student?", punchline: "You can count on me!" },
+  { setup: "Why did the student eat his homework?", punchline: "Because the teacher said it was a piece of cake!" },
+  { setup: "What do you do with a blue crayon?", punchline: "Try to cheer it up!" },
+  { setup: "What's a teacher's favorite nation?", punchline: "Expla-nation!" },
+  { setup: "Why did the nose not want to go to school?", punchline: "It was tired of being picked on!" },
+  { setup: "What flies around school at night?", punchline: "The alpha-BAT!" },
+  { setup: "What do librarians take with them when they go fishing?", punchline: "Bookworms!" },
+  { setup: "What's the king of all school supplies?", punchline: "The ruler!" },
+  { setup: "Why was the geometry book so adorable?", punchline: "Because it had acute angles!" },
+
+  // Silly round 2
+  { setup: "What do you call a shoe made of a banana?", punchline: "A slipper!" },
+  { setup: "What goes up but never comes down?", punchline: "Your age!" },
+  { setup: "What has a bottom at the top?", punchline: "Your legs!" },
+  { setup: "Why do bananas have to wear sunscreen?", punchline: "Because they peel!" },
+  { setup: "Why was the belt arrested?", punchline: "For holding up pants!" },
+  { setup: "What did the blanket say to the bed?", punchline: "Don't worry, I've got you covered!" },
+  { setup: "Why can't a leopard play hide and seek?", punchline: "Because it's always spotted!" },
+  { setup: "What do clouds wear under their clothes?", punchline: "Thunderwear!" },
+  { setup: "What did the traffic light say to the car?", punchline: "Don't look! I'm about to change!" },
+  { setup: "What side of a turkey has the most feathers?", punchline: "The outside!" },
+  { setup: "Where do pencils go on vacation?", punchline: "Pencil-vania!" },
+  { setup: "Why did the teddy bear skip dessert?", punchline: "She was already stuffed!" },
+  { setup: "What did one ear say to the other?", punchline: "Between us, something smells!" },
+  { setup: "What do you call a train that eats toffee?", punchline: "A chew-chew train!" },
+  { setup: "What building in your town has the most stories?", punchline: "The library!" },
+
+  // Knock-knock round 2
+  { setup: "Knock knock! Who's there? Canoe.", punchline: "Canoe who? Canoe help me with my homework?" },
+  { setup: "Knock knock! Who's there? Olive.", punchline: "Olive who? Olive you and I don't care who knows!" },
+  { setup: "Knock knock! Who's there? Harry.", punchline: "Harry who? Harry up and open the door!" },
+  { setup: "Knock knock! Who's there? Beets.", punchline: "Beets who? Beets me, I forgot the joke!" },
+  { setup: "Knock knock! Who's there? Donut.", punchline: "Donut who? Donut ask, it's a secret!" },
+  { setup: "Knock knock! Who's there? Spell.", punchline: "Spell who? W-H-O!" },
+  { setup: "Knock knock! Who's there? Butter.", punchline: "Butter who? Butter let me in or I'll huff and puff!" },
+  { setup: "Knock knock! Who's there? Ketchup.", punchline: "Ketchup who? Ketchup with me and I'll tell you!" },
+  { setup: "Knock knock! Who's there? Dishes.", punchline: "Dishes who? Dishes the police, open up!" },
+  { setup: "Knock knock! Who's there? Needle.", punchline: "Needle who? Needle little help opening this door!" },
+  { setup: "Knock knock! Who's there? Owls.", punchline: "Owls who? That's right, owls hoo!" },
+  { setup: "Knock knock! Who's there? Snow.", punchline: "Snow who? Snow use, I forgot my key again!" },
+  { setup: "Knock knock! Who's there? Annie.", punchline: "Annie who? Annie body home?" },
+  { setup: "Knock knock! Who's there? Cows go.", punchline: "Cows go who? No silly, cows go MOO!" },
+  { setup: "Knock knock! Who's there? Justin.", punchline: "Justin who? Justin time for dinner!" },
+
+  // Nature & space round 2
+  { setup: "What did one tornado say to the other?", punchline: "Let's twist again!" },
+  { setup: "How do trees get on the internet?", punchline: "They log in!" },
+  { setup: "What do you call a snowman in the summer?", punchline: "A puddle!" },
+  { setup: "What's the ocean's favorite lullaby?", punchline: "Roe, roe, roe your boat!" },
+  { setup: "Why did the leaf go to the doctor?", punchline: "It was feeling green!" },
+  { setup: "What did the little corn say to the big corn?", punchline: "Where's popcorn?" },
+  { setup: "What did the ground say to the earthquake?", punchline: "You crack me up!" },
+  { setup: "How does a scientist freshen their breath?", punchline: "With experi-mints!" },
+  { setup: "Why is the ocean so friendly?", punchline: "It waves!" },
+  { setup: "What do planets like to read?", punchline: "Comet books!" },
+  { setup: "Where does a snowman keep its money?", punchline: "In a snow bank!" },
+  { setup: "What's the wind's favorite chat-up line?", punchline: "I'm a big fan of yours!" },
+  { setup: "Why did the star get a time-out?", punchline: "Because it was being too twinkly at bedtime!" },
+  { setup: "What season is it when you bounce on a trampoline?", punchline: "Spring!" },
+  { setup: "What do clouds do when they get rich?", punchline: "They make it rain!" },
+
+  // More animals
+  { setup: "What do you call a dinosaur that loves to sleep?", punchline: "A stega-snore-us!" },
+  { setup: "What do you call a fly with no wings?", punchline: "A walk!" },
+  { setup: "Why do giraffes have such long necks?", punchline: "Because their feet smell!" },
+  { setup: "What's a cat's favorite dessert?", punchline: "Mice cream!" },
+  { setup: "What did the mama buffalo say when her boy left for school?", punchline: "Bison!" },
+  { setup: "Why don't crabs ever share?", punchline: "Because they're shellfish!" },
+  { setup: "What do you get when you cross a centipede with a parrot?", punchline: "A walkie-talkie!" },
+  { setup: "What's a frog's favorite game?", punchline: "Leapfrog!" },
+  { setup: "What do ducks watch on TV?", punchline: "Duckumentaries!" },
+  { setup: "What animal can you always find at a baseball game?", punchline: "A bat!" },
+  { setup: "Why did the chicken join a band?", punchline: "Because it had the drumsticks!" },
+  { setup: "What do you call a fish that practices medicine?", punchline: "A sturgeon!" },
+  { setup: "What did the snail say when it was riding on the turtle's back?", punchline: "Wheee!" },
+  { setup: "Why are fish so smart?", punchline: "Because they live in schools!" },
+  { setup: "What do you call a cow that eats your grass?", punchline: "A lawn moo-er!" },
+
+  // Body & silly round 3
+  { setup: "What has a head and a tail but no body?", punchline: "A coin!" },
+  { setup: "What has teeth but can't bite?", punchline: "A comb!" },
+  { setup: "Why did the man run around his bed?", punchline: "To catch up on his sleep!" },
+  { setup: "What has one head, one foot, and four legs?", punchline: "A bed!" },
+  { setup: "What can you hear but not touch or see?", punchline: "Your voice!" },
+  { setup: "What has lots of eyes but can't see?", punchline: "A potato!" },
+  { setup: "Where do you find a dog with no legs?", punchline: "Right where you left him!" },
+  { setup: "What did the right eye say to the left eye?", punchline: "Between us, something smells!" },
+  { setup: "Why did the boy throw his clock out the window?", punchline: "Because he wanted to see time fly!" },
+  { setup: "What do you call a person with no body and no nose?", punchline: "Nobody knows!" },
+
+  // More food
+  { setup: "What's a ghost's favorite fruit?", punchline: "A BOO-berry!" },
+  { setup: "Why don't eggs tell jokes?", punchline: "They'd crack each other up!" },
+  { setup: "What do you call two bananas?", punchline: "A pair of slippers!" },
+  { setup: "What's brown and sticky?", punchline: "A stick!" },
+  { setup: "Why did the melon jump into the lake?", punchline: "Because it wanted to be a watermelon!" },
+  { setup: "What do you call a peanut in a spacesuit?", punchline: "An astro-nut!" },
+  { setup: "What did the hot dog say when it won the race?", punchline: "I'm the wiener!" },
+  { setup: "What do you call a grumpy cow?", punchline: "Moody!" },
+  { setup: "What's a vampire's favorite fruit?", punchline: "A neck-tarine!" },
+  { setup: "What do you call a fake spaghetti?", punchline: "An im-pasta!" },
+
+  // More silly
+  { setup: "What kind of button won't unbutton?", punchline: "A belly button!" },
+  { setup: "What do you call a fairy who hasn't taken a bath?", punchline: "Stinkerbell!" },
+  { setup: "Why don't skeletons fight each other?", punchline: "They don't have the guts!" },
+  { setup: "What is a robot's favorite snack?", punchline: "Computer chips!" },
+  { setup: "What do you call a magic dog?", punchline: "A Labra-cadabra-dor!" },
+  { setup: "What goes tick-tock, woof-woof?", punchline: "A watchdog!" },
+  { setup: "What did the snowman say to the other snowman?", punchline: "Do you smell carrots?" },
+  { setup: "How do you throw a space party?", punchline: "You planet!" },
+  { setup: "What do you call a duck that gets good grades?", punchline: "A wise quacker!" },
+  { setup: "Where do baby cats learn to swim?", punchline: "The kitty pool!" },
+  { setup: "What do you call a dinosaur ghost?", punchline: "A scare-odactyl!" },
+  { setup: "What do witches put on their bagels?", punchline: "Scream cheese!" },
+  { setup: "What's a balloon's least favorite kind of music?", punchline: "Pop!" },
+  { setup: "Why did the banana go to the hospital?", punchline: "He was peeling really bad!" },
+  { setup: "What do you give a sick lemon?", punchline: "Lemon-aid!" }
 ];
 
       var KID_MADLIBS = [
@@ -3863,8 +4213,24 @@
         startMadLib();
       }
 
+      function randomIndex(length, previousIndex) {
+        if (!length) return 0;
+        if (length === 1) return 0;
+        var next = Math.floor(Math.random() * length);
+        while (next === previousIndex) {
+          next = Math.floor(Math.random() * length);
+        }
+        return next;
+      }
+
+      function nextRandomJoke() {
+        state.jokeIndex = randomIndex(KID_JOKES.length, state.jokeIndex);
+        state.jokeRevealed = false;
+        saveJokeState();
+      }
+
       function nextMadLibTemplate() {
-        state.madLibIndex = (state.madLibIndex + 1) % KID_MADLIBS.length;
+        state.madLibIndex = randomIndex(KID_MADLIBS.length, state.madLibIndex);
         state.madLibProgress = null;
         saveMadLibState();
       }
@@ -3999,7 +4365,7 @@
       function renderJokeCard() {
         var joke = getCurrentJoke();
         return '<article class="fun-card">' +
-          '<div><h3>Kid Fun</h3><p class="fun-meta">Joke ' + (state.jokeIndex + 1) + ' of ' + KID_JOKES.length + '</p></div>' +
+          '<div><h3>Kid Fun</h3><p class="fun-meta">Parent reads the setup aloud, then tap to reveal the punchline.</p></div>' +
           '<div class="fun-joke-setup">' + escapeBulletinHtml(joke.setup) + '</div>' +
           (state.jokeRevealed ? '<div class="joke-punchline">' + escapeBulletinHtml(joke.punchline) + '</div>' : '<button type="button" class="fun-btn secondary" id="funRevealJokeBtn">Tap to reveal!</button>') +
           '<div class="fun-actions"><button type="button" class="fun-btn" id="funNextJokeBtn">Next Joke</button></div>' +
@@ -4011,7 +4377,7 @@
         var progress = ensureMadLibProgress();
         if (!progress.started) {
           return '<article class="fun-card">' +
-            '<div><h3>Mad Libs</h3><p class="fun-meta">Story ' + (state.madLibIndex + 1) + ' of ' + KID_MADLIBS.length + '</p></div>' +
+            '<div><h3>Mad Libs</h3><p class="fun-meta">Pick a random story and build it one silly word at a time.</p></div>' +
             '<div><h4>' + escapeBulletinHtml(template.title) + '</h4><p>Fill in the blanks one at a time, then read the silly story together.</p></div>' +
             '<div class="fun-actions"><button type="button" class="fun-btn" id="funMadLibStartBtn">Start</button><button type="button" class="fun-btn secondary" id="funMadLibCycleBtn">New Mad Lib</button></div>' +
           '</article>';
@@ -4034,17 +4400,45 @@
         '</article>';
       }
 
+      async function renderFun() {
+        var phase = runtime();
+        var container = document.getElementById('funContent');
+        if (!container) return;
+        ensureKidFunStyles();
+        loadFunState();
+        if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
+          container.innerHTML = '<div class="bulletin-shell"><section class="panel bulletin-hero"><h2>Fun</h2><p>Connect to a family to load jokes and Mad Libs.</p></section></div>';
+          return;
+        }
+
+        container.innerHTML =
+          '<div class="bulletin-shell">' +
+            '<section class="panel bulletin-hero">' +
+              '<div class="bulletin-section-head"><div><h2>Kid Fun</h2><p>A playful corner with jokes and Mad Libs kids can revisit anytime.</p></div></div>' +
+              '<p>Joke progress and Mad Lib progress stay saved on this device.</p>' +
+            '</section>' +
+            '<section class="panel">' +
+              '<div class="bulletin-section-head"><div><h3>Jokes and stories</h3><p>Tap to reveal punchlines and build silly stories together.</p></div></div>' +
+              '<div class="fun-section">' + renderJokeCard() + renderMadLibCard() + '</div>' +
+            '</section>' +
+          '</div>';
+
+        var madLibInput = document.getElementById('funMadLibAnswer');
+        if (madLibInput) {
+          madLibInput.focus();
+          madLibInput.setSelectionRange(madLibInput.value.length, madLibInput.value.length);
+        }
+      }
+
       async function renderBulletin() {
         var phase = runtime();
         var container = document.getElementById('bulletinContent');
         if (!container) return;
-        ensureKidFunStyles();
         if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
           container.innerHTML = '<div class="bulletin-shell"><section class="panel bulletin-hero"><h2>Bulletin</h2><p>Connect to a family to load notes and the shared home view.</p></section></div>';
           return;
         }
 
-        loadFunState();
         var notes = await getNotes();
         var visibleNotes = notes.slice(0, 10);
         var extraCount = Math.max(0, notes.length - visibleNotes.length);
@@ -4069,12 +4463,8 @@
             '</section>' +
             composeMarkup +
             '<section class="panel">' +
-              '<div class="bulletin-section-head"><div><h3>Sticky Notes</h3><p>' + notes.length + ' total note' + (notes.length === 1 ? '' : 's') + (extraCount ? ' � showing newest 10' : '') + '</p></div></div>' +
+              '<div class="bulletin-section-head"><div><h3>Sticky Notes</h3><p>' + notes.length + ' total note' + (notes.length === 1 ? '' : 's') + (extraCount ? ' - showing newest 10' : '') + '</p></div></div>' +
               notesMarkup +
-            '</section>' +
-            '<section class="panel">' +
-              '<div class="bulletin-section-head"><div><h3>Kid Fun</h3><p>Jokes and Mad Libs the kids can come back to.</p></div></div>' +
-              '<div class="fun-section">' + renderJokeCard() + renderMadLibCard() + '</div>' +
             '</section>' +
             '<section class="panel bulletin-calendar">' +
               '<div class="bulletin-section-head"><div><h3>Calendar</h3><p>Google Calendar integration is still queued for Phase 7.</p></div></div>' +
@@ -4087,11 +4477,6 @@
           noteInput.focus();
           noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
           return;
-        }
-        var madLibInput = document.getElementById('funMadLibAnswer');
-        if (madLibInput) {
-          madLibInput.focus();
-          madLibInput.setSelectionRange(madLibInput.value.length, madLibInput.value.length);
         }
       }
 
@@ -4131,21 +4516,19 @@
         if (event.target.closest('#funRevealJokeBtn')) {
           state.jokeRevealed = true;
           saveJokeState();
-          renderBulletin().catch(function (error) { console.error(error); });
+          renderFun().catch(function (error) { console.error(error); });
           return;
         }
 
         if (event.target.closest('#funNextJokeBtn')) {
-          state.jokeIndex = (state.jokeIndex + 1) % KID_JOKES.length;
-          state.jokeRevealed = false;
-          saveJokeState();
-          renderBulletin().catch(function (error) { console.error(error); });
+          nextRandomJoke();
+          renderFun().catch(function (error) { console.error(error); });
           return;
         }
 
         if (event.target.closest('#funMadLibStartBtn')) {
           startMadLib();
-          renderBulletin().catch(function (error) { console.error(error); });
+          renderFun().catch(function (error) { console.error(error); });
           return;
         }
 
@@ -4157,19 +4540,19 @@
             }
             return;
           }
-          renderBulletin().catch(function (error) { console.error(error); });
+          renderFun().catch(function (error) { console.error(error); });
           return;
         }
 
         if (event.target.closest('#funMadLibCycleBtn')) {
           nextMadLibTemplate();
-          renderBulletin().catch(function (error) { console.error(error); });
+          renderFun().catch(function (error) { console.error(error); });
           return;
         }
 
         if (event.target.closest('#funMadLibRestartBtn')) {
           restartMadLib();
-          renderBulletin().catch(function (error) { console.error(error); });
+          renderFun().catch(function (error) { console.error(error); });
         }
       });
 
@@ -4216,6 +4599,7 @@
         }
       });
 
+      window.renderFun = renderFun;
       window.renderBulletin = renderBulletin;
       window.familyBulletin = {
         addNote: addNote,
@@ -4238,7 +4622,13 @@
   <script>
     (function () {
       var phase4State = {
-        choresSettingsOpen: false
+        choresSettingsOpen: false,
+        bankSettingsOpen: false
+      };
+
+      var historyState = {
+        kid: 'all',
+        date: toDateString(new Date())
       };
 
       function runtime() {
@@ -4306,10 +4696,91 @@
           var progressStyle = threshold.mode === 'bonus' ? 'background:linear-gradient(90deg,#22c55e,#15803d)' : '';
           var progressLabel = threshold.mode === 'bonus' ? 'Bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts' : 'Next: ' + threshold.next.minPts + 'pts';
           return '<article class="stat-card chores-progress-card">' +
-            '<div class="chores-progress-top"><div><div class="chores-progress-name">' + kid.name + '</div><div class="chores-progress-meta">' + points + 'pts this week � ' + phase.dollars(pay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div>' +
+            '<div class="chores-progress-top"><div><div class="chores-progress-name">' + kid.name + '</div><div class="chores-progress-meta">' + points + 'pts this week - ' + phase.dollars(pay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div>' +
             '<div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div>' +
             '<div class="chores-progress-note">Bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + '</div>' +
           '</article>';
+        }).join('') + '</div>';
+      }
+
+      function renderPayTierEditor(kidId, kid) {
+        var phase = runtime();
+        var tiers = kid.payTiers || [];
+        var bonus = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
+        return '<article class="stat-card"><h3>' + (kid.name || kidId) + ' Pay Tiers</h3>' +
+          '<div class="settings-list">' +
+          tiers.map(function (tier, i) {
+            return '<div class="settings-row"><span>Tier ' + (i + 1) + ' (' + tier.minPts + 'pts)</span>' +
+              '<input type="number" min="1" value="' + tier.minPts + '" data-bank-setting="pay-tier-pts" data-kid="' + kidId + '" data-index="' + i + '">' +
+              '<input type="number" step="0.5" value="' + tier.pay + '" data-bank-setting="pay-tier" data-kid="' + kidId + '" data-index="' + i + '">' +
+              '</div>';
+          }).join('') +
+          '<div class="settings-row"><span>Bonus (' + bonus.extraPts + 'pts)</span>' +
+          '<input type="number" min="1" value="' + bonus.extraPts + '" data-bank-setting="bonus-pts" data-kid="' + kidId + '">' +
+          '<input type="number" step="0.5" value="' + bonus.bonus + '" data-bank-setting="bonus-pay" data-kid="' + kidId + '">' +
+          '</div>' +
+          '</div></article>';
+      }
+
+      async function renderBankSettings() {
+        var phase = runtime();
+        var panel = document.getElementById('bankSettings');
+        if (!panel) return;
+        panel.hidden = !phase4State.bankSettingsOpen;
+        if (!phase4State.bankSettingsOpen) {
+          panel.innerHTML = '';
+          return;
+        }
+        if (!phase || !phase.familyId || !phase.configLoaded) {
+          panel.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading bank settings...</p></article></div>';
+          return;
+        }
+        var kids = phase.currentConfig.kids || {};
+        var historyMarkup = await renderHistory();
+        var txnMarkup = await renderTransactions();
+        
+        panel.innerHTML = '<div class="settings-grid">' +
+          Object.entries(kids).map(function (entry) { return renderPayTierEditor(entry[0], entry[1]); }).join('') +
+          '<article class="stat-card"><h3>History</h3>' +
+          '<div class="settings-chip-row">' +
+          ['all', 'alex', 'louisa'].map(function (k) {
+            return '<button type="button" class="settings-chip ' + (historyState.kid === k ? 'active' : '') + '" data-history-kid="' + k + '">' + (k === 'all' ? 'All' : k.charAt(0).toUpperCase() + k.slice(1)) + '</button>';
+          }).join('') +
+          '</div>' +
+          '<div class="settings-row"><span>Date</span><input type="date" value="' + (historyState.date || '') + '" data-bank-setting="history-date"></div>' +
+          historyMarkup +
+          '</article>' +
+          '<article class="stat-card"><h3>Transactions</h3>' + txnMarkup + '</article>' +
+          '</div>';
+      }
+
+      async function renderHistory() {
+        var phase = runtime();
+        var date = historyState.date || toDateString(new Date());
+        var entries = await phase.getAllLogEntries();
+        var filtered = entries.filter(function (e) {
+          return e.date === date && (historyState.kid === 'all' || e.kid === historyState.kid);
+        }).sort(function (a, b) { return b.timestamp - a.timestamp; });
+
+        if (!filtered.length) return '<p class="settings-note">No history for this date.</p>';
+        return '<div class="settings-list" style="margin-top:12px">' + filtered.map(function (e) {
+          var label = e.choreLabel || 'Chore';
+          var note = e.note ? ' (' + e.note + ')' : '';
+          var deleteButton = '<button type="button" data-bank-action="delete-log" data-log-id="' + e.id + '" title="Delete">X</button>';
+          return '<div class="settings-row"><span>' + (phase.currentConfig.kids[e.kid].name || e.kid) + ': ' + label + note + ' (' + e.points + 'pts)</span>' + deleteButton + '</div>';
+        }).join('') + '</div>';
+      }
+
+      async function renderTransactions() {
+        var phase = runtime();
+        var txns = await phase.getAllPayments();
+        var filtered = txns.sort(function (a, b) { return b.timestamp - a.timestamp; }).slice(0, 15);
+        if (!filtered.length) return '<p class="settings-note">No recent transactions.</p>';
+        return '<div class="settings-list">' + filtered.map(function (p) {
+          var label = p.type === 'spend' ? 'Spent' : p.type === 'weekly' ? 'Weekly Pay' : p.type === 'credit' ? 'Credit' : 'Payment';
+          var note = p.note ? ': ' + p.note : '';
+          var deleteButton = '<button type="button" data-bank-action="delete-payment" data-payment-id="' + p.id + '" data-payment-kid="' + p.kid + '" data-payment-amount="' + p.amount + '" data-payment-type="' + p.type + '" title="Delete">X</button>';
+          return '<div class="settings-row"><span>' + (phase.currentConfig.kids[p.kid].name || p.kid) + ': ' + label + note + ' (' + phase.dollars(p.amount) + ')<div class="settings-note">' + (p.date || '') + '</div></span>' + deleteButton + '</div>';
         }).join('') + '</div>';
       }
 
@@ -4409,6 +4880,52 @@
           renderChoreSettings();
           return;
         }
+        var bankToggle = event.target.closest('#bankSettingsToggle');
+        if (bankToggle) {
+          phase4State.bankSettingsOpen = !phase4State.bankSettingsOpen;
+          renderBankSettings().catch(function (error) { console.error(error); });
+          return;
+        }
+        var historyKidBtn = event.target.closest('[data-history-kid]');
+        if (historyKidBtn) {
+          historyState.kid = historyKidBtn.dataset.historyKid;
+          renderBankSettings().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var bankActionBtn = event.target.closest('[data-bank-action]');
+        if (bankActionBtn) {
+          var action = bankActionBtn.dataset.bankAction;
+          var phase = runtime();
+          if (action === 'delete-log') {
+            var logId = bankActionBtn.dataset.logId;
+            if (!phase || !logId) return;
+            phase.database.ref('families/' + phase.familyId + '/log/' + logId).remove().then(function () {
+              phase.showToast('Deleted log entry.');
+              renderBankSettings().catch(function (error) { console.error(error); });
+            }).catch(function (error) { console.error(error); phase.showToast('Failed to delete.', { type: 'error' }); });
+            return;
+          }
+          if (action === 'delete-payment') {
+            var paymentId = bankActionBtn.dataset.paymentId;
+            var kidId = bankActionBtn.dataset.paymentKid;
+            var amount = Number(bankActionBtn.dataset.paymentAmount || 0);
+            var type = bankActionBtn.dataset.paymentType || 'payment';
+            if (!phase || !paymentId) return;
+            phase.database.ref('families/' + phase.familyId + '/payments/' + paymentId).get().then(function (snap) {
+              var p = snap.exists() ? snap.val() : null;
+              return phase.database.ref('families/' + phase.familyId + '/payments/' + paymentId).remove().then(function () { return p; });
+            }).then(function (p) {
+              var delta = p && typeof p.balanceDelta === 'number' ? Number(p.balanceDelta) : (type === 'credit' ? amount : -amount);
+              return phase.adjustBalance(kidId, Number((-delta).toFixed(2)));
+            }).then(function () {
+              phase.showToast('Deleted transaction and reversed ' + phase.dollars(amount) + '.');
+              renderBankSettings().catch(function (error) { console.error(error); });
+            }).catch(function (error) { console.error(error); phase.showToast('Failed to delete transaction.', { type: 'error' }); });
+            return;
+          }
+        }
+
         var actionBtn = event.target.closest('[data-chore-action]');
         if (!actionBtn) return;
         if (actionBtn.dataset.choreAction === 'add') {
@@ -4422,12 +4939,65 @@
 
       document.addEventListener('change', function (event) {
         var target = event.target;
-        if (!target || target.dataset.choreSetting !== 'points') return;
         var phase = runtime();
         if (!phase) return;
-        var points = Number(target.value);
-        if (Number.isNaN(points)) return;
-        phase.updateChorePoints(target.dataset.chore, points).catch(function (error) { console.error(error); });
+
+        if (target.dataset.choreSetting === 'points') {
+          var points = Number(target.value);
+          if (Number.isNaN(points)) return;
+          phase.updateChorePoints(target.dataset.chore, points).catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (target.dataset.bankSetting) {
+          var setting = target.dataset.bankSetting;
+          var kidId = target.dataset.kid;
+          var idx = Number(target.dataset.index);
+          var val = Number(target.value);
+
+          if (setting === 'pay-tier-pts') {
+            if (Number.isNaN(val) || val < 1) return;
+            var tiers = (phase.currentConfig.kids[kidId].payTiers || []).slice();
+            tiers[idx] = { ...tiers[idx], minPts: val };
+            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/payTiers').set(tiers).then(function () {
+              phase.currentConfig.kids[kidId].payTiers = tiers;
+              renderBankSettings().catch(function (error) { console.error(error); });
+            });
+            return;
+          }
+          if (setting === 'pay-tier') {
+            if (Number.isNaN(val)) return;
+            var tiers = (phase.currentConfig.kids[kidId].payTiers || []).slice();
+            tiers[idx] = { ...tiers[idx], pay: val };
+            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/payTiers').set(tiers).then(function () {
+              phase.currentConfig.kids[kidId].payTiers = tiers;
+              renderBankSettings().catch(function (error) { console.error(error); });
+            });
+            return;
+          }
+          if (setting === 'bonus-pts') {
+            if (Number.isNaN(val) || val < 1) return;
+            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/weeklyBonus/extraPts').set(val).then(function () {
+              if (!phase.currentConfig.kids[kidId].weeklyBonus) phase.currentConfig.kids[kidId].weeklyBonus = {};
+              phase.currentConfig.kids[kidId].weeklyBonus.extraPts = val;
+              renderBankSettings().catch(function (error) { console.error(error); });
+            });
+            return;
+          }
+          if (setting === 'bonus-pay') {
+            if (Number.isNaN(val)) return;
+            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/weeklyBonus/bonus').set(val).then(function () {
+              if (!phase.currentConfig.kids[kidId].weeklyBonus) phase.currentConfig.kids[kidId].weeklyBonus = {};
+              phase.currentConfig.kids[kidId].weeklyBonus.bonus = val;
+              renderBankSettings().catch(function (error) { console.error(error); });
+            });
+            return;
+          }
+          if (setting === 'history-date') {
+            historyState.date = target.value;
+            renderBankSettings().catch(function (error) { console.error(error); });
+          }
+        }
       });
 
       document.getElementById('quickPoints').addEventListener('click', function () {
@@ -4436,11 +5006,18 @@
         }, 150);
       });
 
+      function isBankViewActive() {
+        return location.hash.replace('#', '') === 'bank';
+      }
+
       window.addEventListener('hashchange', function () {
         setTimeout(function () {
           if (isChoresViewActive()) {
             renderChoreProgress().catch(function (error) { console.error(error); });
             renderChoreSettings();
+          }
+          if (isBankViewActive()) {
+            renderBankSettings().catch(function (error) { console.error(error); });
           }
         }, 50);
       });
@@ -4456,11 +5033,16 @@
         stripWeeklyCard();
         renderChoreProgress().catch(function (error) { console.error(error); });
         renderChoreSettings();
+        if (isBankViewActive()) {
+          renderBankSettings().catch(function (error) { console.error(error); });
+        }
       }, 400);
     })();
   </script>
 </body>
 </html>
+
+
 
 
 
