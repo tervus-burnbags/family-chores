@@ -1623,6 +1623,19 @@
       gap: 6px;
     }
 
+    .chore-log-day-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 10px 0 4px;
+    }
+
+    .chore-log-day-label:first-child {
+      padding-top: 4px;
+    }
+
     .chore-log-entry {
       display: flex;
       align-items: center;
@@ -5538,30 +5551,69 @@
         '</div></div>';
       }
 
-      function renderTodayLog(entries, phase) {
+      function formatLogDayLabel(dateStr) {
+        var parts = String(dateStr || '').split('-');
+        var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return days[d.getDay()] + ' ' + (d.getMonth() + 1) + '/' + d.getDate();
+      }
+
+      function weekDateRange(isoWeek) {
+        var parts = String(isoWeek || '').split('-W');
+        var year = Number(parts[0]);
+        var weekNum = Number(parts[1]);
+        var jan4 = new Date(year, 0, 4);
+        var dayOfWeek = jan4.getDay() || 7;
+        var monday = new Date(jan4);
+        monday.setDate(jan4.getDate() - dayOfWeek + 1 + (weekNum - 1) * 7);
+        var sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        function fmt(d) {
+          var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          return days[d.getDay()] + ' ' + (d.getMonth() + 1) + '/' + d.getDate();
+        }
+
+        return fmt(monday) + ' – ' + fmt(sunday);
+      }
+
+      function renderWeekLog(entries, phase) {
         if (!entries.length) return '';
         var sorted = entries.slice().sort(function (a, b) { return b.timestamp - a.timestamp; });
-        return '<div class="chore-section-label">Today</div><div class="chore-log">' +
-          sorted.map(function (entry) {
-            var kidName = ((phase.currentConfig.kids || {})[entry.kid] || {}).name || entry.kid;
-            var time = new Date(Number(entry.timestamp || 0));
-            var h = time.getHours();
-            var ampm = h >= 12 ? 'pm' : 'am';
-            var h12 = h % 12 || 12;
-            var timeStr = h12 + ':' + String(time.getMinutes()).padStart(2, '0') + ampm;
-            return '<div class="chore-log-entry ' + escapeHtml(entry.kid) + '">' +
-              '<div class="chore-log-main">' +
-                '<span class="chore-log-name">' + escapeHtml(entry.choreLabel || 'Points') + '</span>' +
-                '<span class="chore-log-pts-badge">+' + Number(entry.points || 0) + '</span>' +
-              '</div>' +
-              '<div class="chore-log-aside">' +
-                '<span class="chore-log-who">' + escapeHtml(kidName) + '</span>' +
-                '<span class="chore-log-when">' + escapeHtml(timeStr) + '</span>' +
-                '<button type="button" class="chore-log-del" data-chore-log-delete="' + escapeHtml(entry.id) + '" aria-label="Delete">' +
-                  '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
-                '</button>' +
-              '</div>' +
-            '</div>';
+        var groups = {};
+        sorted.forEach(function (entry) {
+          var key = entry.date || 'unknown';
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(entry);
+        });
+        var dateKeys = Object.keys(groups).sort().reverse();
+        var today = phase.toDateString(new Date());
+
+        return '<div class="chore-section-label">This Week</div><div class="chore-log">' +
+          dateKeys.map(function (dateKey) {
+            var dayLabel = dateKey === today ? 'Today' : formatLogDayLabel(dateKey);
+            return '<div class="chore-log-day-label">' + escapeHtml(dayLabel) + '</div>' +
+              groups[dateKey].map(function (entry) {
+                var kidName = ((phase.currentConfig.kids || {})[entry.kid] || {}).name || entry.kid;
+                var time = new Date(Number(entry.timestamp || 0));
+                var h = time.getHours();
+                var ampm = h >= 12 ? 'pm' : 'am';
+                var h12 = h % 12 || 12;
+                var timeStr = h12 + ':' + String(time.getMinutes()).padStart(2, '0') + ampm;
+                return '<div class="chore-log-entry ' + escapeHtml(entry.kid) + '">' +
+                  '<div class="chore-log-main">' +
+                    '<span class="chore-log-name">' + escapeHtml(entry.choreLabel || 'Points') + '</span>' +
+                    '<span class="chore-log-pts-badge">+' + Number(entry.points || 0) + '</span>' +
+                  '</div>' +
+                  '<div class="chore-log-aside">' +
+                    '<span class="chore-log-who">' + escapeHtml(kidName) + '</span>' +
+                    '<span class="chore-log-when">' + escapeHtml(timeStr) + '</span>' +
+                    '<button type="button" class="chore-log-del" data-chore-log-delete="' + escapeHtml(entry.id) + '" aria-label="Delete">' +
+                      '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
+                    '</button>' +
+                  '</div>' +
+                '</div>';
+              }).join('');
           }).join('') +
         '</div>';
       }
@@ -5632,6 +5684,9 @@
           var today = phase.toDateString(now);
           var week = phase.toIsoWeek(now);
           var kids = selectedChoreKids();
+          var weekEntries = entries.filter(function (entry) {
+            return entry.week === week && kids.indexOf(entry.kid) !== -1;
+          });
           var todayEntries = entries.filter(function (entry) {
             return entry.date === today && kids.indexOf(entry.kid) !== -1;
           });
@@ -5662,12 +5717,12 @@
             console.error(checklistError);
             checklistMarkup = '';
           }
-          var logMarkup = renderTodayLog(todayEntries, phase);
+          var logMarkup = renderWeekLog(weekEntries, phase);
           if (kidCardsContainer) kidCardsContainer.innerHTML = kidCardsMarkup;
           container.innerHTML = '<div class="chore-board">' +
             '<div class="chore-section-label">Chores</div>' +
             (checklistMarkup ? '<div class="chore-grid">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores configured. Use the gear icon to add chores.</p>') +
-            '<div class="chore-summary">' + summary.points + 'pts this week · ' + phase.dollars(summary.pay) + ' earned</div>' +
+            '<div class="chore-summary">' + escapeHtml(weekDateRange(week)) + ' · ' + summary.points + 'pts · ' + phase.dollars(summary.pay) + ' earned</div>' +
             logMarkup +
           '</div>';
         } catch (error) {
@@ -5681,7 +5736,7 @@
 
       async function logChoreItem(choreId) {
         var now = Date.now();
-        if (choreCooldowns[choreId] && (now - choreCooldowns[choreId]) < 5000) return;
+        if (choreCooldowns[choreId] && (now - choreCooldowns[choreId]) < 2000) return;
         choreCooldowns[choreId] = now;
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
@@ -5710,7 +5765,7 @@
         var btn = document.querySelector('[data-chore-item="' + choreId + '"]');
         if (btn) {
           btn.classList.add('cooldown');
-          setTimeout(function () { btn.classList.remove('cooldown'); }, 5000);
+          setTimeout(function () { btn.classList.remove('cooldown'); }, 2000);
         }
 
         var names = selectedKidLabel(applicableKids, phase);
