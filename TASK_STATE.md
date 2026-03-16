@@ -2,16 +2,16 @@
 
 **Task:** Chores Redesign + Unified Settings
 **Current Phase:** Phase 8a
-**Phase:** plan-review
+**Phase:** approved
 **Current Phase #:** 8a
-**Status:** Awaiting user approval
-**Next Agent:** user
-**Next Action:** Approve plan in TASK.md, then hand to Codex
+**Status:** Ready for Codex
+**Next Agent:** codex
+**Next Action:** Build Phase 8a (Unified Header Settings), then Phase 8b
 **Last Updated:** 2026-03-16
 
 ## Phases
 
-- [ ] **Phase 8a: Unified Header Settings** ← START HERE
+- [ ] **Phase 8a: Unified Header Settings** ← CURRENT
   - Move gear icons from Chores/Bank toolbars into header
   - One gear button opens context-aware settings based on active tab
   - Remove per-tab toolbar panels
@@ -23,7 +23,6 @@
 
 ## Notes
 
-- Phase 8a must come first (removes per-tab toolbars that 8b eliminates).
-- Chore checklist matches config chores against today's log entries by choreId.
-- Existing renderChoreSettings() and renderBankSettings() are reused, just re-targeted to header panel.
-- sw.js cache bump + Lists placeholder text fix already staged (hub-v10).
+- Plan approved by user 2026-03-16.
+- Phase 8a first, then 8b. See TASK.md for full details.
+- Existing renderChoreSettings() and renderBankSettings() are reused, re-targeted to header panel.
