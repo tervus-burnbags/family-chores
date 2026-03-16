@@ -234,6 +234,15 @@
       color: var(--text);
     }
 
+    .settings-empty {
+      display: grid;
+      gap: 8px;
+    }
+
+    .settings-empty strong {
+      font-size: 0.95rem;
+    }
+
     .view {
       display: none;
       flex-direction: column;
@@ -1264,6 +1273,119 @@
       flex-shrink: 0;
     }
 
+    .chore-board {
+      padding: 8px 0 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .chore-board-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 4px;
+    }
+
+    .chore-board-header h2,
+    .chore-board-header p {
+      margin: 0;
+    }
+
+    .chore-board-header h2 {
+      font-size: 1rem;
+    }
+
+    .chore-board-header p,
+    .chore-list-note,
+    .chore-summary {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .chore-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .chore-item {
+      min-height: 52px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .chore-item:active {
+      transform: scale(0.98);
+    }
+
+    .chore-item.done {
+      background: rgba(34, 197, 94, 0.08);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .chore-check {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
+      border-radius: 999px;
+      border: 2px solid #b8c5d8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      color: transparent;
+      background: #fff;
+    }
+
+    .chore-item.done .chore-check {
+      border-color: #16a34a;
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .chore-meta {
+      min-width: 0;
+      flex: 1 1 auto;
+      display: grid;
+      gap: 2px;
+    }
+
+    .chore-label {
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .chore-item.done .chore-label {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .chore-note {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .chore-pts {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--panel-alt);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     .qp-row {
       display: flex;
       gap: 8px;
@@ -1562,10 +1684,12 @@
           <small id="familyLabel"></small>
         </div>
         <div class="header-actions">
+          <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Open settings">&#9881;</button>
           <button type="button" class="icon-btn" id="headerFamilyButton" aria-label="Open family info and sharing">&#128279;</button>
         </div>
       </div>
       <section class="family-panel" id="headerFamilyPanel" hidden></section>
+      <section class="family-panel" id="headerSettingsPanel" hidden></section>
     </section>
 
     <!-- Bulletin View -->
@@ -1575,12 +1699,6 @@
 
     <!-- Chores View -->
     <div class="view" id="viewChores">
-      <section class="panel">
-        <div class="chores-toolbar">
-          <div class="chores-title">Chores</div>
-          <button type="button" class="icon-btn" id="choresSettingsToggle" aria-label="Open chore settings">&#9881;</button>
-        </div>
-      </section>
       <div class="panel quick-points" id="quickPoints">
         <div class="qp-row">
           <button type="button" class="qp-kid alex active" data-qp-kid="alex">Alex</button>
@@ -1595,7 +1713,6 @@
         </div>
       </div>
       <section class="panel" id="choreProgress" aria-live="polite"></section>
-      <section class="panel chores-settings" id="choresSettings" hidden></section>
       <section class="panel messages" id="messages" aria-live="polite" aria-label="Chat history"></section>
     </div>
 
@@ -1613,13 +1730,6 @@
 
     <!-- Bank View -->
     <div class="view" id="viewBank">
-      <section class="panel">
-        <div class="chores-toolbar">
-          <div class="chores-title">Bank</div>
-          <button type="button" class="icon-btn" id="bankSettingsToggle" aria-label="Open bank settings">&#9881;</button>
-        </div>
-      </section>
-      <section class="panel bank-settings" id="bankSettings" hidden></section>
       <div class="bank-kid-picker" id="bankKidPicker">
         <button type="button" class="qp-kid alex active" data-bank-kid="alex">Alex</button>
         <button type="button" class="qp-kid louisa" data-bank-kid="louisa">Louisa</button>
@@ -1813,6 +1923,8 @@
       familyLabel: document.getElementById('familyLabel'),
       familyModal: document.getElementById('familyModal'),
       familyModalStatus: document.getElementById('familyModalStatus'),
+      headerSettingsButton: document.getElementById('headerSettingsButton'),
+      headerSettingsPanel: document.getElementById('headerSettingsPanel'),
       headerFamilyButton: document.getElementById('headerFamilyButton'),
       headerFamilyPanel: document.getElementById('headerFamilyPanel'),
       createFamilyButton: document.getElementById('createFamilyButton'),
@@ -1838,6 +1950,8 @@
     };
     const appShellState = {
       familyPanelOpen: false,
+      settingsPanelOpen: false,
+      currentView: 'bulletin',
       online: navigator.onLine !== false
     };
 
@@ -2011,31 +2125,19 @@
       return url.toString();
     }
 
-    function renderHeaderFamilyPanel() {
-      const panel = elements.headerFamilyPanel;
+    function buildFamilySettingsMarkup() {
       const runtime = window.phaseRuntime;
       const calendarUrl = runtime && runtime.currentConfig ? String(runtime.currentConfig.calendarUrl || '') : '';
-      if (!panel) return;
-      panel.hidden = !appShellState.familyPanelOpen;
-      if (panel.hidden) {
-        panel.innerHTML = '';
-        return;
-      }
       if (!familyId) {
-        panel.innerHTML =
-          '<div class="family-panel-row">' +
-            '<div class="family-panel-copy">' +
-              '<strong>Family</strong>' +
-              '<p class="family-panel-note">Create or join a family to sync notes, chores, and balances across devices.</p>' +
-            '</div>' +
-            '<div class="family-panel-actions">' +
-              '<button type="button" class="settings-btn" data-family-action="manage">Choose family</button>' +
-            '</div>' +
-          '</div>';
-        return;
+        return '<div class="settings-empty">' +
+          '<strong>Family</strong>' +
+          '<p class="family-panel-note">Create or join a family to sync notes, chores, and balances across devices.</p>' +
+          '<div class="family-panel-actions">' +
+            '<button type="button" class="settings-btn" data-family-action="manage">Choose family</button>' +
+          '</div>' +
+        '</div>';
       }
-      panel.innerHTML =
-        '<div class="family-panel-row">' +
+      return '<div class="family-panel-row">' +
           '<div class="family-panel-copy">' +
             '<strong>Family Code</strong>' +
             '<code>' + escapeHtml(familyId) + '</code>' +
@@ -2056,6 +2158,41 @@
             '<button type="submit" class="settings-btn">Save calendar URL</button>' +
           '</div>' +
         '</form>';
+    }
+
+    function renderHeaderFamilyPanel() {
+      const panel = elements.headerFamilyPanel;
+      if (!panel) return;
+      panel.hidden = !appShellState.familyPanelOpen;
+      if (panel.hidden) {
+        panel.innerHTML = '';
+        return;
+      }
+      panel.innerHTML = buildFamilySettingsMarkup();
+    }
+
+    function renderHeaderSettingsPanel() {
+      var panel = elements.headerSettingsPanel;
+      if (!panel) return;
+      panel.hidden = !appShellState.settingsPanelOpen;
+      if (panel.hidden) {
+        panel.innerHTML = '';
+        return;
+      }
+      if (appShellState.currentView === 'bulletin') {
+        panel.innerHTML = buildFamilySettingsMarkup();
+        return;
+      }
+      if (appShellState.currentView === 'chores' && typeof window.renderChoreSettings === 'function') {
+        window.renderChoreSettings();
+        return;
+      }
+      if (appShellState.currentView === 'bank' && typeof window.renderBankSettings === 'function') {
+        window.renderBankSettings().catch(function (error) { console.error(error); });
+        return;
+      }
+      var label = appShellState.currentView === 'fun' ? 'Fun' : 'Lists';
+      panel.innerHTML = '<div class="settings-empty"><strong>No settings for ' + label + '.</strong><p class="family-panel-note">This tab does not have any configurable options yet.</p></div>';
     }
 
     async function copyFamilyLink() {
@@ -2084,11 +2221,10 @@
         bank: document.getElementById('viewBank')
       };
       var tabs = elements.tabBar.querySelectorAll('.tab');
-      var currentView = 'bulletin';
 
       function switchView(name) {
         if (!views[name]) name = 'bulletin';
-        currentView = name;
+        appShellState.currentView = name;
         Object.keys(views).forEach(function (key) {
           views[key].classList.toggle('active', key === name);
         });
@@ -2114,7 +2250,9 @@
         if (name === 'lists' && typeof window.renderListsHome === 'function') {
           window.renderListsHome();
         }
-
+        if (appShellState.settingsPanelOpen) {
+          renderHeaderSettingsPanel();
+        }
       }
 
       window.addEventListener('hashchange', function () {
@@ -2130,8 +2268,17 @@
       });
 
       elements.headerFamilyButton.addEventListener('click', function () {
+        appShellState.settingsPanelOpen = false;
+        renderHeaderSettingsPanel();
         appShellState.familyPanelOpen = !appShellState.familyPanelOpen;
         renderHeaderFamilyPanel();
+      });
+
+      elements.headerSettingsButton.addEventListener('click', function () {
+        appShellState.familyPanelOpen = false;
+        renderHeaderFamilyPanel();
+        appShellState.settingsPanelOpen = !appShellState.settingsPanelOpen;
+        renderHeaderSettingsPanel();
       });
 
       // Bank kid picker
@@ -2235,7 +2382,9 @@
         const action = actionButton.dataset.familyAction;
         if (action === 'manage') {
           appShellState.familyPanelOpen = false;
+          appShellState.settingsPanelOpen = false;
           renderHeaderFamilyPanel();
+          renderHeaderSettingsPanel();
           openModal();
           return;
         }
@@ -2283,6 +2432,7 @@
             window.familyBulletin.invalidateCalendarCache();
           }
           renderHeaderFamilyPanel();
+          renderHeaderSettingsPanel();
           if (typeof window.renderBulletin === 'function') {
             window.renderBulletin().catch((error) => console.error(error));
           }
@@ -5801,11 +5951,6 @@
   </script>
   <script>
     (function () {
-      var phase4State = {
-        choresSettingsOpen: false,
-        bankSettingsOpen: false
-      };
-
       var historyState = {
         kid: 'all',
         date: toDateString(new Date())
@@ -5816,7 +5961,19 @@
       }
 
       function isChoresViewActive() {
-        return location.hash.replace('#', '') === 'chores';
+        return appShellState.currentView === 'chores' || location.hash.replace('#', '') === 'chores';
+      }
+
+      function isBankViewActive() {
+        return appShellState.currentView === 'bank' || location.hash.replace('#', '') === 'bank';
+      }
+
+      function getSettingsHost() {
+        return document.getElementById('headerSettingsPanel');
+      }
+
+      function shouldRenderSettings(viewName) {
+        return appShellState.settingsPanelOpen && appShellState.currentView === viewName;
       }
 
       function selectedChoreKids() {
@@ -5825,31 +5982,46 @@
         return kid === 'both' ? ['alex', 'louisa'] : [kid];
       }
 
-      function thresholdInfoLocal(phase, kidId, points) {
-        var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || {};
-        var tiers = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
-        var topTier = tiers[tiers.length - 1] || { minPts: Math.max(points, 1), pay: 0 };
-        var nextTier = tiers.find(function (tier) { return points < tier.minPts; });
-        if (nextTier) {
-          return {
-            mode: 'tier',
-            next: nextTier,
-            targetPoints: Math.max(nextTier.minPts, 1),
-            width: Math.min(100, Math.round((points / Math.max(nextTier.minPts, 1)) * 100))
-          };
+      function selectedKidLabel(kidIds, phase) {
+        return kidIds.map(function (kidId) {
+          return ((phase.currentConfig.kids || {})[kidId] || {}).name || kidId;
+        }).join(' and ');
+      }
+
+      function choreAppliesToSelectedKids(chore, kidIds) {
+        var allowedKids = Array.isArray(chore.kids) && chore.kids.length ? chore.kids : ['alex', 'louisa'];
+        return kidIds.filter(function (kidId) {
+          return allowedKids.indexOf(kidId) !== -1;
+        });
+      }
+
+      function summarizeWeek(entries, phase, kidIds, week) {
+        return kidIds.reduce(function (summary, kidId) {
+          var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { payTiers: [] };
+          var points = entries.filter(function (entry) {
+            return entry.kid === kidId && entry.week === week;
+          }).reduce(function (sum, entry) {
+            return sum + Number(entry.points || 0);
+          }, 0);
+          summary.points += points;
+          summary.pay += phase.calculateWeeklyPay(kid.payTiers || [], points);
+          return summary;
+        }, { points: 0, pay: 0 });
+      }
+
+      function uniqueDoneKids(entries) {
+        return Array.from(new Set(entries.map(function (entry) { return entry.kid; })));
+      }
+
+      function choreNote(phase, applicableKids, doneKids) {
+        if (!applicableKids.length) return '';
+        if (applicableKids.length === 1) {
+          return selectedKidLabel(applicableKids, phase) + ' only';
         }
-        var weeklyBonus = kid.weeklyBonus || {};
-        var extraPts = Math.max(1, Number(weeklyBonus.extraPts || 10));
-        var bonusPoints = Math.max(0, points - Number(topTier.minPts || 0));
-        var completedBonusSteps = Math.floor(bonusPoints / extraPts);
-        var targetBonusPoints = (completedBonusSteps + 1) * extraPts;
-        return {
-          mode: 'bonus',
-          next: { minPts: Number(topTier.minPts || 0) + targetBonusPoints, pay: topTier.pay || 0 },
-          targetPoints: targetBonusPoints,
-          bonusPoints: bonusPoints,
-          width: Math.min(100, Math.round((bonusPoints / targetBonusPoints) * 100))
-        };
+        if (doneKids.length && doneKids.length < applicableKids.length) {
+          return 'Done for ' + selectedKidLabel(doneKids, phase);
+        }
+        return '';
       }
 
       async function renderChoreProgress() {
@@ -5857,30 +6029,101 @@
         var container = document.getElementById('choreProgress');
         if (!container) return;
         if (!phase || !phase.familyId || !phase.configLoaded) {
-          container.innerHTML = '<p class="chores-progress-note">Loading weekly progress...</p>';
+          container.innerHTML = '<div class="chore-board"><p class="chore-list-note">Loading today\'s chores...</p></div>';
           return;
         }
+        var chores = Object.entries(phase.currentConfig.chores || {}).sort(function (a, b) {
+          return String((a[1] && a[1].label) || a[0]).localeCompare(String((b[1] && b[1].label) || b[0]));
+        });
         var entries = await phase.getAllLogEntries();
         var now = new Date();
+        var today = phase.toDateString(now);
         var week = phase.toIsoWeek(now);
         var kids = selectedChoreKids();
-        container.innerHTML = '<div class="chores-progress-grid">' + kids.map(function (kidId) {
-          var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
-          var points = entries.filter(function (entry) { return entry.kid === kidId && entry.week === week; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
-          var pay = phase.calculateWeeklyPay(kid.payTiers || [], points);
-          var threshold = thresholdInfoLocal(phase, kidId, points);
-          var wb = kid.weeklyBonus || { extraPts: 10, bonus: 2 };
-          var topTier = (kid.payTiers || []).slice().sort(function (a, b) { return a.minPts - b.minPts; });
-          var topMinPts = topTier.length ? Number(topTier[topTier.length - 1].minPts || 0) : 0;
-          var progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
-          var progressStyle = threshold.mode === 'bonus' ? 'background:linear-gradient(90deg,#22c55e,#15803d)' : '';
-          var progressLabel = threshold.mode === 'bonus' ? 'Bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts' : 'Next: ' + threshold.next.minPts + 'pts';
-          return '<article class="stat-card chores-progress-card">' +
-            '<div class="chores-progress-top"><div><div class="chores-progress-name">' + kid.name + '</div><div class="chores-progress-meta">' + points + 'pts this week - ' + phase.dollars(pay) + ' earned</div></div><div class="score-next">' + progressLabel + '</div></div>' +
-            '<div class="progress ' + progressClass + '"><span style="width:' + threshold.width + '%;' + progressStyle + '"></span></div>' +
-            '<div class="chores-progress-note">Bonus: ' + phase.dollars(wb.bonus || 2) + ' per ' + (wb.extraPts || 10) + 'pts over ' + topMinPts + '</div>' +
-          '</article>';
-        }).join('') + '</div>';
+        var todayEntries = entries.filter(function (entry) {
+          return entry.date === today && kids.indexOf(entry.kid) !== -1;
+        });
+        var summary = summarizeWeek(entries, phase, kids, week);
+        var checklistMarkup = chores.map(function (entry) {
+          var choreId = entry[0];
+          var chore = entry[1] || {};
+          var applicableKids = choreAppliesToSelectedKids(chore, kids);
+          if (!applicableKids.length) {
+            return '';
+          }
+          var matches = todayEntries.filter(function (logEntry) {
+            return logEntry.choreId === choreId && applicableKids.indexOf(logEntry.kid) !== -1;
+          });
+          var doneKids = uniqueDoneKids(matches);
+          var done = applicableKids.every(function (kidId) {
+            return doneKids.indexOf(kidId) !== -1;
+          });
+          var note = choreNote(phase, applicableKids, doneKids);
+          return '<button type="button" class="chore-item' + (done ? ' done' : '') + '" data-chore-item="' + escapeHtml(choreId) + '">' +
+            '<span class="chore-check" aria-hidden="true">' + (done ? '&#10003;' : '') + '</span>' +
+            '<span class="chore-meta"><span class="chore-label">' + escapeHtml(chore.label || choreId) + '</span>' +
+            (note ? '<span class="chore-note">' + escapeHtml(note) + '</span>' : '') +
+            '</span>' +
+            '<span class="chore-pts">+' + Number(chore.points || 0) + '</span>' +
+          '</button>';
+        }).filter(Boolean).join('');
+        container.innerHTML = '<div class="chore-board">' +
+          '<div class="chore-board-header"><h2>Today\'s Chores</h2><p>' + escapeHtml(selectedKidLabel(kids, phase)) + '</p></div>' +
+          (checklistMarkup ? '<div class="chore-list">' + checklistMarkup + '</div>' : '<p class="chore-list-note">No chores are configured for this selection. Use the header gear to add chores.</p>') +
+          '<div class="chore-summary">' + summary.points + 'pts this week &middot; ' + phase.dollars(summary.pay) + ' earned</div>' +
+        '</div>';
+      }
+
+      async function toggleChoreItem(choreId) {
+        var phase = runtime();
+        if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
+        var chore = (phase.currentConfig.chores || {})[choreId];
+        if (!chore) return;
+        var kids = selectedChoreKids();
+        var applicableKids = choreAppliesToSelectedKids(chore, kids);
+        if (!applicableKids.length) return;
+        var now = new Date();
+        var today = phase.toDateString(now);
+        var todayEntries = (await phase.getAllLogEntries()).filter(function (entry) {
+          return entry.date === today && entry.choreId === choreId && applicableKids.indexOf(entry.kid) !== -1;
+        });
+        var doneKids = uniqueDoneKids(todayEntries);
+        var isDone = applicableKids.every(function (kidId) {
+          return doneKids.indexOf(kidId) !== -1;
+        });
+        if (isDone) {
+          if (!window.confirm('Remove this entry?')) return;
+          await Promise.all(todayEntries.map(function (entry) {
+            return phase.database.ref('families/' + phase.familyId + '/log/' + entry.id).remove();
+          }));
+          phase.showToast('Removed ' + (chore.label || 'chore') + ' for ' + selectedKidLabel(applicableKids, phase) + '.');
+        } else {
+          var missingKids = applicableKids.filter(function (kidId) {
+            return doneKids.indexOf(kidId) === -1;
+          });
+          await phase.saveLogEntries(missingKids.map(function (kidId) {
+            return {
+              kid: kidId,
+              choreId: choreId,
+              choreLabel: chore.label,
+              points: Number(chore.points || 0),
+              timestamp: Date.now(),
+              date: today,
+              week: phase.toIsoWeek(now),
+              note: ''
+            };
+          }));
+          phase.showToast('Logged ' + (chore.label || 'chore') + ' for ' + selectedKidLabel(missingKids, phase) + '.', {
+            kid: missingKids.length === 1 ? missingKids[0] : null,
+            onUndo: function () {
+              phase.undoLastAction().catch(function (error) { console.error(error); });
+            }
+          });
+        }
+        renderChoreProgress().catch(function (error) { console.error(error); });
+        if (shouldRenderSettings('bank')) {
+          renderBankSettings().catch(function (error) { console.error(error); });
+        }
       }
 
       function renderPayTierEditor(kidId, kid) {
@@ -5904,13 +6147,9 @@
 
       async function renderBankSettings() {
         var phase = runtime();
-        var panel = document.getElementById('bankSettings');
+        var panel = getSettingsHost();
         if (!panel) return;
-        panel.hidden = !phase4State.bankSettingsOpen;
-        if (!phase4State.bankSettingsOpen) {
-          panel.innerHTML = '';
-          return;
-        }
+        if (!shouldRenderSettings('bank')) return;
         if (!phase || !phase.familyId || !phase.configLoaded) {
           panel.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading bank settings...</p></article></div>';
           return;
@@ -5966,13 +6205,9 @@
 
       function renderChoreSettings() {
         var phase = runtime();
-        var panel = document.getElementById('choresSettings');
+        var panel = getSettingsHost();
         if (!panel) return;
-        panel.hidden = !phase4State.choresSettingsOpen;
-        if (!phase4State.choresSettingsOpen) {
-          panel.innerHTML = '';
-          return;
-        }
+        if (!shouldRenderSettings('chores')) return;
         if (!phase || !phase.familyId || !phase.configLoaded) {
           panel.innerHTML = '<div class="settings-grid"><article class="stat-card"><p>Loading chore settings...</p></article></div>';
           return;
@@ -6000,6 +6235,7 @@
         await phase.database.ref('families/' + phase.familyId + '/config/chores/' + key).set(chore);
         phase.currentConfig.chores[key] = chore;
         renderChoreSettings();
+        renderChoreProgress().catch(function (error) { console.error(error); });
       }
 
       async function removeChore(choreId) {
@@ -6009,6 +6245,7 @@
         await phase.database.ref('families/' + phase.familyId + '/config/chores/' + choreId).remove();
         delete phase.currentConfig.chores[choreId];
         renderChoreSettings();
+        renderChoreProgress().catch(function (error) { console.error(error); });
       }
 
       function stripWeeklyCard() {
@@ -6041,29 +6278,33 @@
         phase.saveLogEntries = async function (entries) {
           var result = await originalSaveLogEntries(entries);
           renderChoreProgress().catch(function (error) { console.error(error); });
+          if (appShellState.settingsPanelOpen) {
+            renderHeaderSettingsPanel();
+          }
           return result;
         };
         var originalUpdateChorePoints = phase.updateChorePoints;
         phase.updateChorePoints = async function (choreId, points) {
           var result = await originalUpdateChorePoints(choreId, points);
           renderChoreProgress().catch(function (error) { console.error(error); });
-          renderChoreSettings();
+          if (appShellState.settingsPanelOpen) {
+            renderHeaderSettingsPanel();
+          }
           return result;
         };
         phase.__phase4Patched = true;
       }
 
       document.addEventListener('click', function (event) {
-        var toggle = event.target.closest('#choresSettingsToggle');
-        if (toggle) {
-          phase4State.choresSettingsOpen = !phase4State.choresSettingsOpen;
-          renderChoreSettings();
-          return;
-        }
-        var bankToggle = event.target.closest('#bankSettingsToggle');
-        if (bankToggle) {
-          phase4State.bankSettingsOpen = !phase4State.bankSettingsOpen;
-          renderBankSettings().catch(function (error) { console.error(error); });
+        var choreItem = event.target.closest('[data-chore-item]');
+        if (choreItem) {
+          toggleChoreItem(choreItem.dataset.choreItem).catch(function (error) {
+            console.error(error);
+            var phase = runtime();
+            if (phase && typeof phase.showToast === 'function') {
+              phase.showToast('Could not update that chore.', { type: 'error' });
+            }
+          });
           return;
         }
         var historyKidBtn = event.target.closest('[data-history-kid]');
@@ -6082,6 +6323,7 @@
             if (!phase || !logId) return;
             phase.database.ref('families/' + phase.familyId + '/log/' + logId).remove().then(function () {
               phase.showToast('Deleted log entry.');
+              renderChoreProgress().catch(function (error) { console.error(error); });
               renderBankSettings().catch(function (error) { console.error(error); });
             }).catch(function (error) { console.error(error); phase.showToast('Failed to delete.', { type: 'error' }); });
             return;
@@ -6186,21 +6428,33 @@
         }, 150);
       });
 
-      function isBankViewActive() {
-        return location.hash.replace('#', '') === 'bank';
-      }
-
       window.addEventListener('hashchange', function () {
         setTimeout(function () {
           if (isChoresViewActive()) {
             renderChoreProgress().catch(function (error) { console.error(error); });
-            renderChoreSettings();
           }
           if (isBankViewActive()) {
-            renderBankSettings().catch(function (error) { console.error(error); });
+            stripWeeklyCard();
+          }
+          if (appShellState.settingsPanelOpen) {
+            renderHeaderSettingsPanel();
           }
         }, 50);
       });
+
+      async function refreshPhase4() {
+        stripWeeklyCard();
+        if (isChoresViewActive()) {
+          await renderChoreProgress();
+        }
+        if (appShellState.settingsPanelOpen) {
+          renderHeaderSettingsPanel();
+        }
+      }
+
+      window.renderBankSettings = renderBankSettings;
+      window.renderChoreSettings = renderChoreSettings;
+      window.refreshPhase4 = refreshPhase4;
 
       var phase4Warmup = setInterval(function () {
         var phase = runtime();
@@ -6212,9 +6466,8 @@
         clearInterval(phase4Warmup);
         stripWeeklyCard();
         renderChoreProgress().catch(function (error) { console.error(error); });
-        renderChoreSettings();
-        if (isBankViewActive()) {
-          renderBankSettings().catch(function (error) { console.error(error); });
+        if (appShellState.settingsPanelOpen) {
+          renderHeaderSettingsPanel();
         }
       }, 400);
     })();
