@@ -1722,7 +1722,7 @@
         chores: document.getElementById('viewChores'),
         fun: document.getElementById('viewFun'),
         lists: document.getElementById('viewLists'),
-        bank: document.getElementById('viewBank'),
+        bank: document.getElementById('viewBank')
       };
       var tabs = elements.tabBar.querySelectorAll('.tab');
       var currentView = 'bulletin';
@@ -4150,7 +4150,8 @@
         var familyId = phase && phase.familyId ? phase.familyId : 'global';
         if (state.funLoadedFor === familyId) return;
         state.funLoadedFor = familyId;
-        state.jokeIndex = Number(readFunState('jokeIndex', 0)) || 0;
+        var savedJokeIndex = readFunState('jokeIndex', null);
+        state.jokeIndex = savedJokeIndex !== null ? (Number(savedJokeIndex) || 0) : Math.floor(Math.random() * KID_JOKES.length);
         if (state.jokeIndex < 0) state.jokeIndex = 0;
         state.jokeIndex = state.jokeIndex % KID_JOKES.length;
         state.jokeRevealed = Boolean(readFunState('jokeRevealed', false));
@@ -4365,7 +4366,7 @@
       function renderJokeCard() {
         var joke = getCurrentJoke();
         return '<article class="fun-card">' +
-          '<div><h3>Kid Fun</h3><p class="fun-meta">Parent reads the setup aloud, then tap to reveal the punchline.</p></div>' +
+          '<div><h3>Kid Fun</h3></div>' +
           '<div class="fun-joke-setup">' + escapeBulletinHtml(joke.setup) + '</div>' +
           (state.jokeRevealed ? '<div class="joke-punchline">' + escapeBulletinHtml(joke.punchline) + '</div>' : '<button type="button" class="fun-btn secondary" id="funRevealJokeBtn">Tap to reveal!</button>') +
           '<div class="fun-actions"><button type="button" class="fun-btn" id="funNextJokeBtn">Next Joke</button></div>' +
@@ -5041,7 +5042,6 @@
   </script>
 </body>
 </html>
-
 
 
 

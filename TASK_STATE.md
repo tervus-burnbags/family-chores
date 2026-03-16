@@ -1,9 +1,11 @@
-﻿# Task State - Family Hub Redesign
+# Task State - Family Hub Redesign
 
-**Task:** Family Hub Redesign
-**Current Phase:** Phase 6: Family Code to Header + Cleanup
-**Status:** In Progress
-**Active Agent:** Codex (Builder) - Verification pending for Phase 3b-fix + Phase 6
+**Task:** Fix Review Findings (Phase 3b-fix & Phase 6 remnants)
+**Current Phase:** Review-fix
+**Phase:** build-complete
+**Status:** Ready for review
+**Next Agent:** gemini
+**Next Action:** Review review-fix implementation
 **Last Updated:** 2026-03-15
 
 ## Redesign Phases
@@ -28,9 +30,9 @@
   - [x] Jokes module with reveal/cycle
   - [x] Mad Libs module with step-by-step entry
   - [x] LocalStorage persistence for kid fun state
-- [x] **Phase 3b-fix: Kid Fun Updates** *(prerequisite for Phase 6)*
+- [x] **Phase 3b-fix: Kid Fun Updates** *(review fixes resolved)*
   - [x] Replace 100 jokes with 250 from `kid-fun-data.js`
-  - [x] Jokes: random selection (not sequential) - Math.floor(Math.random() * KID_JOKES.length)
+  - [x] Jokes: random selection on initial load (not always index 0)
   - [x] Mad Libs: random selection, avoid immediate repeats
   - [x] Remove "Joke X of Y" counter
   - [x] Jokes designed for verbal delivery (parent reads aloud to young kids)
@@ -43,17 +45,14 @@
   - [x] Pay tiers and bonus settings moved to Bank
   - [x] History and transactions moved to Bank
   - [x] Simplified monolithic settings tab
-- [x] **Phase 6: Family Code to Header + Cleanup**
+- [x] **Phase 6: Family Code to Header + Cleanup** *(review fixes resolved)*
   - [x] Move Family Code display to header
   - [x] Update header layout
-  - [x] Final CSS cleanup and "monolith" removal
+  - [x] Remove stale `settingsContent` and `viewSettings` JS references
 - [ ] **Phase 7: Google Calendar Integration**
 
 ## Notes
 
-- Phase 5 completed (by Gemini). Verified correct â€” bank toolbar, inline settings for pay tiers/bonus/history/transactions all working.
-- Bank now owns its financial history and configuration.
-- Old settings tab has been removed; family code/share now lives in the header panel.
-- Phase 3b-fix and Phase 6 are implemented in the workspace. The local `kid-fun-data.js` source currently contains 235 jokes, so the embedded set now matches that file rather than the planned 250-item target.
-- Kid Fun is already in its own tab (viewFun) â€” that's correct, keep it.
-
+- Codex applied the three review fixes in `index.html`: random initial joke selection, counter removal, and stale settings reference cleanup.
+- Manual browser verification is still pending in line with the task testing strategy.
+- Next step is Gemini re-review of the review-fix implementation.
