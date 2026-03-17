@@ -1,28 +1,30 @@
 # Task State - Family Hub
 
-**Task:** Phase 29 — List Fixes, Bank Revamp, Icon & iOS Fullscreen
+**Task:** Phase 30 — Fun Tab Overhaul: Activity Hub
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 29
-**Last Updated:** 2026-03-16
+**Next Action:** Review Phase 30
+**Last Updated:** 2026-03-17
 
 ## Completed
 
-- [x] Phases 8–27 + Consolidation + Visual Polish
-- [x] Phase 28: Fix template reset — built & reviewed
+- [x] Phases 8–28 + Consolidation + Visual Polish
+- [x] Phase 29: List fixes, Bank revamp, Icon & iOS fullscreen — built & reviewed
 
 ## Current
 
-- [x] **Phase 29** — five parts complete:
-  - Part A: List item undo works for swipe-delete and voice undo
-  - Part B: Empty lake house categories render with empty-state rows
-  - Part C: Grouped lists support a category picker on add
-  - Part D: Bank supports invest, shows YTD earned/spent/invested, and statement is money-only
-  - Part E: New icon set is in place and manifest display is back to standalone
+- [x] **Phase 30** — Fun tab overhaul complete:
+  - Activity launcher grid with five activity tiles
+  - Jokes support star/unstar favorites and starred-only browsing
+  - Mad Libs moved into a dedicated activity view
+  - Hangman added with SVG figure, letter grid, and persistent game state
+  - Would You Rather added as a conversation activity
+  - Trivia added with answer feedback and session scoring
+  - Fun tab re-tap returns from activity view to the grid
 
 ## Notes
 
-- Combined former Phases 29, 30, 31 into single Phase 29
-- iOS standalone change still requires deleting and re-adding the home screen shortcut after push
+- All games are still designed for the parent-read-aloud, kids-answer car ride pattern
+- Three new data arrays were added to `kid-fun-data.js` without changing existing joke or Mad Lib data
 - Ready for Gemini review

@@ -3358,6 +3358,13 @@
         if (!tab) return;
         e.preventDefault();
         var name = tab.dataset.tab;
+        if (name === 'fun' && appShellState.currentView === 'fun') {
+          if (typeof window.returnToFunHome === 'function' && window.returnToFunHome()) {
+            return;
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
         if (name === 'lists' && appShellState.currentView === 'lists') {
           if (typeof window.returnToListsHome === 'function' && window.returnToListsHome()) {
             return;
@@ -5019,12 +5026,20 @@
         draftText: '',
         draftColor: 'neutral',
         funLoadedFor: null,
+        funView: 'home',
         jokeIndex: 0,
         jokeRevealed: false,
-        jokesSeen: [],
+        starredJokes: [],
+        jokeShowStarred: false,
+        starredJokeViewIndex: 0,
         madLibIndex: 0,
         madLibProgress: null,
-        madLibsCompleted: 0
+        hangmanState: null,
+        wyrIndex: 0,
+        triviaIndex: 0,
+        triviaScore: 0,
+        triviaAnswered: false,
+        triviaSelectedChoice: -1
       };
       var calendarCache = {
         familyId: null,
@@ -5039,7 +5054,7 @@
         if (document.getElementById('kidFunStyles')) return;
         var style = document.createElement('style');
         style.id = 'kidFunStyles';
-        style.textContent = '.fun-section{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fun-card{padding:16px;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f9fbff);border:1px solid var(--line);box-shadow:0 10px 24px rgba(15,23,42,0.06);display:grid;gap:12px;align-content:start}.fun-card h3,.fun-card p,.fun-card h4{margin:0}.fun-card p{color:var(--muted)}.fun-joke-setup{font-size:var(--font-md);font-weight:700;line-height:1.45}.joke-punchline{font-weight:700;color:var(--alex);animation:jokeBounce .3s ease-out}.fun-actions{display:flex;gap:10px;flex-wrap:wrap}.fun-btn{min-height:42px;padding:0 14px;border:0;border-radius:12px;background:var(--alex);color:#fff;font:inherit;font-weight:700;cursor:pointer}.fun-btn.secondary{background:var(--panel-alt);color:var(--text)}.fun-meta{font-size:var(--font-sm);color:var(--muted)}.fun-input{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:var(--text)}.fun-story{line-height:1.65;font-size:var(--font-base)}.madlib-highlight{font-weight:700;padding:1px 4px;border-radius:4px}.madlib-highlight.alex{background:rgba(74,144,217,.15);color:var(--alex)}.madlib-highlight.louisa{background:rgba(138,91,209,.15);color:var(--louisa)}.fun-progress{font-size:var(--font-base);color:var(--muted)}@keyframes jokeBounce{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}@media (max-width: 560px){.fun-section{grid-template-columns:1fr}}';
+        style.textContent = '.fun-shell{padding:12px 16px 24px;display:grid;gap:14px}.fun-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.fun-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px 16px 22px;border:0;border-radius:20px;background:radial-gradient(circle at top left,rgba(255,255,255,.18),transparent 42%),linear-gradient(180deg,var(--tile-color),var(--tile-color));color:#fff;cursor:pointer;min-height:132px;box-shadow:0 12px 28px rgba(15,23,42,.16);transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}.fun-tile:active{transform:scale(.96);box-shadow:0 6px 14px rgba(15,23,42,.18)}.fun-tile-icon{font-size:2.4rem;line-height:1}.fun-tile-label{font-size:var(--font-base);font-weight:800;text-align:center}.fun-tile-sub{font-size:var(--font-xs);opacity:.88;text-align:center}.fun-card{padding:18px;border-radius:20px;background:linear-gradient(180deg,#ffffff,#f9fbff);border:1px solid var(--line);box-shadow:0 10px 24px rgba(15,23,42,.06);display:grid;gap:14px;align-content:start}.fun-card h3,.fun-card p,.fun-card h4{margin:0}.fun-card p{color:var(--muted)}.fun-activity-head{display:flex;align-items:center;gap:12px;padding:4px 0 4px}.fun-activity-head h2{flex:1;font-size:var(--font-lg);font-weight:800;margin:0}.fun-back-btn{min-height:44px;padding:8px 12px;border:0;border-radius:12px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:var(--font-sm);font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}.fun-empty{color:var(--muted);text-align:center;padding:40px 16px}.fun-joke-setup{font-size:var(--font-lg);font-weight:700;line-height:1.45;text-align:center}.joke-punchline{font-weight:800;color:var(--alex);font-size:var(--font-md);text-align:center;animation:jokeBounce .3s ease-out}.fun-actions{display:flex;gap:10px;flex-wrap:wrap}.fun-btn{min-height:46px;padding:0 16px;border:0;border-radius:12px;background:var(--alex);color:#fff;font:inherit;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}.fun-btn.secondary{background:var(--panel-alt);color:var(--text)}.fun-btn.starred{background:#f59e0b;color:#fff}.fun-meta{font-size:var(--font-sm);color:var(--muted)}.fun-input{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit;color:var(--text)}.fun-story{line-height:1.7;font-size:var(--font-base)}.fun-progress{font-size:var(--font-base);color:var(--muted)}.madlib-highlight{font-weight:700;padding:1px 4px;border-radius:4px}.madlib-highlight.alex{background:rgba(74,144,217,.15);color:var(--alex)}.madlib-highlight.louisa{background:rgba(138,91,209,.15);color:var(--louisa)}.hangman-figure{width:100%;max-width:180px;justify-self:center}.hangman-category,.hangman-wrong-count{font-size:var(--font-sm);font-weight:700;color:var(--muted);text-align:center}.hangman-word{font-size:clamp(1.25rem,4vw,2rem);font-weight:800;letter-spacing:.3rem;text-align:center}.hangman-letters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.hangman-letter{min-height:48px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font:inherit;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}.hangman-letter.correct{background:#dcfce7;border-color:#16a34a;color:#15803d}.hangman-letter.wrong{background:#fef2f2;border-color:var(--danger);color:var(--danger)}.hangman-result{padding:12px 14px;border-radius:14px;font-weight:700;text-align:center}.hangman-result.won{background:#dcfce7;color:#15803d}.hangman-result.lost{background:#fef2f2;color:var(--danger)}.wyr-prompt{text-align:center;font-size:var(--font-lg);font-weight:700;color:var(--muted);padding:8px 0}.wyr-options{display:flex;flex-direction:column;gap:12px;align-items:center}.wyr-option{width:100%;min-height:76px;padding:24px 20px;border:2px solid var(--line);border-radius:18px;background:var(--panel);font-size:var(--font-md);font-weight:700;text-align:center;cursor:pointer;color:var(--text);line-height:1.4;transition:transform .1s ease,border-color .15s ease;-webkit-tap-highlight-color:transparent}.wyr-option:active{transform:scale(.97)}.wyr-a:active{border-color:var(--alex);background:rgba(74,144,217,.08)}.wyr-b:active{border-color:var(--louisa);background:rgba(138,91,209,.08)}.wyr-or{font-size:var(--font-sm);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:2px}.trivia-question{font-size:var(--font-lg);font-weight:700;line-height:1.4;text-align:center;padding:8px 0}.trivia-choices{display:grid;gap:10px}.trivia-choice{width:100%;min-height:56px;padding:16px;border:2px solid var(--line);border-radius:14px;background:var(--panel);font:inherit;font-size:var(--font-base);font-weight:600;text-align:left;cursor:pointer;color:var(--text);transition:transform .1s ease;-webkit-tap-highlight-color:transparent}.trivia-choice:active:not(:disabled){transform:scale(.97)}.trivia-choice.correct{background:#dcfce7;border-color:#16a34a;color:#15803d}.trivia-choice.wrong{background:#fef2f2;border-color:var(--danger);color:var(--danger)}.trivia-choice.dimmed{opacity:.45}.trivia-score{font-size:var(--font-sm);color:var(--muted);font-weight:700}.fun-stars-row{display:flex;justify-content:center}.fun-card.centered{text-align:center}.fun-card.centered .fun-actions{justify-content:center}@keyframes jokeBounce{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}@media (max-width: 560px){.fun-grid{grid-template-columns:1fr}.fun-activity-head{flex-wrap:wrap}.fun-activity-head h2{width:100%}.hangman-letters{grid-template-columns:repeat(4,minmax(0,1fr))}}';
         document.head.appendChild(style);
       }
 
@@ -5115,40 +5130,39 @@
         if (state.jokeIndex < 0) state.jokeIndex = 0;
         state.jokeIndex = state.jokeIndex % KID_JOKES.length;
         state.jokeRevealed = Boolean(readFunState('jokeRevealed', false));
-        var jokesSeen = readFunState('jokesSeen', []);
-        state.jokesSeen = Array.isArray(jokesSeen) ? jokesSeen.map(function (value) { return Number(value); }).filter(function (value, index, list) {
+        var starred = readFunState('starredJokes', []);
+        state.starredJokes = Array.isArray(starred) ? starred.map(function (value) { return Number(value); }).filter(function (value, index, list) {
           return Number.isInteger(value) && value >= 0 && value < KID_JOKES.length && list.indexOf(value) === index;
         }) : [];
-        state.madLibIndex = Number(readFunState('madLibIndex', 0)) || 0;
+        state.jokeShowStarred = false;
+        state.starredJokeViewIndex = 0;
+        state.madLibIndex = Number(readFunState('madLibIndex', Math.floor(Math.random() * Math.max(1, KID_MADLIBS.length)))) || 0;
         if (state.madLibIndex < 0) state.madLibIndex = 0;
         state.madLibIndex = state.madLibIndex % KID_MADLIBS.length;
-        state.madLibsCompleted = Number(readFunState('madLibsCompleted', 0)) || 0;
-        if (state.madLibsCompleted < 0) state.madLibsCompleted = 0;
         var savedProgress = validateMadLibProgress(readFunState('madLibProgress', null));
         if (savedProgress && savedProgress.templateIndex === state.madLibIndex) {
           state.madLibProgress = savedProgress;
         } else {
           state.madLibProgress = null;
         }
+        state.hangmanState = readFunState('hangmanState', null);
+        state.wyrIndex = Number(readFunState('wyrIndex', Math.floor(Math.random() * Math.max(1, typeof WOULD_YOU_RATHER !== 'undefined' ? WOULD_YOU_RATHER.length : 1)))) || 0;
+        state.triviaIndex = Number(readFunState('triviaIndex', Math.floor(Math.random() * Math.max(1, typeof KID_TRIVIA !== 'undefined' ? KID_TRIVIA.length : 1)))) || 0;
+        state.triviaScore = Number(readFunState('triviaScore', 0)) || 0;
+        state.triviaAnswered = false;
+        state.triviaSelectedChoice = -1;
+        state.funView = 'home';
       }
 
       function saveJokeState() {
         writeFunState('jokeIndex', state.jokeIndex);
         writeFunState('jokeRevealed', state.jokeRevealed);
-        writeFunState('jokesSeen', state.jokesSeen);
+        writeFunState('starredJokes', state.starredJokes);
       }
 
       function saveMadLibState() {
         writeFunState('madLibIndex', state.madLibIndex);
         writeFunState('madLibProgress', state.madLibProgress);
-        writeFunState('madLibsCompleted', state.madLibsCompleted);
-      }
-
-      function markCurrentJokeSeen() {
-        if (state.jokesSeen.indexOf(state.jokeIndex) === -1) {
-          state.jokesSeen.push(state.jokeIndex);
-          writeFunState('jokesSeen', state.jokesSeen);
-        }
       }
 
       function getCurrentJoke() {
@@ -5225,9 +5239,6 @@
         progress.answers[progress.currentBlank] = answer;
         if (progress.currentBlank >= progress.answers.length - 1) {
           progress.currentBlank = progress.answers.length;
-          if (!progress.completed) {
-            state.madLibsCompleted += 1;
-          }
           progress.completed = true;
         } else {
           progress.currentBlank += 1;
@@ -5235,6 +5246,146 @@
         progress.started = true;
         saveMadLibState();
         return true;
+      }
+
+      function toggleStarJoke() {
+        var idx = state.jokeIndex;
+        var pos = state.starredJokes.indexOf(idx);
+        if (pos >= 0) {
+          state.starredJokes.splice(pos, 1);
+          if (state.jokeShowStarred && state.starredJokes.length) {
+            state.starredJokeViewIndex = state.starredJokeViewIndex % state.starredJokes.length;
+          } else if (!state.starredJokes.length) {
+            state.jokeShowStarred = false;
+            state.starredJokeViewIndex = 0;
+          }
+        } else {
+          state.starredJokes.push(idx);
+        }
+        writeFunState('starredJokes', state.starredJokes);
+      }
+
+      function getActiveJokeInfo() {
+        if (state.jokeShowStarred && state.starredJokes.length) {
+          var starIdx = (state.starredJokeViewIndex || 0) % state.starredJokes.length;
+          var jokeIndex = state.starredJokes[starIdx];
+          return {
+            jokeIndex: jokeIndex,
+            joke: KID_JOKES[jokeIndex] || getCurrentJoke(),
+            isStarred: true
+          };
+        }
+        return {
+          jokeIndex: state.jokeIndex,
+          joke: getCurrentJoke(),
+          isStarred: state.starredJokes.indexOf(state.jokeIndex) >= 0
+        };
+      }
+
+      function openFunActivity(activityId) {
+        state.funView = activityId || 'home';
+        renderFun().catch(function (error) { console.error(error); });
+      }
+
+      function returnToFunHome() {
+        if (state.funView === 'home') return false;
+        state.funView = 'home';
+        renderFun().catch(function (error) { console.error(error); });
+        return true;
+      }
+
+      var HANGMAN_MAX_WRONG = 6;
+
+      function startHangman() {
+        if (!Array.isArray(HANGMAN_WORDS) || !HANGMAN_WORDS.length) return;
+        state.hangmanState = {
+          wordIndex: Math.floor(Math.random() * HANGMAN_WORDS.length),
+          guessedLetters: [],
+          wrongCount: 0
+        };
+        writeFunState('hangmanState', state.hangmanState);
+      }
+
+      function guessHangmanLetter(letter) {
+        var hs = state.hangmanState;
+        if (!hs) return;
+        var nextLetter = String(letter || '').toUpperCase();
+        if (!nextLetter || hs.guessedLetters.indexOf(nextLetter) >= 0) return;
+        hs.guessedLetters.push(nextLetter);
+        var entry = HANGMAN_WORDS[hs.wordIndex];
+        if (entry && String(entry.word || '').indexOf(nextLetter) < 0) {
+          hs.wrongCount += 1;
+        }
+        writeFunState('hangmanState', hs);
+      }
+
+      function isHangmanWon() {
+        var hs = state.hangmanState;
+        if (!hs) return false;
+        var entry = HANGMAN_WORDS[hs.wordIndex];
+        var word = String(entry && entry.word || '');
+        for (var i = 0; i < word.length; i += 1) {
+          if (hs.guessedLetters.indexOf(word[i]) < 0) return false;
+        }
+        return Boolean(word);
+      }
+
+      function isHangmanLost() {
+        return Boolean(state.hangmanState && state.hangmanState.wrongCount >= HANGMAN_MAX_WRONG);
+      }
+
+      function getHangmanDisplay() {
+        var hs = state.hangmanState;
+        if (!hs) return '';
+        var entry = HANGMAN_WORDS[hs.wordIndex] || { word: '' };
+        return String(entry.word || '').split('').map(function (ch) {
+          return hs.guessedLetters.indexOf(ch) >= 0 ? ch : '_';
+        }).join(' ');
+      }
+
+      function renderHangmanFigure(wrongCount) {
+        var parts = [
+          '<circle cx="60" cy="35" r="12" stroke="#1f2937" stroke-width="2.5" fill="none"/>',
+          '<line x1="60" y1="47" x2="60" y2="85" stroke="#1f2937" stroke-width="2.5"/>',
+          '<line x1="60" y1="55" x2="40" y2="72" stroke="#1f2937" stroke-width="2.5"/>',
+          '<line x1="60" y1="55" x2="80" y2="72" stroke="#1f2937" stroke-width="2.5"/>',
+          '<line x1="60" y1="85" x2="42" y2="110" stroke="#1f2937" stroke-width="2.5"/>',
+          '<line x1="60" y1="85" x2="78" y2="110" stroke="#1f2937" stroke-width="2.5"/>'
+        ];
+        var gallows = '<line x1="20" y1="130" x2="100" y2="130" stroke="#64748b" stroke-width="3"/>' +
+          '<line x1="30" y1="130" x2="30" y2="10" stroke="#64748b" stroke-width="3"/>' +
+          '<line x1="30" y1="10" x2="60" y2="10" stroke="#64748b" stroke-width="3"/>' +
+          '<line x1="60" y1="10" x2="60" y2="23" stroke="#64748b" stroke-width="2"/>';
+        return '<svg viewBox="0 0 120 140" class="hangman-figure">' + gallows + parts.slice(0, wrongCount).join('') + '</svg>';
+      }
+
+      function startTrivia() {
+        if (!Array.isArray(KID_TRIVIA) || !KID_TRIVIA.length) return;
+        state.triviaIndex = Math.floor(Math.random() * KID_TRIVIA.length);
+        state.triviaScore = 0;
+        state.triviaAnswered = false;
+        state.triviaSelectedChoice = -1;
+        writeFunState('triviaIndex', state.triviaIndex);
+        writeFunState('triviaScore', state.triviaScore);
+      }
+
+      function answerTrivia(choiceIndex) {
+        if (state.triviaAnswered) return;
+        state.triviaAnswered = true;
+        state.triviaSelectedChoice = choiceIndex;
+        var question = KID_TRIVIA[state.triviaIndex % KID_TRIVIA.length];
+        if (question && Number(choiceIndex) === Number(question.answer)) {
+          state.triviaScore += 1;
+        }
+        writeFunState('triviaScore', state.triviaScore);
+      }
+
+      function nextTrivia() {
+        if (!Array.isArray(KID_TRIVIA) || !KID_TRIVIA.length) return;
+        state.triviaIndex = randomIndex(KID_TRIVIA.length, state.triviaIndex);
+        state.triviaAnswered = false;
+        state.triviaSelectedChoice = -1;
+        writeFunState('triviaIndex', state.triviaIndex);
       }
 
       function explainBlank(blank) {
@@ -5523,16 +5674,6 @@
         return match;
       }
 
-      function renderJokeCard() {
-        var joke = getCurrentJoke();
-        return '<article class="fun-card">' +
-          '<div><h3>Kid Fun</h3></div>' +
-          '<div class="fun-joke-setup">' + escapeBulletinHtml(joke.setup) + '</div>' +
-          (state.jokeRevealed ? '<div class="joke-punchline">' + escapeBulletinHtml(joke.punchline) + '</div>' : '<button type="button" class="fun-btn secondary" id="funRevealJokeBtn">Tap to reveal!</button>') +
-          '<div class="fun-actions"><button type="button" class="fun-btn" id="funNextJokeBtn">Next Joke</button></div>' +
-        '</article>';
-      }
-
       function renderMadLibCard() {
         var template = getCurrentMadLibTemplate();
         var progress = ensureMadLibProgress();
@@ -5561,6 +5702,158 @@
         '</article>';
       }
 
+      function renderFunHome(container) {
+        var tiles = [
+          { id: 'jokes', icon: '😂', label: 'Jokes', color: '#f59e0b', sub: state.starredJokes.length ? '★ ' + state.starredJokes.length + ' saved' : '' },
+          { id: 'madlibs', icon: '📝', label: 'Mad Libs', color: '#8b5cf6', sub: '' },
+          { id: 'hangman', icon: '🎯', label: 'Hangman', color: '#06b6d4', sub: '' },
+          { id: 'wyr', icon: '🤔', label: 'Would You Rather', color: '#ec4899', sub: '' },
+          { id: 'trivia', icon: '🧠', label: 'Trivia', color: '#22c55e', sub: '' }
+        ];
+        container.innerHTML = '<div class="fun-shell"><div class="fun-grid">' + tiles.map(function (tile) {
+          return '<button type="button" class="fun-tile" data-fun-open="' + tile.id + '" style="--tile-color:' + tile.color + '">' +
+            '<span class="fun-tile-icon">' + tile.icon + '</span>' +
+            '<span class="fun-tile-label">' + escapeBulletinHtml(tile.label) + '</span>' +
+            (tile.sub ? '<span class="fun-tile-sub">' + escapeBulletinHtml(tile.sub) + '</span>' : '') +
+          '</button>';
+        }).join('') + '</div></div>';
+      }
+
+      function renderJokesActivity(container) {
+        var jokeInfo = getActiveJokeInfo();
+        var joke = jokeInfo.joke;
+        var showingStarred = state.jokeShowStarred && state.starredJokes.length;
+        container.innerHTML = '<div class="fun-shell">' +
+          '<div class="fun-activity-head">' +
+            '<button type="button" class="fun-back-btn" data-fun-open="home">← Back</button>' +
+            '<h2>😂 Jokes</h2>' +
+            (state.starredJokes.length ? '<button type="button" class="fun-btn secondary" id="funStarToggle">' + (showingStarred ? 'All Jokes' : '★ ' + state.starredJokes.length) + '</button>' : '') +
+          '</div>' +
+          '<article class="fun-card">' +
+            '<div class="fun-joke-setup">' + escapeBulletinHtml(joke.setup) + '</div>' +
+            (state.jokeRevealed ? '<div class="joke-punchline">' + escapeBulletinHtml(joke.punchline) + '</div>' : '<button type="button" class="fun-btn secondary" id="funRevealJokeBtn">Tap to reveal!</button>') +
+            '<div class="fun-actions">' +
+              '<button type="button" class="fun-btn" id="funNextJokeBtn">Next Joke</button>' +
+              '<button type="button" class="fun-btn ' + (jokeInfo.isStarred ? 'starred' : 'secondary') + '" id="funStarJokeBtn">' + (jokeInfo.isStarred ? '★ Starred' : '☆ Star') + '</button>' +
+            '</div>' +
+          '</article>' +
+        '</div>';
+      }
+
+      function renderMadLibsActivity(container) {
+        container.innerHTML = '<div class="fun-shell">' +
+          '<div class="fun-activity-head">' +
+            '<button type="button" class="fun-back-btn" data-fun-open="home">← Back</button>' +
+            '<h2>📝 Mad Libs</h2>' +
+          '</div>' +
+          renderMadLibCard() +
+        '</div>';
+        var madLibInput = document.getElementById('funMadLibAnswer');
+        if (madLibInput) {
+          madLibInput.focus();
+          madLibInput.setSelectionRange(madLibInput.value.length, madLibInput.value.length);
+        }
+      }
+
+      function renderHangmanActivity(container) {
+        var hs = state.hangmanState;
+        if (!hs) {
+          container.innerHTML = '<div class="fun-shell">' +
+            '<div class="fun-activity-head">' +
+              '<button type="button" class="fun-back-btn" data-fun-open="home">← Back</button>' +
+              '<h2>🎯 Hangman</h2>' +
+            '</div>' +
+            '<article class="fun-card centered">' +
+              '<p>Guess the word one letter at a time.<br>6 wrong guesses and it\'s game over.</p>' +
+              '<div class="fun-actions"><button type="button" class="fun-btn" id="funHangmanStartBtn">Start Game</button></div>' +
+            '</article>' +
+          '</div>';
+          return;
+        }
+        var entry = HANGMAN_WORDS[hs.wordIndex] || { word: '', category: 'Thing' };
+        var won = isHangmanWon();
+        var lost = isHangmanLost();
+        var gameOver = won || lost;
+        var letterGrid = '';
+        if (!gameOver) {
+          letterGrid = '<div class="hangman-letters">';
+          for (var i = 0; i < 26; i += 1) {
+            var letter = String.fromCharCode(65 + i);
+            var used = hs.guessedLetters.indexOf(letter) >= 0;
+            var inWord = String(entry.word || '').indexOf(letter) >= 0;
+            var cls = 'hangman-letter';
+            if (used) cls += inWord ? ' correct' : ' wrong';
+            letterGrid += '<button type="button" class="' + cls + '" data-hangman-letter="' + letter + '"' + (used ? ' disabled' : '') + '>' + letter + '</button>';
+          }
+          letterGrid += '</div>';
+        }
+        var resultMsg = '';
+        if (won) resultMsg = '<div class="hangman-result won">🎉 You got it!</div>';
+        if (lost) resultMsg = '<div class="hangman-result lost">The word was: <strong>' + escapeBulletinHtml(entry.word) + '</strong></div>';
+        container.innerHTML = '<div class="fun-shell">' +
+          '<div class="fun-activity-head">' +
+            '<button type="button" class="fun-back-btn" data-fun-open="home">← Back</button>' +
+            '<h2>🎯 Hangman</h2>' +
+            '<span class="hangman-wrong-count">' + hs.wrongCount + '/' + HANGMAN_MAX_WRONG + '</span>' +
+          '</div>' +
+          '<article class="fun-card">' +
+            renderHangmanFigure(hs.wrongCount) +
+            '<div class="hangman-category">Category: ' + escapeBulletinHtml(entry.category) + '</div>' +
+            '<div class="hangman-word">' + getHangmanDisplay() + '</div>' +
+            resultMsg +
+            letterGrid +
+            (gameOver ? '<div class="fun-actions" style="justify-content:center"><button type="button" class="fun-btn" id="funHangmanStartBtn">Play Again</button></div>' : '') +
+          '</article>' +
+        '</div>';
+      }
+
+      function renderWyrActivity(container) {
+        var entry = WOULD_YOU_RATHER[state.wyrIndex % WOULD_YOU_RATHER.length];
+        container.innerHTML = '<div class="fun-shell">' +
+          '<div class="fun-activity-head">' +
+            '<button type="button" class="fun-back-btn" data-fun-open="home">← Back</button>' +
+            '<h2>🤔 Would You Rather</h2>' +
+          '</div>' +
+          '<article class="fun-card">' +
+            '<div class="wyr-prompt">Would you rather...</div>' +
+            '<div class="wyr-options">' +
+              '<button type="button" class="wyr-option wyr-a">' + escapeBulletinHtml(entry.a) + '</button>' +
+              '<div class="wyr-or">OR</div>' +
+              '<button type="button" class="wyr-option wyr-b">' + escapeBulletinHtml(entry.b) + '</button>' +
+            '</div>' +
+            '<div class="fun-actions" style="justify-content:center;padding-top:4px"><button type="button" class="fun-btn" id="funWyrNextBtn">Next Question</button></div>' +
+          '</article>' +
+        '</div>';
+      }
+
+      function renderTriviaActivity(container) {
+        var question = KID_TRIVIA[state.triviaIndex % KID_TRIVIA.length];
+        var answered = state.triviaAnswered;
+        var selected = state.triviaSelectedChoice;
+        var correct = Number(question.answer);
+        var choicesHtml = question.choices.map(function (choice, index) {
+          var cls = 'trivia-choice';
+          if (answered) {
+            if (index === correct) cls += ' correct';
+            else if (index === selected && selected !== correct) cls += ' wrong';
+            else cls += ' dimmed';
+          }
+          return '<button type="button" class="' + cls + '" data-trivia-choice="' + index + '"' + (answered ? ' disabled' : '') + '>' + escapeBulletinHtml(choice) + '</button>';
+        }).join('');
+        container.innerHTML = '<div class="fun-shell">' +
+          '<div class="fun-activity-head">' +
+            '<button type="button" class="fun-back-btn" data-fun-open="home">← Back</button>' +
+            '<h2>🧠 Trivia</h2>' +
+            '<span class="trivia-score">Score: ' + state.triviaScore + '</span>' +
+          '</div>' +
+          '<article class="fun-card">' +
+            '<div class="trivia-question">' + escapeBulletinHtml(question.question) + '</div>' +
+            '<div class="trivia-choices">' + choicesHtml + '</div>' +
+            (answered ? '<div class="fun-actions" style="justify-content:center"><button type="button" class="fun-btn" id="funTriviaNextBtn">Next Question</button></div>' : '') +
+          '</article>' +
+        '</div>';
+      }
+
       async function renderFun() {
         var phase = runtime();
         var container = document.getElementById('funContent');
@@ -5568,28 +5861,30 @@
         ensureKidFunStyles();
         loadFunState();
         if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
-          container.innerHTML = '<div class="bulletin-shell"><section class="panel bulletin-hero"><h2>Fun</h2><p>Connect to a family to load jokes and Mad Libs.</p></section></div>';
+          container.innerHTML = '<div class="fun-shell"><p class="fun-empty">Connect to a family to unlock activities.</p></div>';
           return;
         }
-
-        container.innerHTML =
-          '<div class="bulletin-shell">' +
-            '<section class="panel bulletin-hero">' +
-              '<div class="bulletin-section-head"><div><h2>Kid Fun</h2><p>A playful corner with jokes and Mad Libs kids can revisit anytime.</p></div></div>' +
-              '<p>Joke progress and Mad Lib progress stay saved on this device.</p>' +
-            '</section>' +
-            '<section class="panel"><div class="bulletin-section-head"><div><h3>Fun stats</h3><p>Track what the kids have already explored.</p></div></div><div class="bulletin-stats-grid"><article class="bulletin-stat-card alex"><div class="bulletin-stat-label">Jokes discovered</div><div class="bulletin-stat-value">' + state.jokesSeen.length + '</div><div class="settings-note">of ' + KID_JOKES.length + ' total jokes</div></article><article class="bulletin-stat-card louisa"><div class="bulletin-stat-label">Stories created</div><div class="bulletin-stat-value">' + state.madLibsCompleted + '</div><div class="settings-note">completed mad libs</div></article></div></section>' +
-            '<section class="panel">' +
-              '<div class="bulletin-section-head"><div><h3>Jokes and stories</h3><p>Tap to reveal punchlines and build silly stories together.</p></div></div>' +
-              '<div class="fun-section">' + renderJokeCard() + renderMadLibCard() + '</div>' +
-            '</section>' +
-          '</div>';
-
-        var madLibInput = document.getElementById('funMadLibAnswer');
-        if (madLibInput) {
-          madLibInput.focus();
-          madLibInput.setSelectionRange(madLibInput.value.length, madLibInput.value.length);
+        if (state.funView === 'jokes') {
+          renderJokesActivity(container);
+          return;
         }
+        if (state.funView === 'madlibs') {
+          renderMadLibsActivity(container);
+          return;
+        }
+        if (state.funView === 'hangman') {
+          renderHangmanActivity(container);
+          return;
+        }
+        if (state.funView === 'wyr') {
+          renderWyrActivity(container);
+          return;
+        }
+        if (state.funView === 'trivia') {
+          renderTriviaActivity(container);
+          return;
+        }
+        renderFunHome(container);
       }
 
       async function renderBulletin() {
@@ -5700,16 +5995,44 @@
           }
         }
 
+        var funOpen = event.target.closest('[data-fun-open]');
+        if (funOpen) {
+          if (funOpen.dataset.funOpen === 'home') {
+            state.funView = 'home';
+            renderFun().catch(function (error) { console.error(error); });
+            return;
+          }
+          openFunActivity(funOpen.dataset.funOpen);
+          return;
+        }
+
         if (event.target.closest('#funRevealJokeBtn')) {
           state.jokeRevealed = true;
-          markCurrentJokeSeen();
           saveJokeState();
           renderFun().catch(function (error) { console.error(error); });
           return;
         }
 
         if (event.target.closest('#funNextJokeBtn')) {
-          nextRandomJoke();
+          if (state.jokeShowStarred && state.starredJokes.length) {
+            state.starredJokeViewIndex = ((state.starredJokeViewIndex || 0) + 1) % state.starredJokes.length;
+            state.jokeRevealed = false;
+          } else {
+            nextRandomJoke();
+          }
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funStarJokeBtn')) {
+          toggleStarJoke();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funStarToggle')) {
+          state.jokeShowStarred = !state.jokeShowStarred;
+          state.starredJokeViewIndex = 0;
           renderFun().catch(function (error) { console.error(error); });
           return;
         }
@@ -5740,6 +6063,39 @@
 
         if (event.target.closest('#funMadLibRestartBtn')) {
           restartMadLib();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funHangmanStartBtn')) {
+          startHangman();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var hangmanLetter = event.target.closest('[data-hangman-letter]');
+        if (hangmanLetter) {
+          guessHangmanLetter(hangmanLetter.dataset.hangmanLetter);
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funWyrNextBtn')) {
+          state.wyrIndex = randomIndex(WOULD_YOU_RATHER.length, state.wyrIndex);
+          writeFunState('wyrIndex', state.wyrIndex);
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var triviaChoice = event.target.closest('[data-trivia-choice]');
+        if (triviaChoice) {
+          answerTrivia(Number(triviaChoice.dataset.triviaChoice));
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funTriviaNextBtn')) {
+          nextTrivia();
           renderFun().catch(function (error) { console.error(error); });
         }
       });
@@ -5788,6 +6144,7 @@
       });
 
       window.renderFun = renderFun;
+      window.returnToFunHome = returnToFunHome;
       window.renderBulletin = renderBulletin;
       window.familyBulletin = {
         addNote: addNote,
