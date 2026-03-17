@@ -23,8 +23,20 @@
       --alex: #4a90d9;
       --louisa: #8a5bd1;
       --danger: #d64545;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --jamie: #3a8a52;
       --shadow: 0 18px 44px rgba(39, 58, 87, 0.12);
       --radius: 20px;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 18px;
+      --radius-pill: 999px;
+      --shadow-xs: 0 2px 8px rgba(15, 23, 42, 0.05);
+      --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.1);
+      --shadow-lg: 0 18px 44px rgba(15, 23, 42, 0.14);
+      --shadow-xl: 0 24px 56px rgba(15, 23, 42, 0.2);
       --tap: 48px;
       --font-xs: 0.75rem;
       --font-sm: 0.85rem;
@@ -1112,6 +1124,36 @@
 
     .send-btn:hover {
       box-shadow: 0 6px 18px rgba(74, 144, 217, 0.4);
+    }
+
+    .btn {
+      min-height: var(--tap);
+      padding: 0 16px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--alex);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--panel-alt);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
     }
 
     .mic-btn {
@@ -2696,6 +2738,483 @@
       transform: scale(0.95);
     }
 
+    .score-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .score-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--panel);
+    }
+
+    .score-action button {
+      min-height: var(--tap);
+      padding: 0 12px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: var(--alex);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .score-empty {
+      color: var(--muted);
+      font-size: var(--font-base);
+    }
+
+    .score-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .score-name {
+      font-weight: 700;
+    }
+
+    .score-pay {
+      font-size: var(--font-base);
+      color: var(--muted);
+    }
+
+    .score-next {
+      font-size: var(--font-sm);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .progress {
+      height: 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(148, 163, 184, 0.18);
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--alex), #2563eb);
+    }
+
+    .progress.louisa span {
+      background: linear-gradient(90deg, var(--louisa), #9333ea);
+    }
+
+    .progress.bonus span {
+      background: linear-gradient(90deg, var(--success), #15803d);
+    }
+
+    .fun-shell {
+      padding: 12px 16px 24px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .fun-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .fun-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 28px 16px 22px;
+      border: 0;
+      border-radius: 20px;
+      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.18), transparent 42%), linear-gradient(180deg, var(--tile-color), var(--tile-color));
+      color: #fff;
+      cursor: pointer;
+      min-height: 132px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fun-tile:active {
+      transform: scale(0.96);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .fun-tile-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+
+    .fun-tile-label {
+      font-size: var(--font-base);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .fun-tile-sub {
+      font-size: var(--font-xs);
+      opacity: 0.88;
+      text-align: center;
+    }
+
+    .fun-card {
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff, #f9fbff);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-md);
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .fun-card h3,
+    .fun-card p,
+    .fun-card h4 {
+      margin: 0;
+    }
+
+    .fun-card p {
+      color: var(--muted);
+    }
+
+    .fun-activity-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .fun-activity-head h2 {
+      flex: 1;
+      font-size: var(--font-lg);
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .fun-back-btn {
+      min-height: var(--tap);
+      padding: 8px 12px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: var(--panel-alt);
+      color: var(--text);
+      font: inherit;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fun-empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 40px 16px;
+    }
+
+    .fun-joke-setup {
+      font-size: var(--font-lg);
+      font-weight: 700;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .joke-punchline {
+      font-weight: 800;
+      color: var(--alex);
+      font-size: var(--font-md);
+      text-align: center;
+      animation: jokeBounce 0.3s ease-out;
+    }
+
+    .fun-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .fun-btn {
+      min-height: var(--tap);
+      padding: 0 16px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: var(--alex);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fun-btn.secondary {
+      background: var(--panel-alt);
+      color: var(--text);
+    }
+
+    .fun-btn.starred {
+      background: var(--warning);
+      color: #fff;
+    }
+
+    .fun-meta {
+      font-size: var(--font-sm);
+      color: var(--muted);
+    }
+
+    .fun-input {
+      width: 100%;
+      min-height: var(--tap);
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+      font: inherit;
+      color: var(--text);
+    }
+
+    .fun-story {
+      line-height: 1.7;
+      font-size: var(--font-base);
+    }
+
+    .fun-progress {
+      font-size: var(--font-base);
+      color: var(--muted);
+    }
+
+    .madlib-highlight {
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .madlib-highlight.alex {
+      background: rgba(74, 144, 217, 0.15);
+      color: var(--alex);
+    }
+
+    .madlib-highlight.louisa {
+      background: rgba(138, 91, 209, 0.15);
+      color: var(--louisa);
+    }
+
+    .hangman-figure {
+      width: 100%;
+      max-width: 180px;
+      justify-self: center;
+    }
+
+    .hangman-category,
+    .hangman-wrong-count {
+      font-size: var(--font-sm);
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .hangman-word {
+      font-size: clamp(1.25rem, 4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: 0.3rem;
+      text-align: center;
+    }
+
+    .hangman-letters {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .hangman-letter {
+      min-height: var(--tap);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hangman-letter.correct {
+      background: #dcfce7;
+      border-color: var(--success);
+      color: #15803d;
+    }
+
+    .hangman-letter.wrong {
+      background: #fef2f2;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .hangman-result {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .hangman-result.won {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .hangman-result.lost {
+      background: #fef2f2;
+      color: var(--danger);
+    }
+
+    .wyr-prompt {
+      text-align: center;
+      font-size: var(--font-lg);
+      font-weight: 700;
+      color: var(--muted);
+      padding: 8px 0;
+    }
+
+    .wyr-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .wyr-option {
+      width: 100%;
+      min-height: 76px;
+      padding: 24px 20px;
+      border: 2px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--panel);
+      font-size: var(--font-md);
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text);
+      line-height: 1.4;
+      transition: transform 0.1s ease, border-color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .wyr-option:active {
+      transform: scale(0.97);
+    }
+
+    .wyr-a:active {
+      border-color: var(--alex);
+      background: rgba(74, 144, 217, 0.08);
+    }
+
+    .wyr-b:active {
+      border-color: var(--louisa);
+      background: rgba(138, 91, 209, 0.08);
+    }
+
+    .wyr-or {
+      font-size: var(--font-sm);
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .trivia-question {
+      font-size: var(--font-lg);
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .trivia-choices {
+      display: grid;
+      gap: 10px;
+    }
+
+    .trivia-choice {
+      width: 100%;
+      min-height: 56px;
+      padding: 16px;
+      border: 2px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--panel);
+      font: inherit;
+      font-size: var(--font-base);
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text);
+      transition: transform 0.1s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .trivia-choice:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .trivia-choice.correct {
+      background: #dcfce7;
+      border-color: var(--success);
+      color: #15803d;
+    }
+
+    .trivia-choice.wrong {
+      background: #fef2f2;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .trivia-choice.dimmed {
+      opacity: 0.45;
+    }
+
+    .trivia-score {
+      font-size: var(--font-sm);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .fun-card.centered {
+      text-align: center;
+    }
+
+    .fun-card.centered .fun-actions {
+      justify-content: center;
+    }
+
+    @keyframes jokeBounce {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 560px) {
+      .fun-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .fun-activity-head {
+        flex-wrap: wrap;
+      }
+
+      .fun-activity-head h2 {
+        width: 100%;
+      }
+
+      .hangman-letters {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 480px) {
       body {
         padding: 6px;
@@ -3006,6 +3525,30 @@
       return window.phaseRuntime;
     }
 
+    let viewAbortController = null;
+
+    function cleanupViewListeners() {
+      if (viewAbortController) {
+        viewAbortController.abort();
+        viewAbortController = null;
+      }
+    }
+
+    function getViewSignal() {
+      if (!viewAbortController) {
+        viewAbortController = new AbortController();
+      }
+      return viewAbortController.signal;
+    }
+
+    function dbPath(segments) {
+      return 'families/' + familyId + (segments ? '/' + segments : '');
+    }
+
+    function dbRef(segments) {
+      return database.ref(dbPath(segments));
+    }
+
     let auth;
     let database;
     let familyId = null;
@@ -3098,13 +3641,15 @@
     }
 
     function escapeHtml(value) {
-      return String(value)
+      return String(value || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
     }
+
+    window.escapeHtml = escapeHtml;
 
     function setModalStatus(text, isError) {
       elements.familyModalStatus.textContent = text || '';
@@ -3309,6 +3854,7 @@
         if (!views[name]) name = 'bulletin';
         appShellState.settingsPanelOpen = false;
         appShellState.currentView = name;
+        cleanupViewListeners();
         if (elements.messageInput) {
           var placeholders = {
             chores: '"Alex brushed teeth" or "3 points for Louisa"',
@@ -3529,9 +4075,9 @@
         const calendarDays = daysInput ? Number(daysInput.value) || 10 : 10;
 
         var updates = {};
-        updates['families/' + familyId + '/config/familyName'] = familyName || null;
-        updates['families/' + familyId + '/config/calendarUrl'] = calendarUrl || null;
-        updates['families/' + familyId + '/config/calendarDays'] = calendarDays;
+        updates[dbPath('config/familyName')] = familyName || null;
+        updates[dbPath('config/calendarUrl')] = calendarUrl || null;
+        updates[dbPath('config/calendarDays')] = calendarDays;
         database.ref().update(updates).then(() => {
           if (window.phaseRuntime && window.phaseRuntime.currentConfig) {
             if (familyName) {
@@ -3620,11 +4166,10 @@
           return;
         }
         keepPathsSynced(familyId);
-        const snapshot = await database.ref('families/' + familyId + '/config').get();
+        const snapshot = await dbRef('config').get();
         currentConfig = snapshot.exists() ? snapshot.val() : buildDefaultConfig();
         updateHeaderTitle(currentConfig.familyName);
         configLoaded = true;
-        await applyBalanceCorrections();
         dispatchHubEvent('hub:config-changed');
       }
       window.loadFamilyConfigV2 = loadFamilyConfigV2;
@@ -3641,15 +4186,6 @@
           normalized = normalized.replace(new RegExp('\\b' + word + '\\b', 'g'), ' ');
         });
         return normalized.replace(/[^a-z0-9$.\s']/g, ' ').replace(/\s+/g, ' ').trim();
-      }
-
-      async function applyBalanceCorrections() {
-        if (!familyId || !database) return;
-        var correctionKey = 'familyChores.correction.louisa_balance_v1.' + familyId;
-        if (localStorage.getItem(correctionKey)) return;
-        await database.ref('families/' + familyId + '/balances/louisa/owed').set(14);
-        localStorage.setItem(correctionKey, 'applied');
-        console.log('Balance correction applied: Louisa set to $14');
       }
 
       function splitClauses(text) {
@@ -4246,7 +4782,7 @@
       }
 
       async function getLogEntriesByDate(dateStr) {
-        const snapshot = await database.ref('families/' + familyId + '/log').orderByChild('date').equalTo(dateStr).get();
+        const snapshot = await dbRef('log').orderByChild('date').equalTo(dateStr).get();
         if (!snapshot.exists()) return [];
         var data = snapshot.val();
         return Object.keys(data).map(function (id) {
@@ -4255,7 +4791,7 @@
       }
 
       async function getAllLogEntries() {
-        const snapshot = await database.ref('families/' + familyId + '/log').get();
+        const snapshot = await dbRef('log').get();
         if (!snapshot.exists()) return [];
         var data = snapshot.val();
         return Object.keys(data).map(function (id) {
@@ -4264,7 +4800,7 @@
       }
 
       async function getAllPayments() {
-        const snapshot = await database.ref('families/' + familyId + '/payments').get();
+        const snapshot = await dbRef('payments').get();
         if (!snapshot.exists()) return [];
         var data = snapshot.val();
         return Object.keys(data).map(function (id) {
@@ -4273,12 +4809,12 @@
       }
 
       async function getBalances() {
-        const snapshot = await database.ref('families/' + familyId + '/balances').get();
+        const snapshot = await dbRef('balances').get();
         return snapshot.exists() ? snapshot.val() : { alex: { owed: 0 }, louisa: { owed: 0 } };
       }
 
       async function setOwed(kidId, amount) {
-        await database.ref('families/' + familyId + '/balances/' + kidId + '/owed').set(Number(amount.toFixed(2)));
+        await dbRef('balances/' + kidId + '/owed').set(Number(amount.toFixed(2)));
       }
 
       async function adjustBalance(kidId, delta) {
@@ -4307,7 +4843,7 @@
       async function saveLogEntries(entries) {
         const saved = [];
         for (const entry of entries) {
-          const ref = database.ref('families/' + familyId + '/log').push();
+          const ref = dbRef('log').push();
           await ref.set(entry);
           saved.push(Object.assign({ id: ref.key }, entry));
         }
@@ -4318,7 +4854,7 @@
 
       async function writePayment(kidId, amount, type, note) {
         const entry = { kid: kidId, amount: Number(amount.toFixed(2)), type, timestamp: Date.now(), date: toDateString(new Date()), note: note || '', balanceDelta: Number((-Number(amount.toFixed(2))).toFixed(2)) };
-        const ref = database.ref('families/' + familyId + '/payments').push();
+        const ref = dbRef('payments').push();
         await ref.set(entry);
         const nextBalance = await adjustBalance(kidId, entry.balanceDelta);
         lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
@@ -4327,13 +4863,13 @@
 
       async function writeDebt(from, to, amount) {
         const entry = { from, to, amount: Number(amount.toFixed(2)), reason: 'Recorded from chat', timestamp: Date.now(), settled: false };
-        const ref = database.ref('families/' + familyId + '/debts').push();
+        const ref = dbRef('debts').push();
         await ref.set(entry);
         lastUndoAction = { type: 'debt', debtId: ref.key };
       }
 
       async function settleDebt(kids) {
-        const snapshot = await database.ref('families/' + familyId + '/debts').get();
+        const snapshot = await dbRef('debts').get();
         if (!snapshot.exists()) return null;
         const data = snapshot.val();
         const debtId = Object.keys(data).find((id) => {
@@ -4342,14 +4878,14 @@
         });
         if (!debtId) return null;
         const debt = data[debtId];
-        await database.ref('families/' + familyId + '/debts/' + debtId + '/settled').set(true);
+        await dbRef('debts/' + debtId + '/settled').set(true);
         lastUndoAction = { type: 'settle_debt', debtId };
         return debt;
       }
 
       async function updateChorePoints(choreId, points) {
         const previous = Number(currentConfig.chores[choreId].points || 0);
-        await database.ref('families/' + familyId + '/config/chores/' + choreId + '/points').set(points);
+        await dbRef('config/chores/' + choreId + '/points').set(points);
         currentConfig.chores[choreId].points = points;
         lastUndoAction = { type: 'change_points', choreId, previous };
         dispatchHubEvent('hub:config-changed');
@@ -4363,31 +4899,31 @@
         }
         if (lastUndoAction.type === 'log') {
           for (const entry of lastUndoAction.entries) {
-            await database.ref('families/' + familyId + '/log/' + entry.id).remove();
+            await dbRef('log/' + entry.id).remove();
           }
           addMessage('system', 'Removed the most recent log entry.');
           showToast('Removed the most recent log entry.');
         } else if (lastUndoAction.type === 'payment') {
-          await database.ref('families/' + familyId + '/payments/' + lastUndoAction.paymentId).remove();
+          await dbRef('payments/' + lastUndoAction.paymentId).remove();
           const undoDelta = Number((-(lastUndoAction.balanceDelta != null ? lastUndoAction.balanceDelta : lastUndoAction.amount)).toFixed(2));
           await adjustBalance(lastUndoAction.kidId, undoDelta);
           addMessage('system', 'Removed the most recent payment.');
           showToast('Removed the most recent payment.');
         } else if (lastUndoAction.type === 'debt') {
-          await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId).remove();
+          await dbRef('debts/' + lastUndoAction.debtId).remove();
           addMessage('system', 'Removed the most recent debt record.');
           showToast('Removed the most recent debt record.');
         } else if (lastUndoAction.type === 'settle_debt') {
-          await database.ref('families/' + familyId + '/debts/' + lastUndoAction.debtId + '/settled').set(false);
+          await dbRef('debts/' + lastUndoAction.debtId + '/settled').set(false);
           addMessage('system', 'Reopened the settled debt.');
           showToast('Reopened the settled debt.');
         } else if (lastUndoAction.type === 'change_points') {
-          await database.ref('families/' + familyId + '/config/chores/' + lastUndoAction.choreId + '/points').set(lastUndoAction.previous);
+          await dbRef('config/chores/' + lastUndoAction.choreId + '/points').set(lastUndoAction.previous);
           currentConfig.chores[lastUndoAction.choreId].points = lastUndoAction.previous;
           addMessage('system', 'Restored the previous point value.');
           showToast('Restored the previous point value.');
         } else if (lastUndoAction.type === 'list_delete') {
-          await database.ref('families/' + familyId + '/lists/' + lastUndoAction.listId + '/items/' + lastUndoAction.itemId).set(lastUndoAction.itemData);
+          await dbRef('lists/' + lastUndoAction.listId + '/items/' + lastUndoAction.itemId).set(lastUndoAction.itemData);
           addMessage('system', 'Restored the deleted list item.');
           showToast('Item restored.');
         }
@@ -4545,7 +5081,7 @@
             note: isParentOwes ? 'Parent owes' : 'Owes parent',
             balanceDelta: isParentOwes ? result.amount : -result.amount
           };
-          const ref = database.ref('families/' + familyId + '/payments').push();
+          const ref = dbRef('payments').push();
           await ref.set(entry);
           lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
           showToast(isParentOwes ? 'You now owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) : currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount), { kid: kidId, onUndo: () => undoLastAction() });
@@ -5081,12 +5617,18 @@
         renderStatus,
         calculateWeeklyPay,
         dollars,
+        dbPath,
+        dbRef,
         paymentBalanceDelta,
         toIsoWeek,
         toDateString,
+        cleanupViewListeners,
+        getViewSignal,
         adjustBalance,
+        setOwed,
         addMessage,
-        showToast
+        showToast,
+        escapeHtml
       };
       bindPhase2Composer();
 
@@ -5150,21 +5692,10 @@
       };
 
       function ensureKidFunStyles() {
-        if (document.getElementById('kidFunStyles')) return;
-        var style = document.createElement('style');
-        style.id = 'kidFunStyles';
-        style.textContent = '.fun-shell{padding:12px 16px 24px;display:grid;gap:14px}.fun-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.fun-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px 16px 22px;border:0;border-radius:20px;background:radial-gradient(circle at top left,rgba(255,255,255,.18),transparent 42%),linear-gradient(180deg,var(--tile-color),var(--tile-color));color:#fff;cursor:pointer;min-height:132px;box-shadow:0 12px 28px rgba(15,23,42,.16);transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}.fun-tile:active{transform:scale(.96);box-shadow:0 6px 14px rgba(15,23,42,.18)}.fun-tile-icon{font-size:2.4rem;line-height:1}.fun-tile-label{font-size:var(--font-base);font-weight:800;text-align:center}.fun-tile-sub{font-size:var(--font-xs);opacity:.88;text-align:center}.fun-card{padding:18px;border-radius:20px;background:linear-gradient(180deg,#ffffff,#f9fbff);border:1px solid var(--line);box-shadow:0 10px 24px rgba(15,23,42,.06);display:grid;gap:14px;align-content:start}.fun-card h3,.fun-card p,.fun-card h4{margin:0}.fun-card p{color:var(--muted)}.fun-activity-head{display:flex;align-items:center;gap:12px;padding:4px 0 4px}.fun-activity-head h2{flex:1;font-size:var(--font-lg);font-weight:800;margin:0}.fun-back-btn{min-height:44px;padding:8px 12px;border:0;border-radius:12px;background:var(--panel-alt);color:var(--text);font:inherit;font-size:var(--font-sm);font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}.fun-empty{color:var(--muted);text-align:center;padding:40px 16px}.fun-joke-setup{font-size:var(--font-lg);font-weight:700;line-height:1.45;text-align:center}.joke-punchline{font-weight:800;color:var(--alex);font-size:var(--font-md);text-align:center;animation:jokeBounce .3s ease-out}.fun-actions{display:flex;gap:10px;flex-wrap:wrap}.fun-btn{min-height:46px;padding:0 16px;border:0;border-radius:12px;background:var(--alex);color:#fff;font:inherit;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}.fun-btn.secondary{background:var(--panel-alt);color:var(--text)}.fun-btn.starred{background:#f59e0b;color:#fff}.fun-meta{font-size:var(--font-sm);color:var(--muted)}.fun-input{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit;color:var(--text)}.fun-story{line-height:1.7;font-size:var(--font-base)}.fun-progress{font-size:var(--font-base);color:var(--muted)}.madlib-highlight{font-weight:700;padding:1px 4px;border-radius:4px}.madlib-highlight.alex{background:rgba(74,144,217,.15);color:var(--alex)}.madlib-highlight.louisa{background:rgba(138,91,209,.15);color:var(--louisa)}.hangman-figure{width:100%;max-width:180px;justify-self:center}.hangman-category,.hangman-wrong-count{font-size:var(--font-sm);font-weight:700;color:var(--muted);text-align:center}.hangman-word{font-size:clamp(1.25rem,4vw,2rem);font-weight:800;letter-spacing:.3rem;text-align:center}.hangman-letters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.hangman-letter{min-height:48px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font:inherit;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}.hangman-letter.correct{background:#dcfce7;border-color:#16a34a;color:#15803d}.hangman-letter.wrong{background:#fef2f2;border-color:var(--danger);color:var(--danger)}.hangman-result{padding:12px 14px;border-radius:14px;font-weight:700;text-align:center}.hangman-result.won{background:#dcfce7;color:#15803d}.hangman-result.lost{background:#fef2f2;color:var(--danger)}.wyr-prompt{text-align:center;font-size:var(--font-lg);font-weight:700;color:var(--muted);padding:8px 0}.wyr-options{display:flex;flex-direction:column;gap:12px;align-items:center}.wyr-option{width:100%;min-height:76px;padding:24px 20px;border:2px solid var(--line);border-radius:18px;background:var(--panel);font-size:var(--font-md);font-weight:700;text-align:center;cursor:pointer;color:var(--text);line-height:1.4;transition:transform .1s ease,border-color .15s ease;-webkit-tap-highlight-color:transparent}.wyr-option:active{transform:scale(.97)}.wyr-a:active{border-color:var(--alex);background:rgba(74,144,217,.08)}.wyr-b:active{border-color:var(--louisa);background:rgba(138,91,209,.08)}.wyr-or{font-size:var(--font-sm);font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:2px}.trivia-question{font-size:var(--font-lg);font-weight:700;line-height:1.4;text-align:center;padding:8px 0}.trivia-choices{display:grid;gap:10px}.trivia-choice{width:100%;min-height:56px;padding:16px;border:2px solid var(--line);border-radius:14px;background:var(--panel);font:inherit;font-size:var(--font-base);font-weight:600;text-align:left;cursor:pointer;color:var(--text);transition:transform .1s ease;-webkit-tap-highlight-color:transparent}.trivia-choice:active:not(:disabled){transform:scale(.97)}.trivia-choice.correct{background:#dcfce7;border-color:#16a34a;color:#15803d}.trivia-choice.wrong{background:#fef2f2;border-color:var(--danger);color:var(--danger)}.trivia-choice.dimmed{opacity:.45}.trivia-score{font-size:var(--font-sm);color:var(--muted);font-weight:700}.fun-stars-row{display:flex;justify-content:center}.fun-card.centered{text-align:center}.fun-card.centered .fun-actions{justify-content:center}@keyframes jokeBounce{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}@media (max-width: 560px){.fun-grid{grid-template-columns:1fr}.fun-activity-head{flex-wrap:wrap}.fun-activity-head h2{width:100%}.hangman-letters{grid-template-columns:repeat(4,minmax(0,1fr))}}';
-        document.head.appendChild(style);
+        return;
       }
 
-      function escapeBulletinHtml(value) {
-        return String(value || '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
+      var escapeBulletinHtml = window.escapeHtml;
 
       function normalizeNoteText(value) {
         return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -5172,7 +5703,7 @@
 
       function bulletinNotesRef(phase) {
         if (!phase || !phase.database || !phase.familyId) return null;
-        return phase.database.ref('families/' + phase.familyId + '/bulletin/notes');
+        return phase.dbRef('bulletin/notes');
       }
 
       function funStorageKey(name) {
@@ -6290,7 +6821,8 @@
         listsById: {},
         templatesByType: {},
         settingsOpen: false,
-        bound: false,
+        listenerSignal: null,
+        swipeSignal: null,
         teardown: null
       };
 
@@ -6417,11 +6949,7 @@
       };
 
       function ensureBankListStyles() {
-        if (document.getElementById('bankListStyles')) return;
-        var style = document.createElement('style');
-        style.id = 'bankListStyles';
-        style.textContent = '.score-actions{display:grid;gap:10px}.score-action{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}.score-action button{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--alex);color:#fff;cursor:pointer}.score-empty{color:var(--muted);font-size:var(--font-base)}.score-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.score-name{font-weight:700}.score-pay{font-size:var(--font-base);color:var(--muted)}.score-next{font-size:var(--font-sm);color:var(--muted);font-weight:700}.progress{height:10px;border-radius:999px;background:rgba(148,163,184,.18);overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--alex),#2563eb)}.progress.louisa span{background:linear-gradient(90deg,var(--louisa),#9333ea)}.progress.bonus span{background:linear-gradient(90deg,#22c55e,#15803d)}';
-        document.head.appendChild(style);
+        return;
       }
 
       function autoCategory(text) {
@@ -6498,7 +7026,7 @@
       window.getWeeklyPayBreakdown = getWeeklyPayBreakdown;
 
       async function getDebts(phase) {
-        var snapshot = await phase.database.ref('families/' + phase.familyId + '/debts').get();
+        var snapshot = await phase.dbRef('debts').get();
         if (!snapshot.exists()) return [];
         var data = snapshot.val();
         return Object.keys(data).map(function (id) {
@@ -6518,7 +7046,7 @@
           var previous = new Date(now);
           previous.setDate(previous.getDate() - 7);
           var previousWeek = phase.toIsoWeek(previous);
-          var metaRef = phase.database.ref('families/' + phase.familyId + '/meta/lastWeeklyPayWeek');
+          var metaRef = phase.dbRef('meta/lastWeeklyPayWeek');
           var metaSnap = await metaRef.get();
           if (metaSnap.exists() && metaSnap.val() === currentWeek) return;
           var payments = await phase.getAllPayments();
@@ -6541,7 +7069,7 @@
             var amount = payInfo.totalPay;
             if (amount > 0) {
               var paymentEntry = { kid: kidId, amount: Number(amount.toFixed(2)), type: 'weekly', timestamp: Date.now(), date: phase.toDateString(now), note: note, balanceDelta: Number(amount.toFixed(2)) };
-              var ref = phase.database.ref('families/' + phase.familyId + '/payments').push();
+              var ref = phase.dbRef('payments').push();
               await ref.set(paymentEntry);
               await phase.adjustBalance(kidId, paymentEntry.balanceDelta);
               paidCount += 1;
@@ -6566,6 +7094,7 @@
 
       window.renderCardView = async function renderCardView(kidId) {
         ensureBankListStyles();
+        bindBankAndLists();
         var phase = runtime();
         var cardContent = document.getElementById('cardContent');
         if (!cardContent) return;
@@ -6697,12 +7226,12 @@
 
       function listsRef(phase) {
         if (!phase || !phase.database || !phase.familyId) return null;
-        return phase.database.ref('families/' + phase.familyId + '/lists');
+        return phase.dbRef('lists');
       }
 
       function listTemplatesRef(phase) {
         if (!phase || !phase.database || !phase.familyId) return null;
-        return phase.database.ref('families/' + phase.familyId + '/listTemplates');
+        return phase.dbRef('listTemplates');
       }
 
       function listTypeMeta(type) {
@@ -7151,6 +7680,7 @@
 
       async function renderListsHomeImpl() {
         ensureBankListStyles();
+        bindBankAndLists();
         var phase = runtime();
         var container = document.getElementById('listsContent');
         if (!container) return;
@@ -7190,7 +7720,11 @@
       };
 
       function bindSwipeHandlers(container) {
-        if (!container || container.dataset.swipeBound === 'true') return;
+        if (!container) return;
+        var phase = runtime();
+        var signal = phase && typeof phase.getViewSignal === 'function' ? phase.getViewSignal() : null;
+        if (container.dataset.swipeBound === 'true' && listState.swipeSignal === signal) return;
+        listState.swipeSignal = signal;
         container.dataset.swipeBound = 'true';
         container.addEventListener('touchstart', function (e) {
           var touch = e.touches[0];
@@ -7216,7 +7750,7 @@
           wrapper.classList.remove('swiping-left');
           wrapper.classList.remove('swiping-right');
           item.classList.add(handle ? 'dragging' : 'swiping');
-        }, { passive: true });
+        }, signal ? { passive: true, signal: signal } : { passive: true });
 
         container.addEventListener('touchmove', function (e) {
           if (!gestureState.itemEl) return;
@@ -7266,7 +7800,7 @@
             gestureState.itemEl.style.transform = 'translateX(' + Math.max(-120, Math.min(120, diff)) + 'px)';
             gestureState.itemEl.style.opacity = String(Math.max(0.35, 1 - (Math.abs(diff) / 260)));
           }
-        }, { passive: false });
+        }, signal ? { passive: false, signal: signal } : { passive: false });
 
         container.addEventListener('touchend', function () {
           if (!gestureState.itemEl) return;
@@ -7338,7 +7872,7 @@
           gestureState.category = null;
           gestureState.activeTouchId = null;
           gestureState.overItemId = null;
-        });
+        }, signal ? { signal: signal } : undefined);
 
         container.addEventListener('touchcancel', function () {
           if (!gestureState.itemEl) return;
@@ -7362,7 +7896,7 @@
           gestureState.category = null;
           gestureState.activeTouchId = null;
           gestureState.overItemId = null;
-        });
+        }, signal ? { signal: signal } : undefined);
       }
 
       async function saveTemplateForList(list) {
@@ -7412,14 +7946,16 @@
       }
 
       function bindBankAndLists() {
-        if (listState.bound) return;
-        listState.bound = true;
+        var phase = runtime();
+        var signal = phase && typeof phase.getViewSignal === 'function' ? phase.getViewSignal() : null;
+        if (listState.listenerSignal === signal) return;
+        listState.listenerSignal = signal;
         var cardContent = document.getElementById('cardContent');
         if (cardContent) {
           cardContent.addEventListener('click', function (event) {
             var button = event.target.closest('[data-card-action]');
             if (button) handleCardAction(button);
-          });
+          }, signal ? { signal: signal } : undefined);
         }
         var listsContent = document.getElementById('listsContent');
         if (listsContent) {
@@ -7480,7 +8016,7 @@
                 if (categoryInput && (categoryInput.value === 'auto' || !categoryInput.value)) categoryInput.value = 'auto';
               }).catch(function (error) { console.error(error); });
             }
-          });
+          }, signal ? { signal: signal } : undefined);
 
           listsContent.addEventListener('keydown', function (event) {
             if (event.key === 'Enter' && event.target.id === 'listItemInput') {
@@ -7488,7 +8024,7 @@
               var addBtn = listsContent.querySelector('[data-list-action="add-item"]');
               if (addBtn) addBtn.click();
             }
-          });
+          }, signal ? { signal: signal } : undefined);
         }
       }
 
@@ -7510,18 +8046,13 @@
         checkOffItemByText: checkOffItemByText
       };
 
-      bindBankAndLists();
     })();
   </script>
   <script>
     (function () {
-      function localDateString(date) {
-        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-      }
-
       var historyState = {
         kid: 'all',
-        date: localDateString(new Date())
+        date: runtime().toDateString(new Date())
       };
       var choreSelectedKid = null;
       var weeklyPayChecked = false;
@@ -7936,7 +8467,7 @@
 
       async function renderHistory() {
         var phase = runtime();
-        var date = historyState.date || localDateString(new Date());
+        var date = historyState.date || runtime().toDateString(new Date());
         var entries = await phase.getAllLogEntries();
         var filtered = entries.filter(function (e) {
           return e.date === date && (historyState.kid === 'all' || e.kid === historyState.kid);
@@ -7995,7 +8526,7 @@
         if (!points || Number.isNaN(points)) return;
         var key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('chore_' + Date.now());
         var chore = { label: label, points: points, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
-        await phase.database.ref('families/' + phase.familyId + '/config/chores/' + key).set(chore);
+        await phase.dbRef('config/chores/' + key).set(chore);
         phase.currentConfig.chores[key] = chore;
         renderChoreSettings();
         renderChoreProgress().catch(function (error) { console.error(error); });
@@ -8005,7 +8536,7 @@
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
         if (!await window.appConfirm('Remove chore?', 'Remove this chore?', true)) return;
-        await phase.database.ref('families/' + phase.familyId + '/config/chores/' + choreId).remove();
+        await phase.dbRef('config/chores/' + choreId).remove();
         delete phase.currentConfig.chores[choreId];
         renderChoreSettings();
         renderChoreProgress().catch(function (error) { console.error(error); });
@@ -8024,7 +8555,7 @@
           var logId = logDeleteBtn.dataset.choreLogDelete;
           var phase = runtime();
           if (!phase || !logId) return;
-          phase.database.ref('families/' + phase.familyId + '/log/' + logId).remove().then(function () {
+          phase.dbRef('log/' + logId).remove().then(function () {
             phase.showToast('Entry removed.');
             renderChoreProgress().catch(function (error) { console.error(error); });
           }).catch(function (error) { console.error(error); });
@@ -8055,7 +8586,7 @@
           if (action === 'delete-log') {
             var logId = bankActionBtn.dataset.logId;
             if (!phase || !logId) return;
-            phase.database.ref('families/' + phase.familyId + '/log/' + logId).remove().then(function () {
+            phase.dbRef('log/' + logId).remove().then(function () {
               phase.showToast('Deleted log entry.');
               renderChoreProgress().catch(function (error) { console.error(error); });
               renderBankSettings().catch(function (error) { console.error(error); });
@@ -8068,9 +8599,9 @@
             var amount = Number(bankActionBtn.dataset.paymentAmount || 0);
             var type = bankActionBtn.dataset.paymentType || 'payment';
             if (!phase || !paymentId) return;
-            phase.database.ref('families/' + phase.familyId + '/payments/' + paymentId).get().then(function (snap) {
+            phase.dbRef('payments/' + paymentId).get().then(function (snap) {
               var p = snap.exists() ? snap.val() : null;
-              return phase.database.ref('families/' + phase.familyId + '/payments/' + paymentId).remove().then(function () { return p; });
+              return phase.dbRef('payments/' + paymentId).remove().then(function () { return p; });
             }).then(function (p) {
               var delta = p && typeof p.balanceDelta === 'number' ? Number(p.balanceDelta) : (type === 'credit' ? amount : -amount);
               return phase.adjustBalance(kidId, Number((-delta).toFixed(2)));
@@ -8115,7 +8646,7 @@
             if (Number.isNaN(val) || val < 1) return;
             var tiers = (phase.currentConfig.kids[kidId].payTiers || []).slice();
             tiers[idx] = Object.assign({}, tiers[idx], { minPts: val });
-            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/payTiers').set(tiers).then(function () {
+            phase.dbRef('config/kids/' + kidId + '/payTiers').set(tiers).then(function () {
               phase.currentConfig.kids[kidId].payTiers = tiers;
               renderBankSettings().catch(function (error) { console.error(error); });
             });
@@ -8125,7 +8656,7 @@
             if (Number.isNaN(val)) return;
             var tiers = (phase.currentConfig.kids[kidId].payTiers || []).slice();
             tiers[idx] = Object.assign({}, tiers[idx], { pay: val });
-            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/payTiers').set(tiers).then(function () {
+            phase.dbRef('config/kids/' + kidId + '/payTiers').set(tiers).then(function () {
               phase.currentConfig.kids[kidId].payTiers = tiers;
               renderBankSettings().catch(function (error) { console.error(error); });
             });
@@ -8133,7 +8664,7 @@
           }
           if (setting === 'bonus-pts') {
             if (Number.isNaN(val) || val < 1) return;
-            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/weeklyBonus/extraPts').set(val).then(function () {
+            phase.dbRef('config/kids/' + kidId + '/weeklyBonus/extraPts').set(val).then(function () {
               if (!phase.currentConfig.kids[kidId].weeklyBonus) phase.currentConfig.kids[kidId].weeklyBonus = {};
               phase.currentConfig.kids[kidId].weeklyBonus.extraPts = val;
               renderBankSettings().catch(function (error) { console.error(error); });
@@ -8142,7 +8673,7 @@
           }
           if (setting === 'bonus-pay') {
             if (Number.isNaN(val)) return;
-            phase.database.ref('families/' + phase.familyId + '/config/kids/' + kidId + '/weeklyBonus/bonus').set(val).then(function () {
+            phase.dbRef('config/kids/' + kidId + '/weeklyBonus/bonus').set(val).then(function () {
               if (!phase.currentConfig.kids[kidId].weeklyBonus) phase.currentConfig.kids[kidId].weeklyBonus = {};
               phase.currentConfig.kids[kidId].weeklyBonus.bonus = val;
               renderBankSettings().catch(function (error) { console.error(error); });

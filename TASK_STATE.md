@@ -1,10 +1,10 @@
 # Task State - Family Hub
 
-**Task:** Phase 31 — Fix Input Bar, Starred Jokes Tile, Louisa Balance
+**Task:** Phase 32 — Consolidation: Design System, Code Cleanup, Listener Safety
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 31
+**Next Action:** Review Phase 32
 **Last Updated:** 2026-03-17
 
 ## Completed
@@ -12,16 +12,17 @@
 - [x] Phases 8–28 + Consolidation + Visual Polish
 - [x] Phase 29: List fixes, Bank revamp, Icon & iOS fullscreen
 - [x] Phase 30: Fun tab overhaul — built & reviewed (12/12 tests passed)
+- [x] Phase 31: Input bar fixes, Starred favorites, Louisa balance — built & reviewed
 
 ## Current
 
-- [x] **Phase 31** — three fixes complete:
-  - Part A: Composer hides on Fun, sits above the tab bar, and parsing now uses current-tab context
-  - Part B: Favorites tile appears on the Fun grid when starred jokes exist
-  - Part C: One-time Louisa balance correction sets owed to $14 per family
+- [x] **Phase 32** — Consolidation complete:
+  - Part A: Added shared design tokens and moved the Fun/Bank injected styles into the main stylesheet
+  - Part B: Consolidated shared escaping/date helpers, removed the Louisa balance correction patch, and added AbortController-based view listener cleanup
+  - Part C: Added `dbPath()` / `dbRef()` helpers and converted the core runtime plus tab modules over to the shared path helpers
 
 ## Notes
 
-- The parser now prioritizes the active tab's commands before chore fallbacks
-- The Louisa correction is guarded by a family-specific localStorage flag so it only runs once
+- Phase 31 remains a separate local commit and is untouched
+- One pre-runtime family config lookup still uses a raw path because it runs before `familyId` is promoted into the helper-backed runtime flow
 - Ready for Gemini review
