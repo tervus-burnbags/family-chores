@@ -2143,6 +2143,10 @@
       border-radius: 16px;
     }
 
+    .list-item-wrapper.dragging-active .list-swipe-action {
+      display: none;
+    }
+
     .list-swipe-action {
       position: absolute;
       top: 0;
@@ -2193,9 +2197,10 @@
     }
 
     .list-item.dragging {
-      opacity: 0.95;
-      z-index: 5;
-      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+      opacity: 1;
+      z-index: 10;
+      background: var(--panel-alt);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
       transition: none;
     }
 
@@ -6155,7 +6160,7 @@
       }
 
       async function openOrCreateTypedList(type) {
-        var existing = (type === 'grocery' || type === 'costco' || type === 'lakehouse') ? findExistingListByType(type) : null;
+        var existing = (type === 'costco' || type === 'lakehouse') ? findExistingListByType(type) : null;
         if (existing) {
           listState.currentListId = existing.id;
           listState.settingsOpen = false;
@@ -6163,7 +6168,9 @@
         }
         var template = templateForType(type);
         var name = template ? template.name : listTypeMeta(type).label;
-        if (type === 'packing') {
+        if (type === 'grocery') {
+          name = window.prompt('Store name?', 'Harris Teeter') || '';
+        } else if (type === 'packing') {
           name = window.prompt('Trip name?', 'Spring Break 2026') || '';
         } else if (type === 'todo') {
           name = window.prompt('To-do list name?', 'Family To-Do') || '';
@@ -6335,6 +6342,7 @@
           gestureState.overItemId = gestureState.itemId;
           gestureState.mode = handle ? 'drag' : 'swipe';
           if (!item) return;
+          wrapper.classList.toggle('dragging-active', Boolean(handle));
           item.classList.add(handle ? 'dragging' : 'swiping');
         }, { passive: true });
 
@@ -6424,6 +6432,7 @@
           }
           itemEl.classList.remove('swiping');
           itemEl.classList.remove('dragging');
+          if (gestureState.wrapperEl) gestureState.wrapperEl.classList.remove('dragging-active');
           gestureState.mode = null;
           gestureState.wrapperEl = null;
           gestureState.itemEl = null;
@@ -6443,6 +6452,7 @@
           itemEl.style.opacity = '';
           itemEl.classList.remove('swiping');
           itemEl.classList.remove('dragging');
+          if (gestureState.wrapperEl) gestureState.wrapperEl.classList.remove('dragging-active');
           gestureState.mode = null;
           gestureState.wrapperEl = null;
           gestureState.itemEl = null;
@@ -7237,6 +7247,9 @@
 
       document.addEventListener('hub:config-changed', function () {
         renderChoreProgress().catch(function (error) { console.error(error); });
+        if (appShellState.currentView === 'lists' && typeof window.renderListsHome === 'function') {
+          window.renderListsHome();
+        }
         if (isBankViewActive()) {
           renderBankSettings().catch(function (error) { console.error(error); });
         }
