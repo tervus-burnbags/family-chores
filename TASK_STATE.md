@@ -1,24 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 27 — Lake House Grouped Sections + Updated Template
+**Task:** Phase 28 — Fix Template Application for Existing Lists
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 27
+**Next Action:** Review Phase 28
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–26 + Consolidation + Visual Polish
+- [x] Phases 8–27 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 27: Lake House Grouped Sections + Updated Template** — Add lake house section grouping, update template, and fix swipe indicator direction visibility
+- [x] **Phase 28: Fix template reset** — "Reset template" now repopulates the current list with built-in template items, add confirm dialog and toast feedback
 
 ## Notes
 
-- Added lake house-specific grouped categories and updated the default template to the full family packing/prep list
-- Lake house detail now renders in grouped sections and defaults newly added items into `pack_to`
-- Swipe indicators now only show for the active swipe direction, preventing opposite-side bleed-through
-- Lake house drag reorder stays scoped to each section through the existing category-aware drag logic
-- Validation complete: inline scripts parsed successfully after Phase 27 changes
+- `resetTemplateForType()` now clears the Firebase override and repopulates the active list from the built-in template
+- Reset now asks for destructive confirmation before replacing the current list contents
+- Save-template and reset-template actions both show explicit toast feedback with type/item context
+- Existing lake house and grocery lists can now be refreshed to current built-in template content
+- Validation complete: inline scripts parsed successfully after Phase 28 changes

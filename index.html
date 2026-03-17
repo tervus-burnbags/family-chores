@@ -6765,13 +6765,32 @@
           return { text: item.text, category: item.category || 'other' };
         });
         await ref.child(list.type).set({ name: list.name, type: list.type, items: items });
+        return items.length;
       }
 
       async function resetTemplateForType(type) {
         var phase = runtime();
         var ref = listTemplatesRef(phase);
-        if (!ref || !LIST_TEMPLATES[type]) return;
+        var listRef = listsRef(phase);
+        if (!ref || !LIST_TEMPLATES[type]) return 0;
         await ref.child(type).remove();
+        var currentListId = listState.currentListId;
+        if (!currentListId || !listRef) return 0;
+        var templateItems = (LIST_TEMPLATES[type].items || []).slice();
+        var updates = {};
+        for (var i = 0; i < templateItems.length; i += 1) {
+          var pushKey = listRef.child(currentListId + '/items').push().key;
+          var templateItem = templateItems[i] || {};
+          updates[pushKey] = {
+            text: String(templateItem.text || '').trim(),
+            done: false,
+            order: i + 1,
+            timestamp: Date.now() + i,
+            category: templateItem.category || (type === 'lakehouse' ? 'pack_to' : ((type === 'grocery' || type === 'costco') ? autoCategory(templateItem.text || '') : 'other'))
+          };
+        }
+        await listRef.child(currentListId + '/items').set(updates);
+        return templateItems.length;
       }
 
       async function deleteEntireList(listId) {
@@ -6824,18 +6843,22 @@
               return;
             }
             if (target.dataset.listAction === 'save-template' && listState.currentListId) {
-              saveTemplateForList(listState.listsById[listState.currentListId]).then(function () {
+              var currentListForSave = listState.listsById[listState.currentListId];
+              saveTemplateForList(currentListForSave).then(function () {
                 var phase = runtime();
-                if (phase) phase.showToast('Template saved.');
+                if (phase && currentListForSave) {
+                  phase.showToast('Saved as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+                }
               }).catch(function (error) { console.error(error); });
               return;
             }
             if (target.dataset.listAction === 'reset-template' && listState.currentListId) {
               var currentList = listState.listsById[listState.currentListId];
               if (!currentList) return;
-              resetTemplateForType(currentList.type).then(function () {
+              if (!await window.appConfirm('Reset to default template?', 'This will replace all items in this list with the default template. Any custom items will be lost.', true)) return;
+              resetTemplateForType(currentList.type).then(function (count) {
                 var phase = runtime();
-                if (phase) phase.showToast('Template reset.');
+                if (phase) phase.showToast('Template reset - ' + count + ' items loaded.');
               }).catch(function (error) { console.error(error); });
               return;
             }
