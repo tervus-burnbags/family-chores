@@ -1,24 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 26 — Fullscreen PWA + Font System Overhaul
+**Task:** Phase 27 — Lake House Grouped Sections + Updated Template
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 26
+**Next Action:** Review Phase 27
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–25 + Consolidation + Visual Polish
+- [x] Phases 8–26 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 26: Fullscreen + Font System** — Switch manifest to fullscreen display; replace 28+ arbitrary font sizes with a 6-step type scale (--font-xs through --font-xl)
+- [x] **Phase 27: Lake House Grouped Sections + Updated Template** — Add lake house section grouping, update template, and fix swipe indicator direction visibility
 
 ## Notes
 
-- `manifest.json` now uses `display: fullscreen` for reinstall-based fullscreen PWA mode
-- Added the shared 6-step type scale in `:root` and replaced stylesheet font-size usage with `var(--font-*)` tokens
-- Injected runtime style blocks now use the same type scale instead of raw rem values
-- Minimum font-size token is `--font-xs` at 0.75rem, with no raw font-size rem/px values left in `index.html`
-- Validation complete: inline scripts parsed successfully after the font-system conversion
+- Added lake house-specific grouped categories and updated the default template to the full family packing/prep list
+- Lake house detail now renders in grouped sections and defaults newly added items into `pack_to`
+- Swipe indicators now only show for the active swipe direction, preventing opposite-side bleed-through
+- Lake house drag reorder stays scoped to each section through the existing category-aware drag logic
+- Validation complete: inline scripts parsed successfully after Phase 27 changes

@@ -2154,6 +2154,21 @@
     }
 
     .list-swipe-action {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 0;
+    }
+
+    .list-item-wrapper.swiping-left .list-swipe-action.left,
+    .list-item-wrapper.swiping-right .list-swipe-action.right {
+      opacity: 1;
+    }
+
+    .list-item {
+      z-index: 1;
+    }
+
+    .list-swipe-action {
       position: absolute;
       top: 0;
       bottom: 0;
@@ -5758,6 +5773,13 @@
         { id: 'other', label: 'Other', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9.5 12 5l8 4.5M4 9.5V18l8 4 8-4V9.5M4 9.5l8 4.5m8-4.5L12 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' }
       ];
 
+      var LAKEHOUSE_CATEGORIES = [
+        { id: 'pack_to', label: 'Pack - Bring to Lake House', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="7" width="11" height="12" rx="3" stroke="currentColor" stroke-width="2"></rect><path d="M8 7V6a2 2 0 0 1 4 0v1M17 12h3m0 0-2.5-2.5M20 12l-2.5 2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' },
+        { id: 'prep_go', label: 'Before Leaving Home', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M9 9h6M9 13h4M8.5 17l1.5 1.5 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' },
+        { id: 'prep_depart', label: 'Before Leaving Lake House', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M9 9h6M9 13h4M8.5 17l1.5 1.5 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' },
+        { id: 'pack_back', label: 'Pack - Bring Home', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="7" width="11" height="12" rx="3" stroke="currentColor" stroke-width="2"></rect><path d="M13 7V6a2 2 0 0 1 4 0v1M7 12H4m0 0 2.5-2.5M4 12l2.5 2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' }
+      ];
+
       var CATEGORY_KEYWORDS = {
         produce: ['apple', 'banana', 'lettuce', 'tomato', 'onion', 'potato', 'carrot', 'pepper', 'cucumber', 'avocado', 'berry', 'berries', 'grape', 'lemon', 'lime', 'orange', 'spinach', 'kale', 'broccoli', 'celery', 'mushroom', 'garlic', 'ginger', 'herb', 'basil', 'cilantro', 'fruit', 'vegetable', 'salad', 'corn'],
         meat: ['chicken', 'beef', 'pork', 'steak', 'ground', 'turkey', 'sausage', 'bacon', 'fish', 'salmon', 'shrimp', 'tuna', 'tilapia', 'meat', 'seafood', 'crab', 'lobster', 'ribs'],
@@ -5776,21 +5798,48 @@
           name: 'Lake House',
           type: 'lakehouse',
           items: [
-            { text: 'Towels & linens', category: 'other' },
-            { text: 'Cooler with ice', category: 'other' },
-            { text: 'Sunscreen', category: 'health' },
-            { text: 'Bug spray', category: 'health' },
-            { text: 'Swimsuits', category: 'other' },
-            { text: 'Trash bags', category: 'household' },
-            { text: 'Paper towels', category: 'household' },
-            { text: 'Firewood or charcoal', category: 'other' },
-            { text: 'Board games', category: 'other' },
-            { text: 'Fishing gear', category: 'other' },
-            { text: 'Dog food & bowls', category: 'other' },
-            { text: 'Life jackets', category: 'other' },
-            { text: 'First aid kit', category: 'health' },
-            { text: 'Flashlights & batteries', category: 'other' },
-            { text: 'Snacks & drinks for the car', category: 'snacks' }
+            { text: 'Jackets/coats', category: 'pack_to' },
+            { text: 'Boots', category: 'pack_to' },
+            { text: 'Work phone', category: 'pack_to' },
+            { text: 'Suitcase', category: 'pack_to' },
+            { text: 'Purse', category: 'pack_to' },
+            { text: 'Skin care', category: 'pack_to' },
+            { text: 'Mouth guard', category: 'pack_to' },
+            { text: 'Deodorant', category: 'pack_to' },
+            { text: 'Phone/watch charger', category: 'pack_to' },
+            { text: 'Water bottles', category: 'pack_to' },
+            { text: 'Gloves/hats', category: 'pack_to' },
+            { text: 'Medicine - Christina', category: 'pack_to' },
+            { text: 'Jewelry', category: 'pack_to' },
+            { text: 'Shoes', category: 'pack_to' },
+            { text: 'Clothes', category: 'pack_to' },
+            { text: 'Pajamas', category: 'pack_to' },
+            { text: 'Bras', category: 'pack_to' },
+            { text: 'Bathing suits', category: 'pack_to' },
+            { text: 'Sheets', category: 'pack_to' },
+            { text: 'Crocs', category: 'pack_to' },
+            { text: 'Work computer', category: 'pack_to' },
+            { text: 'Sunscreen', category: 'pack_to' },
+            { text: 'Cooler', category: 'pack_to' },
+            { text: 'Milk', category: 'pack_to' },
+            { text: 'Sandals', category: 'pack_to' },
+            { text: 'Goggles', category: 'pack_to' },
+            { text: 'Food', category: 'pack_to' },
+            { text: 'Cash', category: 'pack_to' },
+            { text: 'Float plan', category: 'pack_to' },
+            { text: 'Tampons & pads', category: 'pack_to' },
+            { text: 'Diapers', category: 'pack_to' },
+            { text: 'Iced coffee', category: 'pack_to' },
+            { text: 'Turn on lake house AC/heat', category: 'prep_go' },
+            { text: 'Turn fireplace off', category: 'prep_go' },
+            { text: 'Empty trash', category: 'prep_go' },
+            { text: 'Run dishwasher', category: 'prep_go' },
+            { text: 'Empty dog water bowl', category: 'prep_go' },
+            { text: 'Empty trash', category: 'prep_depart' },
+            { text: 'Run dishwasher', category: 'prep_depart' },
+            { text: 'Empty dog water bowl', category: 'prep_depart' },
+            { text: 'Run Roomba', category: 'prep_depart' },
+            { text: 'Check hot tub chemicals', category: 'prep_depart' }
           ]
         },
         packing: {
@@ -6213,7 +6262,7 @@
           done: false,
           order: Number(offset || 0),
           timestamp: Date.now() + Number(offset || 0),
-          category: category || ((listType === 'grocery' || listType === 'costco') ? autoCategory(safeText) : 'other')
+          category: category || (listType === 'lakehouse' ? 'pack_to' : ((listType === 'grocery' || listType === 'costco') ? autoCategory(safeText) : 'other'))
         };
       }
 
@@ -6357,7 +6406,9 @@
         var parts = String(value || '').split(/,|\band\b/).map(function (part) { return part.trim(); }).filter(Boolean);
         var categoryOrders = {};
         for (var i = 0; i < parts.length; i += 1) {
-          var category = (listType === 'grocery' || listType === 'costco') ? autoCategory(parts[i]) : 'other';
+          var category = listType === 'lakehouse'
+            ? 'pack_to'
+            : ((listType === 'grocery' || listType === 'costco') ? autoCategory(parts[i]) : 'other');
           if (typeof categoryOrders[category] !== 'number') {
             categoryOrders[category] = nextItemOrder(list, category);
           }
@@ -6454,7 +6505,11 @@
       }
 
       function renderGroupedItems(list) {
-        var markup = GROCERY_CATEGORIES.map(function (category) {
+        var categories = list.type === 'lakehouse' ? LAKEHOUSE_CATEGORIES : GROCERY_CATEGORIES;
+        var emptyCopy = list.type === 'lakehouse'
+          ? 'Add an item and it will land in the lake house packing section.'
+          : 'Add an item and it will snap into the right aisle.';
+        var markup = categories.map(function (category) {
           var items = (list.items || []).filter(function (item) {
             return (item.category || 'other') === category.id;
           });
@@ -6463,7 +6518,7 @@
             items.map(function (item) { return renderListItem(list, item); }).join('') +
           '</div></section>';
         }).filter(Boolean).join('');
-        return markup || '<div class="list-empty"><div class="list-empty-title">Nothing here yet.</div><div class="list-empty-copy">Add an item and it will snap into the right aisle.</div></div>';
+        return markup || '<div class="list-empty"><div class="list-empty-title">Nothing here yet.</div><div class="list-empty-copy">' + emptyCopy + '</div></div>';
       }
 
       function renderFlatItems(list) {
@@ -6480,7 +6535,7 @@
         var doneCount = (list.items || []).filter(function (item) { return item.done; }).length;
         var total = (list.items || []).length;
         var isTemplateType = Boolean(LIST_TEMPLATES[list.type]);
-        var itemsMarkup = (list.type === 'grocery' || list.type === 'costco') ? renderGroupedItems(list) : renderFlatItems(list);
+        var itemsMarkup = (list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse') ? renderGroupedItems(list) : renderFlatItems(list);
         var gearIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Z" stroke="currentColor" stroke-width="2"></path><path d="M4 13.5v-3l2.23-.56a6.83 6.83 0 0 1 .72-1.73L5.8 6.2l2.12-2.12 2.01 1.15c.55-.3 1.12-.54 1.72-.71L12.5 2h3l.56 2.23c.6.17 1.17.41 1.72.71l2.01-1.15 2.12 2.12-1.15 2.01c.3.56.54 1.13.71 1.73L22 10.5v3l-2.23.56a6.83 6.83 0 0 1-.71 1.72l1.15 2.01-2.12 2.12-2.01-1.15a6.83 6.83 0 0 1-1.72.71L15.5 22h-3l-.56-2.23a6.83 6.83 0 0 1-1.72-.71l-2.01 1.15-2.12-2.12 1.15-2.01a6.83 6.83 0 0 1-.71-1.72L4 13.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>';
         return '<div class="list-detail-shell"><section class="list-detail-card">' +
           '<div class="list-detail-head"><div class="list-detail-accent" style="background:' + escapeHtml(meta.color) + ';"></div><div class="list-detail-title-row"><span class="list-detail-icon" style="background:' + escapeHtml(meta.color) + ';">' + meta.icon + '</span><div class="list-detail-copy"><h3 class="list-detail-title">' + escapeHtml(list.name) + '</h3><p class="list-detail-meta">' + doneCount + '/' + total + ' done · ' + escapeHtml(meta.label) + '</p></div><button type="button" class="list-btn secondary list-settings-btn" data-list-action="toggle-settings" aria-label="List settings">' + gearIcon + '</button></div>' +
@@ -6559,6 +6614,8 @@
           gestureState.mode = handle ? 'drag' : 'swipe';
           if (!item) return;
           wrapper.classList.toggle('dragging-active', Boolean(handle));
+          wrapper.classList.remove('swiping-left');
+          wrapper.classList.remove('swiping-right');
           item.classList.add(handle ? 'dragging' : 'swiping');
         }, { passive: true });
 
@@ -6582,7 +6639,7 @@
             var overWrapper = overEl && overEl.closest('.list-item-wrapper');
             var list = listState.listsById[gestureState.listId];
             if (!list || !overWrapper || overWrapper.dataset.listId !== gestureState.listId) return;
-            var isGrouped = list.type === 'grocery' || list.type === 'costco';
+            var isGrouped = list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse';
             if (isGrouped && overWrapper.dataset.itemCategory !== gestureState.category) return;
             if (gestureState.wrapperEl && gestureState.wrapperEl !== overWrapper) {
               var oldGhosts = container.querySelectorAll('.list-item.drag-ghost');
@@ -6595,6 +6652,18 @@
           }
           var diff = gestureState.currentX - gestureState.startX;
           if (Math.abs(diff) > Math.abs(gestureState.currentY - gestureState.startY)) {
+            if (gestureState.wrapperEl) {
+              if (diff < -10) {
+                gestureState.wrapperEl.classList.add('swiping-left');
+                gestureState.wrapperEl.classList.remove('swiping-right');
+              } else if (diff > 10) {
+                gestureState.wrapperEl.classList.add('swiping-right');
+                gestureState.wrapperEl.classList.remove('swiping-left');
+              } else {
+                gestureState.wrapperEl.classList.remove('swiping-left');
+                gestureState.wrapperEl.classList.remove('swiping-right');
+              }
+            }
             gestureState.itemEl.style.transform = 'translateX(' + Math.max(-120, Math.min(120, diff)) + 'px)';
             gestureState.itemEl.style.opacity = String(Math.max(0.35, 1 - (Math.abs(diff) / 260)));
           }
@@ -6616,7 +6685,7 @@
               var list = listState.listsById[listId];
               if (list) {
                 var items = (list.items || []).filter(function (entry) {
-                  if (list.type === 'grocery' || list.type === 'costco') {
+                  if (list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse') {
                     return entry.category === gestureState.category;
                   }
                   return true;
@@ -6626,7 +6695,7 @@
                 var toIndex = orderedIds.indexOf(gestureState.overItemId);
                 if (fromIndex !== -1 && toIndex !== -1) {
                   orderedIds.splice(toIndex, 0, orderedIds.splice(fromIndex, 1)[0]);
-                  reorderListItems(listId, orderedIds, (list.type === 'grocery' || list.type === 'costco') ? gestureState.category : null).catch(function (error) { console.error(error); });
+                  reorderListItems(listId, orderedIds, (list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse') ? gestureState.category : null).catch(function (error) { console.error(error); });
                 }
               }
             }
@@ -6648,7 +6717,11 @@
           }
           itemEl.classList.remove('swiping');
           itemEl.classList.remove('dragging');
-          if (gestureState.wrapperEl) gestureState.wrapperEl.classList.remove('dragging-active');
+          if (gestureState.wrapperEl) {
+            gestureState.wrapperEl.classList.remove('dragging-active');
+            gestureState.wrapperEl.classList.remove('swiping-left');
+            gestureState.wrapperEl.classList.remove('swiping-right');
+          }
           gestureState.mode = null;
           gestureState.wrapperEl = null;
           gestureState.itemEl = null;
@@ -6668,7 +6741,11 @@
           itemEl.style.opacity = '';
           itemEl.classList.remove('swiping');
           itemEl.classList.remove('dragging');
-          if (gestureState.wrapperEl) gestureState.wrapperEl.classList.remove('dragging-active');
+          if (gestureState.wrapperEl) {
+            gestureState.wrapperEl.classList.remove('dragging-active');
+            gestureState.wrapperEl.classList.remove('swiping-left');
+            gestureState.wrapperEl.classList.remove('swiping-right');
+          }
           gestureState.mode = null;
           gestureState.wrapperEl = null;
           gestureState.itemEl = null;
