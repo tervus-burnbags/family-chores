@@ -2408,6 +2408,91 @@
       border-radius: 14px;
     }
 
+    .app-modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(4px);
+      z-index: 1200;
+    }
+
+    .app-modal {
+      width: min(92vw, 360px);
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+      border-radius: 20px;
+      background: #fff;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+    }
+
+    .app-modal-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .app-modal-message {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .app-modal-input {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 14px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    .app-modal-input:focus {
+      outline: none;
+      border-color: var(--alex);
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.14);
+    }
+
+    .app-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .app-modal-btn {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-modal-btn.cancel {
+      background: var(--panel-alt);
+      color: var(--text);
+    }
+
+    .app-modal-btn.confirm {
+      background: var(--alex);
+      color: #fff;
+    }
+
+    .app-modal-btn.confirm.destructive {
+      background: #ef4444;
+    }
+
     .primary {
       border: 0;
       background: linear-gradient(135deg, var(--alex), #3a7bc8);
@@ -3445,6 +3530,7 @@
         currentConfig = snapshot.exists() ? snapshot.val() : buildDefaultConfig();
         updateHeaderTitle(currentConfig.familyName);
         configLoaded = true;
+        dispatchHubEvent('hub:config-changed');
       }
       window.loadFamilyConfigV2 = loadFamilyConfigV2;
 
@@ -3512,6 +3598,126 @@
         event.initCustomEvent(name, false, false, null);
         document.dispatchEvent(event);
       }
+
+      function openAppModal(options) {
+        return new Promise(function (resolve) {
+          var settings = options || {};
+          var overlay = document.createElement('div');
+          overlay.className = 'app-modal-overlay';
+
+          var modal = document.createElement('div');
+          modal.className = 'app-modal';
+          modal.setAttribute('role', 'dialog');
+          modal.setAttribute('aria-modal', 'true');
+
+          var title = document.createElement('h3');
+          title.className = 'app-modal-title';
+          title.textContent = settings.title || '';
+          modal.appendChild(title);
+
+          var input = null;
+          if (settings.kind === 'prompt') {
+            input = document.createElement('input');
+            input.className = 'app-modal-input';
+            input.type = settings.inputType || 'text';
+            input.placeholder = settings.placeholder || '';
+            input.value = settings.defaultValue || '';
+            modal.appendChild(input);
+          } else {
+            var message = document.createElement('p');
+            message.className = 'app-modal-message';
+            message.textContent = settings.message || '';
+            modal.appendChild(message);
+          }
+
+          var actions = document.createElement('div');
+          actions.className = 'app-modal-actions';
+
+          var cancelButton = document.createElement('button');
+          cancelButton.type = 'button';
+          cancelButton.className = 'app-modal-btn cancel';
+          cancelButton.textContent = settings.cancelLabel || 'Cancel';
+          actions.appendChild(cancelButton);
+
+          var confirmButton = document.createElement('button');
+          confirmButton.type = 'button';
+          confirmButton.className = 'app-modal-btn confirm' + (settings.destructive ? ' destructive' : '');
+          confirmButton.textContent = settings.confirmLabel || 'OK';
+          actions.appendChild(confirmButton);
+
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          function cleanup(result) {
+            document.removeEventListener('keydown', onKeyDown, true);
+            overlay.remove();
+            resolve(result);
+          }
+
+          function submit() {
+            if (settings.kind === 'prompt') {
+              cleanup(input ? input.value : '');
+              return;
+            }
+            cleanup(true);
+          }
+
+          function cancel() {
+            cleanup(settings.kind === 'prompt' ? null : false);
+          }
+
+          function onKeyDown(event) {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              cancel();
+              return;
+            }
+            if (event.key === 'Enter') {
+              if (event.target === cancelButton) return;
+              event.preventDefault();
+              submit();
+            }
+          }
+
+          overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) cancel();
+          });
+          cancelButton.addEventListener('click', cancel);
+          confirmButton.addEventListener('click', submit);
+          document.addEventListener('keydown', onKeyDown, true);
+
+          setTimeout(function () {
+            if (input) {
+              input.focus();
+              input.select();
+            } else {
+              confirmButton.focus();
+            }
+          }, 0);
+        });
+      }
+
+      function appPrompt(title, placeholder, defaultValue, options) {
+        var settings = options || {};
+        settings.kind = 'prompt';
+        settings.title = title;
+        settings.placeholder = placeholder;
+        settings.defaultValue = defaultValue || '';
+        return openAppModal(settings);
+      }
+
+      function appConfirm(title, message, destructive, options) {
+        var settings = options || {};
+        settings.kind = 'confirm';
+        settings.title = title;
+        settings.message = message;
+        settings.destructive = Boolean(destructive);
+        return openAppModal(settings);
+      }
+
+      window.appPrompt = appPrompt;
+      window.appConfirm = appConfirm;
 
       function showToast(text, options) {
         const container = document.getElementById('toastContainer');
@@ -5817,13 +6023,15 @@
         cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div><div class="card-pts">' + weeklyPoints + ' pts<br>this week</div></div></div><div class="drawer-grid"><article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
       };
 
-      function handleCardAction(button) {
+      async function handleCardAction(button) {
         var phase = runtime();
         if (!button || !phase) return;
         var action = button.dataset.cardAction;
         if (action === 'pay-balance') {
           var kidId = button.dataset.kid;
-          var amountText = window.prompt('Payment amount for ' + (((phase.currentConfig.kids || {})[kidId] || {}).name || kidId) + '?');
+          var amountText = await window.appPrompt('Payment amount for ' + (((phase.currentConfig.kids || {})[kidId] || {}).name || kidId) + '?', 'Amount', '10', {
+            inputType: 'number'
+          });
           var amount = amountText === null ? null : Number(amountText);
           if (!amount || Number.isNaN(amount) || amount <= 0) return;
           phase.writePayment(kidId, amount, 'manual', 'Manual pay from bank card').then(function () {
@@ -5837,10 +6045,12 @@
         }
         if (action === 'kid-spent') {
           var spendKidId = button.dataset.kid;
-          var spendText = window.prompt((((phase.currentConfig.kids || {})[spendKidId] || {}).name || spendKidId) + ' spent how much?');
+          var spendText = await window.appPrompt((((phase.currentConfig.kids || {})[spendKidId] || {}).name || spendKidId) + ' spent how much?', 'Amount', '10', {
+            inputType: 'number'
+          });
           var spendAmount = spendText === null ? null : Number(spendText);
           if (!spendAmount || Number.isNaN(spendAmount) || spendAmount <= 0) return;
-          var noteText = window.prompt('What was it for?', '') || '';
+          var noteText = await window.appPrompt('What was it for?', 'Optional note', '') || '';
           phase.writePayment(spendKidId, spendAmount, 'spend', noteText || 'Card spend').then(function () {
             phase.showToast('Spend recorded.', { kid: spendKidId });
             return window.openCardForKid(spendKidId);
@@ -6169,13 +6379,13 @@
         var template = templateForType(type);
         var name = template ? template.name : listTypeMeta(type).label;
         if (type === 'grocery') {
-          name = window.prompt('Store name?', 'Harris Teeter') || '';
+          name = await window.appPrompt('Store name?', 'e.g. Harris Teeter', 'Harris Teeter') || '';
         } else if (type === 'packing') {
-          name = window.prompt('Trip name?', 'Spring Break 2026') || '';
+          name = await window.appPrompt('Trip name?', 'e.g. Spring Break 2026', 'Spring Break 2026') || '';
         } else if (type === 'todo') {
-          name = window.prompt('To-do list name?', 'Family To-Do') || '';
+          name = await window.appPrompt('To-do list name?', 'e.g. Family To-Do', 'Family To-Do') || '';
         } else if (type === 'custom') {
-          name = window.prompt('List name?', 'New List') || '';
+          name = await window.appPrompt('List name?', 'e.g. New List', 'New List') || '';
         } else if (type === 'costco') {
           name = 'Costco';
         }
@@ -6503,7 +6713,7 @@
         }
         var listsContent = document.getElementById('listsContent');
         if (listsContent) {
-          listsContent.addEventListener('click', function (event) {
+          listsContent.addEventListener('click', async function (event) {
             var target = event.target.closest('[data-list-open],[data-list-type-open],[data-list-action]');
             if (!target) return;
             if (target.dataset.listOpen) {
@@ -6526,7 +6736,7 @@
             if (target.dataset.listAction === 'delete-list' && listState.currentListId) {
               var currentListForDelete = listState.listsById[listState.currentListId];
               if (!currentListForDelete) return;
-              if (!window.confirm('Delete ' + currentListForDelete.name + '? This can\'t be undone.')) return;
+              if (!await window.appConfirm('Delete list?', 'Delete ' + currentListForDelete.name + '? This can\'t be undone.', true)) return;
               deleteEntireList(listState.currentListId).catch(function (error) { console.error(error); });
               return;
             }
@@ -7061,9 +7271,11 @@
       async function addChoreViaPrompt() {
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded) return;
-        var label = window.prompt('New chore name?');
+        var label = await window.appPrompt('New chore name?', 'e.g. Empty dishwasher', '');
         if (!label) return;
-        var points = Number(window.prompt('Points for ' + label + '?', '1'));
+        var points = Number(await window.appPrompt('Points for ' + label + '?', 'Points', '1', {
+          inputType: 'number'
+        }));
         if (!points || Number.isNaN(points)) return;
         var key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('chore_' + Date.now());
         var chore = { label: label, points: points, kids: ['alex', 'louisa'], keywords: [label.toLowerCase()] };
@@ -7076,7 +7288,7 @@
       async function removeChore(choreId) {
         var phase = runtime();
         if (!phase || !phase.familyId || !phase.configLoaded || !choreId) return;
-        if (!window.confirm('Remove this chore?')) return;
+        if (!await window.appConfirm('Remove chore?', 'Remove this chore?', true)) return;
         await phase.database.ref('families/' + phase.familyId + '/config/chores/' + choreId).remove();
         delete phase.currentConfig.chores[choreId];
         renderChoreSettings();

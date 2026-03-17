@@ -1,24 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 24 — Lists Bug Fixes (Refresh + Drag Indicators)
+**Task:** Phase 25 — Fix Lists Refresh + Custom Modals
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 24
+**Next Action:** Review Phase 25
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–23 + Consolidation + Visual Polish
+- [x] Phases 8–24 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 24: Lists Bug Fixes + Named Grocery** — Fix refresh loading, hide drag indicators, named grocery lists (multiple stores)
+- [x] **Phase 25: Fix Lists refresh + Custom modals** — Dispatch hub:config-changed on config load; replace all window.prompt/confirm with in-app modals
 
 ## Notes
 
-- `hub:config-changed` now re-renders Lists when the active view is `lists`, fixing the refresh/deep-link loading stall
-- Drag mode now applies `.dragging-active` to hide swipe strips and uses a stronger lifted card treatment
-- Grocery quick-create now prompts for a store name, allowing multiple grocery lists to coexist
-- Costco and Lake House remain singleton flows with no naming prompt
-- Validation complete: inline scripts parsed successfully after Phase 24 changes
+- `loadFamilyConfigV2()` now dispatches `hub:config-changed`, so Lists/Chores/Bank refresh after config becomes ready
+- Added shared `appPrompt()` and `appConfirm()` modal helpers with autofocus and Enter/Escape handling
+- Replaced all browser prompt/confirm usage in Bank, Lists, and Chores with in-app dialogs
+- Destructive confirms now use the red confirm button styling
+- Validation complete: inline scripts parsed successfully and no `window.prompt` / `window.confirm` calls remain
