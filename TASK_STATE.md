@@ -1,28 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 33 - Unified Swipe-to-Delete + CSS Cleanup
+**Task:** Phase 34 - Hotfixes, Visual Cohesion, New Games
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 33
+**Next Action:** Review Phase 34
 **Last Updated:** 2026-03-17
 
 ## Completed
 
-- [x] Phases 8-28 + Consolidation + Visual Polish
-- [x] Phase 29: List fixes, Bank revamp, Icon & iOS fullscreen
-- [x] Phase 30: Fun tab overhaul - built & reviewed (12/12 tests passed)
-- [x] Phase 31: Input bar fixes, Starred favorites, Louisa balance - built & reviewed
-- [x] Phase 32: Consolidation - built & reviewed (CSS gaps noted for follow-up)
-- [x] Phase 33: Unified Swipe-to-Delete + CSS Cleanup
+- [x] Phases 8-33
+- [x] Phase 34: Hotfixes, Visual Cohesion, New Games
 
 ## Current
 
-- [ ] Waiting on Gemini review for Phase 33
+- [ ] Waiting on Gemini review for Phase 34
 
 ## Notes
 
-- Shared `.swipe-wrapper` and `.swipe-action` styling now covers Lists, Chores, and Bank.
-- Chore log entries now delete by swipe with undo restore through the shared runtime undo path.
-- Bank card transactions now delete by swipe with balance reversal; weekly and credit entries require confirmation.
-- List button tap targets now use the shared tap-size token from Phase 32.
+- `window.bindSwipeHandlers` is now exposed so Chores can reuse the Phase 33 swipe runtime safely.
+- Bulletin now re-renders on `hub:config-changed`, and the Louisa balance correction is back with a new `louisa_balance_v2` guard key.
+- Shared `hub` card/header/empty-state styles are in place, and the remaining Phase 32 tap-target/token gaps were cleaned up.
+- Fun now includes Tic Tac Toe, Connect Four, and Battleship; Tic Tac Toe and Connect Four scores persist locally per family.
