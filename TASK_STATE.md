@@ -1,24 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 22-patch — Lists UX Refinements
+**Task:** Phase 23 — Gesture-Driven Lists & Settings Panel
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 22-patch
+**Next Action:** Review Phase 23
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–22 + Consolidation + Visual Polish
+- [x] Phases 8–22 + 22-patch + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 22-patch: Lists UX Refinements** — Hid empty lists, replaced emoji with SVG icons, reframed lake house prep, added tab-tap-to-home, delete-list flow, and swipe-any-item
+- [x] **Phase 23: Gesture-Driven Lists** — Bi-directional swipe (left=delete, right=strikethrough), drag-to-reorder, settings gear panel, remove all buttons from detail view
 
 ## Notes
 
-- Empty lists are hidden from the hub; lists with all items done still remain visible
-- All list type and grocery aisle icons now use a cohesive inline SVG set with `currentColor`
-- The active Lists tab now returns from detail view to the hub before doing anything else
-- Swipe-to-dismiss now works on any item, not just checked items
-- Validation complete: inline scripts parsed successfully after Phase 22-patch changes
+- List detail now uses swipe-right toggle, swipe-left delete, and a touch drag handle for reorder
+- Detail header is reduced to a settings gear with template actions and delete-list inside the panel
+- Grocery and Costco reorder stays within category groups; flat lists reorder across the whole list
+- Typed create flows still open/create as specified, and detail state remains transient to the current session
+- Validation complete: inline scripts parsed successfully after Phase 23 changes
