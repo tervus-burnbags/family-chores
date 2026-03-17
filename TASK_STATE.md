@@ -1,24 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 22 — Lists Tab Overhaul
-**Current Phase:** 22g
+**Task:** Phase 22-patch — Lists UX Refinements
+**Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 22
+**Next Action:** Review Phase 22-patch
 **Last Updated:** 2026-03-16
 
 ## Completed
 
-- [x] Phases 8–21 + Consolidation + Visual Polish
+- [x] Phases 8–22 + Consolidation + Visual Polish
 
 ## Current
 
-- [x] **Phase 22: Lists Tab Overhaul** — Added list types, grocery auto-categorization, template overrides, quick-create hub, grouped grocery detail view, swipe-to-dismiss, and full CSS redesign
+- [x] **Phase 22-patch: Lists UX Refinements** — Hid empty lists, replaced emoji with SVG icons, reframed lake house prep, added tab-tap-to-home, delete-list flow, and swipe-any-item
 
 ## Notes
 
-- List types now include grocery, costco, lakehouse, packing, todo, and custom
-- Grocery and Costco items auto-categorize into store aisles; existing uncategorized items fall back to inferred categories or `other`
-- Template overrides live in Firebase at `families/{familyId}/listTemplates/{type}`
-- The old default-list bootstrap is removed; lists now start from the quick-create tiles
-- Validation complete: inline scripts parsed successfully after Phase 22 changes
+- Empty lists are hidden from the hub; lists with all items done still remain visible
+- All list type and grocery aisle icons now use a cohesive inline SVG set with `currentColor`
+- The active Lists tab now returns from detail view to the hub before doing anything else
+- Swipe-to-dismiss now works on any item, not just checked items
+- Validation complete: inline scripts parsed successfully after Phase 22-patch changes

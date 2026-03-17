@@ -1849,6 +1849,14 @@
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45);
     }
 
+    .list-type-icon svg,
+    .list-card-badge svg,
+    .list-detail-icon svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
     .list-type-label {
       font-size: 0.82rem;
       font-weight: 700;
@@ -2078,6 +2086,21 @@
       align-items: center;
       gap: 8px;
       padding: 2px 2px 0;
+    }
+
+    .list-group-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    .list-group-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
     }
 
     .list-group-title {
@@ -3112,6 +3135,13 @@
         if (!tab) return;
         e.preventDefault();
         var name = tab.dataset.tab;
+        if (name === 'lists' && appShellState.currentView === 'lists') {
+          if (typeof window.returnToListsHome === 'function' && window.returnToListsHome()) {
+            return;
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
         location.hash = '#' + name;
       });
 
@@ -5439,26 +5469,26 @@
       };
 
       var LIST_TYPES = {
-        grocery: { label: 'Grocery', icon: '🛒', color: '#22c55e' },
-        costco: { label: 'Costco', icon: '📦', color: '#e85d04' },
-        lakehouse: { label: 'Lake House', icon: '🏡', color: '#0ea5e9' },
-        packing: { label: 'Trip', icon: '🧳', color: '#8b5cf6' },
-        todo: { label: 'To-Do', icon: '✓', color: '#64748b' },
-        custom: { label: 'List', icon: '📋', color: '#0f172a' }
+        grocery: { label: 'Grocery', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="19" r="1.5" fill="currentColor"></circle><circle cx="18" cy="19" r="1.5" fill="currentColor"></circle><path d="M3 5h2l2.2 9.2a1 1 0 0 0 .97.77H18a1 1 0 0 0 .98-.81L20 8H7.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>', color: '#22c55e' },
+        costco: { label: 'Costco', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9.5 12 5l8 4.5M4 9.5V18l8 4 8-4V9.5M4 9.5l8 4.5m8-4.5L12 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>', color: '#e85d04' },
+        lakehouse: { label: 'Lake House Prep', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5M7.5 10.5V16h9v-5.5M3 19c1.3 0 1.3-1 2.6-1s1.3 1 2.6 1 1.3-1 2.6-1 1.3 1 2.6 1 1.3-1 2.6-1 1.3 1 2.6 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>', color: '#0ea5e9' },
+        packing: { label: 'Trip', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3" stroke="currentColor" stroke-width="2"></rect><path d="M9 7V6a3 3 0 0 1 6 0v1M12 11v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>', color: '#8b5cf6' },
+        todo: { label: 'To-Do', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"></circle><path d="m8.5 12 2.3 2.3 4.7-4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>', color: '#64748b' },
+        custom: { label: 'List', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4h8l3 3v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M9 11h6M9 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>', color: '#0f172a' }
       };
 
       var GROCERY_CATEGORIES = [
-        { id: 'produce', label: 'Produce', icon: '🥬' },
-        { id: 'meat', label: 'Meat & Seafood', icon: '🥩' },
-        { id: 'deli', label: 'Deli', icon: '🧀' },
-        { id: 'dairy', label: 'Dairy & Eggs', icon: '🥛' },
-        { id: 'bakery', label: 'Bakery', icon: '🍞' },
-        { id: 'frozen', label: 'Frozen', icon: '🧊' },
-        { id: 'pantry', label: 'Pantry & Dry Goods', icon: '🥫' },
-        { id: 'snacks', label: 'Snacks & Drinks', icon: '🥤' },
-        { id: 'household', label: 'Household', icon: '🧹' },
-        { id: 'health', label: 'Health & Beauty', icon: '💊' },
-        { id: 'other', label: 'Other', icon: '📦' }
+        { id: 'produce', label: 'Produce', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20c4-2 6-5.5 6-9 0-2.4-1.7-4-4-4-1 0-1.9.3-2.6 1-.7-.7-1.6-1-2.4-1-2.5 0-4 1.8-4 4.4 0 4.1 2.6 6.8 7 8.6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 10v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'meat', label: 'Meat & Seafood', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 18c-2.8 0-5-2.3-5-5 0-2 1.1-3.6 2.7-4.5C7 6.4 8.7 5 10.8 5c3.2 0 5.7 2.5 5.7 5.7 0 4-3.2 7.3-7.3 7.3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="16.5" cy="8.5" r="2.5" stroke="currentColor" stroke-width="2"></circle></svg>' },
+        { id: 'deli', label: 'Deli', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8h14l-1.5 9a2 2 0 0 1-2 1.7H8.5A2 2 0 0 1 6.5 17L5 8Zm3-3h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'dairy', label: 'Dairy & Eggs', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4h6l2 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8l2-4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M8 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'bakery', label: 'Bakery', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 10c0-2.8 2.7-5 6-5s6 2.2 6 5v5a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9 9c.7.8 1.3 1 2 1s1.3-.2 2-1c.7.8 1.3 1 2 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'frozen', label: 'Frozen', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M7.5 5.5 16.5 18.5M16.5 5.5 7.5 18.5M4 9l16 6M20 9 4 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' },
+        { id: 'pantry', label: 'Pantry & Dry Goods', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="7" y="4" width="10" height="16" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M9.5 8h5M9.5 12h5M9.5 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'snacks', label: 'Snacks & Drinks', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5h8l-1 14a2 2 0 0 1-2 1.8h-2A2 2 0 0 1 9 19L8 5Zm2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 8h2.5a1.5 1.5 0 0 1 0 3H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'household', label: 'Household', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 4h8l2 3-7 13H5l4-7-2-9Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 11h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'health', label: 'Health & Beauty', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="9" width="16" height="6" rx="3" stroke="currentColor" stroke-width="2"></rect><path d="M12 6v12M9 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>' },
+        { id: 'other', label: 'Other', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9.5 12 5l8 4.5M4 9.5V18l8 4 8-4V9.5M4 9.5l8 4.5m8-4.5L12 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>' }
       ];
 
       var CATEGORY_KEYWORDS = {
@@ -5479,18 +5509,21 @@
           name: 'Lake House',
           type: 'lakehouse',
           items: [
-            { text: 'Check water heater', category: 'other' },
-            { text: 'Turn on water main', category: 'other' },
-            { text: 'Inspect dock', category: 'other' },
-            { text: 'Bring towels & linens', category: 'other' },
-            { text: 'Bring cooler', category: 'other' },
-            { text: 'Check propane tank', category: 'other' },
+            { text: 'Towels & linens', category: 'other' },
+            { text: 'Cooler with ice', category: 'other' },
             { text: 'Sunscreen', category: 'health' },
             { text: 'Bug spray', category: 'health' },
+            { text: 'Swimsuits', category: 'other' },
             { text: 'Trash bags', category: 'household' },
             { text: 'Paper towels', category: 'household' },
-            { text: 'Firewood', category: 'other' },
-            { text: 'Board games', category: 'other' }
+            { text: 'Firewood or charcoal', category: 'other' },
+            { text: 'Board games', category: 'other' },
+            { text: 'Fishing gear', category: 'other' },
+            { text: 'Dog food & bowls', category: 'other' },
+            { text: 'Life jackets', category: 'other' },
+            { text: 'First aid kit', category: 'health' },
+            { text: 'Flashlights & batteries', category: 'other' },
+            { text: 'Snacks & drinks for the car', category: 'snacks' }
           ]
         },
         packing: {
@@ -6082,23 +6115,29 @@
         return '<div class="list-type-grid">' + order.map(function (type) {
           var meta = listTypeMeta(type);
           return '<button type="button" class="list-type-tile ' + listTintClass(type) + '" data-list-type-open="' + type + '">' +
-            '<span class="list-type-icon" style="color:' + escapeHtml(meta.color) + ';">' + escapeHtml(meta.icon) + '</span>' +
+            '<span class="list-type-icon" style="color:' + escapeHtml(meta.color) + ';">' + meta.icon + '</span>' +
             '<span class="list-type-label">' + escapeHtml(meta.label) + '</span>' +
           '</button>';
         }).join('') + '</div>';
       }
 
+      function visibleLists() {
+        return listArray().filter(function (list) {
+          return (list.items || []).length > 0;
+        });
+      }
+
       function renderListCards() {
-        var lists = listArray();
+        var lists = visibleLists();
         if (!lists.length) {
-          return '<div class="list-empty"><div class="list-empty-title">No lists yet.</div><div class="list-empty-copy">Tap a type above to start a grocery run, trip packing list, or family to-do.</div></div>';
+          return '';
         }
         return '<div class="list-active-grid">' + lists.map(function (list) {
           var meta = listTypeMeta(list.type);
           var doneCount = (list.items || []).filter(function (item) { return item.done; }).length;
           var total = (list.items || []).length;
           return '<button type="button" class="list-active-card" data-list-open="' + list.id + '">' +
-            '<span class="list-card-badge" style="background:' + escapeHtml(meta.color) + ';">' + escapeHtml(meta.icon) + '</span>' +
+            '<span class="list-card-badge" style="background:' + escapeHtml(meta.color) + ';">' + meta.icon + '</span>' +
             '<span class="list-card-copy"><span class="list-card-title">' + escapeHtml(list.name) + '</span><span class="list-card-meta">' + escapeHtml(meta.label) + '</span></span>' +
             '<span class="list-card-count">' + (total - doneCount) + '/' + total + '</span>' +
           '</button>';
@@ -6120,7 +6159,7 @@
             return (item.category || 'other') === category.id;
           });
           if (!items.length) return '';
-          return '<section class="list-group"><div class="list-group-head"><span>' + escapeHtml(category.icon) + '</span><h4 class="list-group-title">' + escapeHtml(category.label) + '</h4></div><div class="list-items">' +
+          return '<section class="list-group"><div class="list-group-head"><span class="list-group-icon">' + category.icon + '</span><h4 class="list-group-title">' + escapeHtml(category.label) + '</h4></div><div class="list-items">' +
             items.map(function (item) { return renderListItem(list, item); }).join('') +
           '</div></section>';
         }).filter(Boolean).join('');
@@ -6143,12 +6182,12 @@
         var isTemplateType = Boolean(LIST_TEMPLATES[list.type]);
         var itemsMarkup = (list.type === 'grocery' || list.type === 'costco') ? renderGroupedItems(list) : renderFlatItems(list);
         return '<div class="list-detail-shell"><section class="list-detail-card">' +
-          '<div class="list-detail-head"><div class="list-detail-accent" style="background:' + escapeHtml(meta.color) + ';"></div><div class="list-detail-title-row"><span class="list-detail-icon" style="background:' + escapeHtml(meta.color) + ';">' + escapeHtml(meta.icon) + '</span><div class="list-detail-copy"><h3 class="list-detail-title">' + escapeHtml(list.name) + '</h3><p class="list-detail-meta">' + doneCount + '/' + total + ' done · ' + escapeHtml(meta.label) + '</p></div></div><div class="list-detail-actions"><button type="button" class="list-btn secondary" data-list-action="back">Back</button><button type="button" class="list-btn secondary" data-list-action="clear-done">Clear done</button></div>' +
+          '<div class="list-detail-head"><div class="list-detail-accent" style="background:' + escapeHtml(meta.color) + ';"></div><div class="list-detail-title-row"><span class="list-detail-icon" style="background:' + escapeHtml(meta.color) + ';">' + meta.icon + '</span><div class="list-detail-copy"><h3 class="list-detail-title">' + escapeHtml(list.name) + '</h3><p class="list-detail-meta">' + doneCount + '/' + total + ' done · ' + escapeHtml(meta.label) + '</p></div></div><div class="list-detail-actions"><button type="button" class="list-btn secondary" data-list-action="back">Back</button><button type="button" class="list-btn secondary" data-list-action="clear-done">Clear done</button><button type="button" class="list-btn secondary" data-list-action="delete-list">Delete list</button></div>' +
           (isTemplateType ? '<div class="list-template-actions"><button type="button" class="list-inline-btn secondary" data-list-action="save-template">Save as template</button><button type="button" class="list-inline-btn secondary" data-list-action="reset-template">Reset template</button></div>' : '') +
           '</div>' +
           '<div class="list-add-row"><input type="text" class="list-add-input" id="listItemInput" placeholder="Add item..." autocomplete="off"><button type="button" class="list-add-btn" data-list-action="add-item" style="background:' + escapeHtml(meta.color) + ';color:#fff;">Add</button></div>' +
           itemsMarkup +
-          ((list.items || []).some(function (item) { return item.done; }) ? '<div class="list-swipe-hint">Swipe completed items left to dismiss them.</div>' : '') +
+          ((list.items || []).length ? '<div class="list-swipe-hint">Swipe items left to dismiss.</div>' : '') +
         '</section></div>';
       }
 
@@ -6165,9 +6204,12 @@
         var current = listState.currentListId ? listState.listsById[listState.currentListId] : null;
         if (listState.currentListId && !current) listState.currentListId = null;
         current = listState.currentListId ? listState.listsById[listState.currentListId] : null;
+        var activeListsMarkup = renderListCards();
         container.innerHTML = current
           ? renderListDetail(current)
-          : '<div class="lists-shell"><section class="lists-hero"><div class="lists-hero-head"><h2>Smart Family Lists</h2><p>Groceries by aisle, running Costco lists, lake house prep, trips, and everything else family life throws at you.</p></div>' + renderListQuickTiles() + '</section><section class="lists-panel"><div class="lists-section-head"><div><h3>Your Lists</h3><p>Open a current list or start a fresh run.</p></div></div>' + renderListCards() + '</section></div>';
+          : '<div class="lists-shell"><section class="lists-hero"><div class="lists-hero-head"><h2>Smart Family Lists</h2><p>Groceries by aisle, running Costco lists, lake house prep, trips, and everything else family life throws at you.</p></div>' + renderListQuickTiles() + '</section>' +
+            (activeListsMarkup ? '<section class="lists-panel"><div class="lists-section-head"><div><h3>Your Lists</h3><p>Open a current list or start a fresh run.</p></div></div>' + activeListsMarkup + '</section>' : '') +
+          '</div>';
         bindSwipeHandlers(container);
       }
 
@@ -6178,7 +6220,7 @@
         container.dataset.swipeBound = 'true';
         container.addEventListener('touchstart', function (e) {
           var item = e.target.closest('.list-item');
-          if (!item || !item.classList.contains('done')) return;
+          if (!item) return;
           swipeState.startX = e.touches[0].clientX;
           swipeState.currentX = swipeState.startX;
           swipeState.itemEl = item;
@@ -6235,6 +6277,15 @@
         await ref.child(type).remove();
       }
 
+      async function deleteEntireList(listId) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref || !listId) return;
+        await ref.child(listId).remove();
+        listState.currentListId = null;
+        renderListsHomeImpl().catch(function (error) { console.error(error); });
+      }
+
       function bindBankAndLists() {
         if (listState.bound) return;
         listState.bound = true;
@@ -6278,6 +6329,13 @@
               clearDoneItems(listState.currentListId).catch(function (error) { console.error(error); });
               return;
             }
+            if (target.dataset.listAction === 'delete-list' && listState.currentListId) {
+              var currentListForDelete = listState.listsById[listState.currentListId];
+              if (!currentListForDelete) return;
+              if (!window.confirm('Delete ' + currentListForDelete.name + '? This can\'t be undone.')) return;
+              deleteEntireList(listState.currentListId).catch(function (error) { console.error(error); });
+              return;
+            }
             if (target.dataset.listAction === 'save-template' && listState.currentListId) {
               saveTemplateForList(listState.listsById[listState.currentListId]).then(function () {
                 var phase = runtime();
@@ -6316,6 +6374,13 @@
 
       window.renderListsHome = function () {
         renderListsHomeImpl().catch(function (error) { console.error(error); });
+      };
+
+      window.returnToListsHome = function () {
+        if (!listState.currentListId) return false;
+        listState.currentListId = null;
+        renderListsHomeImpl().catch(function (error) { console.error(error); });
+        return true;
       };
 
       window.familyLists = {
