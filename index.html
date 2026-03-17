@@ -1377,6 +1377,10 @@
       border-bottom: 0;
     }
 
+    .stmt-list .swipe-wrapper:last-child .stmt-row {
+      border-bottom: 0;
+    }
+
     .stmt-desc {
       display: flex;
       flex-direction: column;
@@ -1825,32 +1829,6 @@
       letter-spacing: 0.01em;
     }
 
-    .chore-log-del {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      border: 0;
-      border-radius: 8px;
-      background: transparent;
-      color: rgba(148, 163, 184, 0.4);
-      cursor: pointer;
-      transition: color 0.12s, background 0.12s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .chore-log-del svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .chore-log-del:active {
-      background: rgba(214, 69, 69, 0.12);
-      color: var(--danger);
-    }
-
     /* Lists */
     .lists-shell {
       display: grid;
@@ -2104,7 +2082,7 @@
     .list-action-btn,
     .list-add-btn,
     .list-inline-btn {
-      min-height: 40px;
+      min-height: var(--tap);
       padding: 0 14px;
       border: 0;
       border-radius: 12px;
@@ -2122,8 +2100,8 @@
     }
 
     .list-settings-btn {
-      width: 40px;
-      min-width: 40px;
+      width: var(--tap);
+      min-width: var(--tap);
       padding: 0;
       display: inline-flex;
       align-items: center;
@@ -2243,31 +2221,39 @@
       gap: 8px;
     }
 
+    .swipe-wrapper,
     .list-item-wrapper {
       position: relative;
       overflow: hidden;
       border-radius: 16px;
     }
 
+    .swipe-wrapper.dragging-active .swipe-action,
     .list-item-wrapper.dragging-active .list-swipe-action {
       display: none;
     }
 
+    .swipe-action,
     .list-swipe-action {
       opacity: 0;
       transition: opacity 0.15s ease;
       z-index: 0;
     }
 
+    .swipe-wrapper.swiping-left .swipe-action.left,
+    .swipe-wrapper.swiping-right .swipe-action.right,
     .list-item-wrapper.swiping-left .list-swipe-action.left,
     .list-item-wrapper.swiping-right .list-swipe-action.right {
       opacity: 1;
     }
 
+    .swipe-surface,
     .list-item {
       z-index: 1;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
+    .swipe-action,
     .list-swipe-action {
       position: absolute;
       top: 0;
@@ -2284,11 +2270,13 @@
       pointer-events: none;
     }
 
+    .swipe-action.left,
     .list-swipe-action.left {
       right: 0;
       background: linear-gradient(135deg, #ef4444, #dc2626);
     }
 
+    .swipe-action.right,
     .list-swipe-action.right {
       left: 0;
       background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -2305,7 +2293,6 @@
       background: #fff;
       border: 1px solid rgba(148, 163, 184, 0.14);
       box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
-      transition: transform 0.2s ease, opacity 0.2s ease;
       will-change: transform;
     }
 
@@ -4861,6 +4848,54 @@
         return nextBalance;
       }
 
+      async function deleteLogEntry(logId) {
+        if (!logId) return false;
+        const snapshot = await dbRef('log/' + logId).get();
+        if (!snapshot.exists()) return false;
+        const entry = snapshot.val();
+        await dbRef('log/' + logId).remove();
+        lastUndoAction = { type: 'log_delete', entries: [Object.assign({ id: logId }, entry)] };
+        dispatchHubEvent('hub:log-changed');
+        if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
+          window.renderChoreProgress().catch(function (error) { console.error(error); });
+        }
+        if (appShellState.currentView === 'bank' && typeof window.renderBankSettings === 'function') {
+          window.renderBankSettings().catch(function (error) { console.error(error); });
+        }
+        return true;
+      }
+
+      async function deletePaymentEntry(paymentId, kidId) {
+        if (!paymentId) return false;
+        const snapshot = await dbRef('payments/' + paymentId).get();
+        if (!snapshot.exists()) return false;
+        const entry = snapshot.val();
+        const entryKid = kidId || entry.kid;
+        const entryType = entry.type || 'payment';
+        if ((entryType === 'weekly' || entryType === 'credit') && !await appConfirm('Delete protected transaction?', 'Delete this ' + entryType + ' entry and reverse its balance impact?', true)) {
+          return false;
+        }
+        const balanceDelta = Number(paymentBalanceDelta(entry) || 0);
+        await dbRef('payments/' + paymentId).remove();
+        await adjustBalance(entryKid, Number((-balanceDelta).toFixed(2)));
+        lastUndoAction = {
+          type: 'payment_delete',
+          paymentId: paymentId,
+          kidId: entryKid,
+          balanceDelta: balanceDelta,
+          entry: Object.assign({ id: paymentId }, entry)
+        };
+        if (appShellState.currentView === 'bank') {
+          if (typeof window.renderCardView === 'function') {
+            window.renderCardView(entryKid).catch(function (error) { console.error(error); });
+          }
+          if (typeof window.renderBankSettings === 'function') {
+            window.renderBankSettings().catch(function (error) { console.error(error); });
+          }
+        }
+        return true;
+      }
+
       async function writeDebt(from, to, amount) {
         const entry = { from, to, amount: Number(amount.toFixed(2)), reason: 'Recorded from chat', timestamp: Date.now(), settled: false };
         const ref = dbRef('debts').push();
@@ -4903,12 +4938,40 @@
           }
           addMessage('system', 'Removed the most recent log entry.');
           showToast('Removed the most recent log entry.');
+        } else if (lastUndoAction.type === 'log_delete') {
+          for (const entry of lastUndoAction.entries) {
+            const restored = Object.assign({}, entry);
+            delete restored.id;
+            await dbRef('log/' + entry.id).set(restored);
+          }
+          dispatchHubEvent('hub:log-changed');
+          if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
+            window.renderChoreProgress().catch(function (error) { console.error(error); });
+          }
+          if (appShellState.currentView === 'bank' && typeof window.renderBankSettings === 'function') {
+            window.renderBankSettings().catch(function (error) { console.error(error); });
+          }
+          addMessage('system', 'Restored the deleted log entry.');
+          showToast('Entry restored.');
         } else if (lastUndoAction.type === 'payment') {
           await dbRef('payments/' + lastUndoAction.paymentId).remove();
           const undoDelta = Number((-(lastUndoAction.balanceDelta != null ? lastUndoAction.balanceDelta : lastUndoAction.amount)).toFixed(2));
           await adjustBalance(lastUndoAction.kidId, undoDelta);
           addMessage('system', 'Removed the most recent payment.');
           showToast('Removed the most recent payment.');
+        } else if (lastUndoAction.type === 'payment_delete') {
+          await dbRef('payments/' + lastUndoAction.paymentId).set(lastUndoAction.entry);
+          await adjustBalance(lastUndoAction.kidId, Number(lastUndoAction.balanceDelta || 0));
+          if (appShellState.currentView === 'bank') {
+            if (typeof window.renderCardView === 'function') {
+              window.renderCardView(lastUndoAction.kidId).catch(function (error) { console.error(error); });
+            }
+            if (typeof window.renderBankSettings === 'function') {
+              window.renderBankSettings().catch(function (error) { console.error(error); });
+            }
+          }
+          addMessage('system', 'Restored the deleted transaction.');
+          showToast('Transaction restored.');
         } else if (lastUndoAction.type === 'debt') {
           await dbRef('debts/' + lastUndoAction.debtId).remove();
           addMessage('system', 'Removed the most recent debt record.');
@@ -5609,6 +5672,8 @@
         getBalances,
         saveLogEntries,
         writePayment,
+        deleteLogEntry,
+        deletePaymentEntry,
         writeDebt,
         settleDebt,
         updateChorePoints,
@@ -7114,7 +7179,7 @@
         var relatedDebts = debts.filter(function (debt) { return debt && !debt.settled && (debt.from === kidId || debt.to === kidId); });
         var allTxns = [];
         payments.filter(function (payment) { return payment.kid === kidId; }).forEach(function (payment) {
-          allTxns.push({ type: payment.type || 'payment', label: payment.note || payment.type || 'Payment', amount: Number(payment.amount || 0), date: payment.date || '', timestamp: Number(payment.timestamp || 0), balanceDelta: Number(payment.balanceDelta || (payment.type === 'weekly' || payment.type === 'credit' ? payment.amount : -payment.amount)) });
+          allTxns.push({ id: payment.id, kid: payment.kid, type: payment.type || 'payment', label: payment.note || payment.type || 'Payment', amount: Number(payment.amount || 0), date: payment.date || '', timestamp: Number(payment.timestamp || 0), balanceDelta: Number(payment.balanceDelta || (payment.type === 'weekly' || payment.type === 'credit' ? payment.amount : -payment.amount)) });
         });
         allTxns.sort(function (a, b) { return Number(b.timestamp || 0) - Number(a.timestamp || 0); });
         var ytdEarned = 0;
@@ -7148,10 +7213,14 @@
         var stmtRows = allTxns.slice(0, 20).map(function (item) {
           var label = item.type === 'spend' ? 'Purchase' : item.type === 'weekly' ? 'Weekly pay' : item.type === 'credit' ? 'Credit' : item.type === 'invest' ? 'Investment' : 'Payment';
           var delta = Number(item.balanceDelta || 0);
-          return '<div class="stmt-row"><div class="stmt-desc"><span>' + escapeHtml(label + (item.label && item.label !== item.type ? ': ' + item.label : '')) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + '</span></div><span class="stmt-amount ' + (delta >= 0 ? 'credit' : 'debit') + '">' + (delta >= 0 ? '+' : '-') + phase.dollars(Math.abs(delta)) + '</span></div>';
+          return '<div class="swipe-wrapper" data-swipe-type="payment" data-payment-id="' + escapeHtml(item.id || '') + '" data-payment-kid="' + escapeHtml(item.kid || kidId) + '">' +
+            '<div class="swipe-action left">Delete</div>' +
+            '<div class="stmt-row swipe-surface" data-swipe-surface="true"><div class="stmt-desc"><span>' + escapeHtml(label + (item.label && item.label !== item.type ? ': ' + item.label : '')) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + '</span></div><span class="stmt-amount ' + (delta >= 0 ? 'credit' : 'debit') + '">' + (delta >= 0 ? '+' : '-') + phase.dollars(Math.abs(delta)) + '</span></div>' +
+          '</div>';
         }).join('');
 
         cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div></div></div><div class="drawer-grid">' + ytdSummary + '<article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button><button type="button" data-card-action="kid-invest" data-kid="' + kidId + '">Invest</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
+        bindSwipeHandlers(cardContent);
       };
 
       async function handleCardAction(button) {
@@ -7611,10 +7680,10 @@
       }
 
       function renderListItem(list, item) {
-        return '<div class="list-item-wrapper" data-list-id="' + list.id + '" data-item-id="' + item.id + '" data-item-category="' + escapeHtml(item.category || 'other') + '">' +
-          '<div class="list-swipe-action right">' + (item.done ? 'Undo' : 'Done') + '</div>' +
-          '<div class="list-swipe-action left">Delete</div>' +
-          '<div class="list-item' + (item.done ? ' done' : '') + '">' +
+        return '<div class="swipe-wrapper list-item-wrapper" data-swipe-type="list-item" data-list-id="' + list.id + '" data-item-id="' + item.id + '" data-item-category="' + escapeHtml(item.category || 'other') + '">' +
+          '<div class="swipe-action list-swipe-action right">' + (item.done ? 'Undo' : 'Done') + '</div>' +
+          '<div class="swipe-action list-swipe-action left">Delete</div>' +
+          '<div class="list-item swipe-surface' + (item.done ? ' done' : '') + '" data-swipe-surface="true">' +
           '<div class="list-item-text">' + escapeHtml(item.text) + '</div>' +
           '<button type="button" class="list-drag-handle" data-list-drag-handle="' + item.id + '" aria-label="Reorder item">' + listDragHandleSvg() + '</button>' +
         '</div></div>';
@@ -7726,13 +7795,85 @@
         if (container.dataset.swipeBound === 'true' && listState.swipeSignal === signal) return;
         listState.swipeSignal = signal;
         container.dataset.swipeBound = 'true';
+        function resetGestureState() {
+          gestureState.mode = null;
+          gestureState.wrapperEl = null;
+          gestureState.itemEl = null;
+          gestureState.itemId = null;
+          gestureState.listId = null;
+          gestureState.category = null;
+          gestureState.activeTouchId = null;
+          gestureState.overItemId = null;
+        }
+
+        function finishSwipe(itemEl) {
+          if (!itemEl) return;
+          itemEl.style.transform = '';
+          itemEl.style.opacity = '';
+          itemEl.classList.remove('swiping');
+          itemEl.classList.remove('dragging');
+          if (gestureState.wrapperEl) {
+            gestureState.wrapperEl.classList.remove('dragging-active');
+            gestureState.wrapperEl.classList.remove('swiping-left');
+            gestureState.wrapperEl.classList.remove('swiping-right');
+          }
+          resetGestureState();
+        }
+
+        function runUndoToast(message) {
+          var activePhase = runtime();
+          if (activePhase && typeof activePhase.showToast === 'function' && typeof activePhase.undoLastAction === 'function') {
+            activePhase.showToast(message, {
+              onUndo: function () {
+                activePhase.undoLastAction().catch(function (error) { console.error(error); });
+              }
+            });
+          }
+        }
+
+        function handleSwipeAction(wrapper, direction) {
+          var activePhase = runtime();
+          var swipeType = wrapper && wrapper.dataset ? wrapper.dataset.swipeType : '';
+          if (!activePhase || !wrapper || !swipeType) return Promise.resolve(false);
+          if (swipeType === 'list-item') {
+            if (direction === 'left') {
+              return deleteListItem(wrapper.dataset.listId, wrapper.dataset.itemId).then(function () {
+                runUndoToast('Deleted item.');
+                return true;
+              });
+            }
+            if (direction === 'right') {
+              return toggleListItem(wrapper.dataset.listId, wrapper.dataset.itemId).then(function () { return true; });
+            }
+            return Promise.resolve(false);
+          }
+          if (direction !== 'left') {
+            return Promise.resolve(false);
+          }
+          if (swipeType === 'chore-log' && typeof activePhase.deleteLogEntry === 'function') {
+            return activePhase.deleteLogEntry(wrapper.dataset.logId).then(function (deleted) {
+              if (deleted) runUndoToast('Deleted entry.');
+              return deleted;
+            });
+          }
+          if (swipeType === 'payment' && typeof activePhase.deletePaymentEntry === 'function') {
+            return activePhase.deletePaymentEntry(wrapper.dataset.paymentId, wrapper.dataset.paymentKid).then(function (deleted) {
+              if (deleted) runUndoToast('Deleted transaction.');
+              return deleted;
+            });
+          }
+          return Promise.resolve(false);
+        }
+
         container.addEventListener('touchstart', function (e) {
           var touch = e.touches[0];
           if (!touch) return;
           var handle = e.target.closest('[data-list-drag-handle]');
-          var wrapper = e.target.closest('.list-item-wrapper');
+          var wrapper = e.target.closest('.swipe-wrapper');
           if (!wrapper) return;
-          var item = wrapper.querySelector('.list-item');
+          var swipeType = wrapper.dataset.swipeType || '';
+          var canDrag = Boolean(handle) && swipeType === 'list-item';
+          var item = wrapper.querySelector('[data-swipe-surface]') || wrapper.querySelector('.list-item');
           gestureState.startX = touch.clientX;
           gestureState.startY = touch.clientY;
           gestureState.currentX = touch.clientX;
@@ -7744,12 +7885,12 @@
           gestureState.category = wrapper.dataset.itemCategory || 'other';
           gestureState.activeTouchId = touch.identifier;
           gestureState.overItemId = gestureState.itemId;
-          gestureState.mode = handle ? 'drag' : 'swipe';
+          gestureState.mode = canDrag ? 'drag' : 'swipe';
           if (!item) return;
-          wrapper.classList.toggle('dragging-active', Boolean(handle));
+          wrapper.classList.toggle('dragging-active', canDrag);
           wrapper.classList.remove('swiping-left');
           wrapper.classList.remove('swiping-right');
-          item.classList.add(handle ? 'dragging' : 'swiping');
+          item.classList.add(canDrag ? 'dragging' : 'swiping');
         }, signal ? { passive: true, signal: signal } : { passive: true });
 
         container.addEventListener('touchmove', function (e) {
@@ -7769,7 +7910,7 @@
             var diffY = gestureState.currentY - gestureState.startY;
             gestureState.itemEl.style.transform = 'translateY(' + diffY + 'px) scale(1.01)';
             var overEl = document.elementFromPoint(gestureState.currentX, gestureState.currentY);
-            var overWrapper = overEl && overEl.closest('.list-item-wrapper');
+            var overWrapper = overEl && overEl.closest('.swipe-wrapper');
             var list = listState.listsById[gestureState.listId];
             if (!list || !overWrapper || overWrapper.dataset.listId !== gestureState.listId) return;
             var isGrouped = list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse';
@@ -7807,6 +7948,7 @@
           var itemEl = gestureState.itemEl;
           var listId = gestureState.listId;
           var itemId = gestureState.itemId;
+          var actionWrapper = gestureState.wrapperEl;
           var diffX = gestureState.currentX - gestureState.startX;
           var mode = gestureState.mode;
           if (mode === 'drag') {
@@ -7836,42 +7978,24 @@
             itemEl.style.transform = 'translateX(-100%)';
             itemEl.style.opacity = '0';
             setTimeout(function () {
-              deleteListItem(listId, itemId).then(function () {
-                var phase = runtime();
-                if (phase && typeof phase.showToast === 'function' && typeof phase.undoLastAction === 'function') {
-                  phase.showToast('Deleted item.', {
-                    onUndo: function () {
-                      phase.undoLastAction().catch(function (error) { console.error(error); });
-                    }
-                  });
-                }
-              }).catch(function (error) { console.error(error); });
+              handleSwipeAction(actionWrapper || itemEl.closest('.swipe-wrapper'), 'left').catch(function (error) { console.error(error); });
             }, 160);
           } else if (diffX >= 80) {
-            itemEl.style.transform = 'translateX(100%)';
-            itemEl.style.opacity = '0';
-            setTimeout(function () {
-              toggleListItem(listId, itemId).catch(function (error) { console.error(error); });
-            }, 160);
+            if ((actionWrapper && actionWrapper.dataset.swipeType) === 'list-item') {
+              itemEl.style.transform = 'translateX(100%)';
+              itemEl.style.opacity = '0';
+              setTimeout(function () {
+                handleSwipeAction(actionWrapper || itemEl.closest('.swipe-wrapper'), 'right').catch(function (error) { console.error(error); });
+              }, 160);
+            } else {
+              itemEl.style.transform = '';
+              itemEl.style.opacity = '';
+            }
           } else {
             itemEl.style.transform = '';
             itemEl.style.opacity = '';
           }
-          itemEl.classList.remove('swiping');
-          itemEl.classList.remove('dragging');
-          if (gestureState.wrapperEl) {
-            gestureState.wrapperEl.classList.remove('dragging-active');
-            gestureState.wrapperEl.classList.remove('swiping-left');
-            gestureState.wrapperEl.classList.remove('swiping-right');
-          }
-          gestureState.mode = null;
-          gestureState.wrapperEl = null;
-          gestureState.itemEl = null;
-          gestureState.itemId = null;
-          gestureState.listId = null;
-          gestureState.category = null;
-          gestureState.activeTouchId = null;
-          gestureState.overItemId = null;
+          finishSwipe(itemEl);
         }, signal ? { signal: signal } : undefined);
 
         container.addEventListener('touchcancel', function () {
@@ -7879,23 +8003,7 @@
           var itemEl = gestureState.itemEl;
           var ghostNodes = container.querySelectorAll('.list-item.drag-ghost');
           Array.prototype.forEach.call(ghostNodes, function (node) { node.classList.remove('drag-ghost'); });
-          itemEl.style.transform = '';
-          itemEl.style.opacity = '';
-          itemEl.classList.remove('swiping');
-          itemEl.classList.remove('dragging');
-          if (gestureState.wrapperEl) {
-            gestureState.wrapperEl.classList.remove('dragging-active');
-            gestureState.wrapperEl.classList.remove('swiping-left');
-            gestureState.wrapperEl.classList.remove('swiping-right');
-          }
-          gestureState.mode = null;
-          gestureState.wrapperEl = null;
-          gestureState.itemEl = null;
-          gestureState.itemId = null;
-          gestureState.listId = null;
-          gestureState.category = null;
-          gestureState.activeTouchId = null;
-          gestureState.overItemId = null;
+          finishSwipe(itemEl);
         }, signal ? { signal: signal } : undefined);
       }
 
@@ -8227,17 +8335,17 @@
                 var ampm = h >= 12 ? 'pm' : 'am';
                 var h12 = h % 12 || 12;
                 var timeStr = h12 + ':' + String(time.getMinutes()).padStart(2, '0') + ampm;
-                return '<div class="chore-log-entry ' + escapeHtml(entry.kid) + '">' +
-                  '<div class="chore-log-main">' +
-                    '<span class="chore-log-name">' + escapeHtml(entry.choreLabel || 'Points') + '</span>' +
-                    '<span class="chore-log-pts-badge">+' + Number(entry.points || 0) + '</span>' +
-                  '</div>' +
-                  '<div class="chore-log-aside">' +
-                    '<span class="chore-log-who">' + escapeHtml(kidName) + '</span>' +
-                    '<span class="chore-log-when">' + escapeHtml(timeStr) + '</span>' +
-                    '<button type="button" class="chore-log-del" data-chore-log-delete="' + escapeHtml(entry.id) + '" aria-label="Delete">' +
-                      '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
-                    '</button>' +
+                return '<div class="swipe-wrapper" data-swipe-type="chore-log" data-log-id="' + escapeHtml(entry.id) + '">' +
+                  '<div class="swipe-action left">Delete</div>' +
+                  '<div class="chore-log-entry swipe-surface ' + escapeHtml(entry.kid) + '" data-swipe-surface="true">' +
+                    '<div class="chore-log-main">' +
+                      '<span class="chore-log-name">' + escapeHtml(entry.choreLabel || 'Points') + '</span>' +
+                      '<span class="chore-log-pts-badge">+' + Number(entry.points || 0) + '</span>' +
+                    '</div>' +
+                    '<div class="chore-log-aside">' +
+                      '<span class="chore-log-who">' + escapeHtml(kidName) + '</span>' +
+                      '<span class="chore-log-when">' + escapeHtml(timeStr) + '</span>' +
+                    '</div>' +
                   '</div>' +
                 '</div>';
               }).join('');
@@ -8362,6 +8470,7 @@
             '<div class="chore-summary">' + escapeHtml(weekDateRange(week)) + ' · ' + summary.points + 'pts · ' + phase.dollars(summary.pay) + ' earned</div>' +
             logMarkup +
           '</div>';
+          bindSwipeHandlers(container);
         } catch (error) {
           console.error(error);
           if (kidCardsContainer) kidCardsContainer.innerHTML = '';
@@ -8550,17 +8659,6 @@
           renderChoreProgress().catch(function (error) { console.error(error); });
           return;
         }
-        var logDeleteBtn = event.target.closest('[data-chore-log-delete]');
-        if (logDeleteBtn) {
-          var logId = logDeleteBtn.dataset.choreLogDelete;
-          var phase = runtime();
-          if (!phase || !logId) return;
-          phase.dbRef('log/' + logId).remove().then(function () {
-            phase.showToast('Entry removed.');
-            renderChoreProgress().catch(function (error) { console.error(error); });
-          }).catch(function (error) { console.error(error); });
-          return;
-        }
         var choreItem = event.target.closest('[data-chore-item]');
         if (choreItem) {
           logChoreItem(choreItem.dataset.choreItem).catch(function (error) {
@@ -8586,8 +8684,13 @@
           if (action === 'delete-log') {
             var logId = bankActionBtn.dataset.logId;
             if (!phase || !logId) return;
-            phase.dbRef('log/' + logId).remove().then(function () {
-              phase.showToast('Deleted log entry.');
+            phase.deleteLogEntry(logId).then(function (deleted) {
+              if (!deleted) return;
+              phase.showToast('Deleted log entry.', {
+                onUndo: function () {
+                  phase.undoLastAction().catch(function (error) { console.error(error); });
+                }
+              });
               renderChoreProgress().catch(function (error) { console.error(error); });
               renderBankSettings().catch(function (error) { console.error(error); });
             }).catch(function (error) { console.error(error); phase.showToast('Failed to delete.', { type: 'error' }); });
@@ -8596,17 +8699,14 @@
           if (action === 'delete-payment') {
             var paymentId = bankActionBtn.dataset.paymentId;
             var kidId = bankActionBtn.dataset.paymentKid;
-            var amount = Number(bankActionBtn.dataset.paymentAmount || 0);
-            var type = bankActionBtn.dataset.paymentType || 'payment';
             if (!phase || !paymentId) return;
-            phase.dbRef('payments/' + paymentId).get().then(function (snap) {
-              var p = snap.exists() ? snap.val() : null;
-              return phase.dbRef('payments/' + paymentId).remove().then(function () { return p; });
-            }).then(function (p) {
-              var delta = p && typeof p.balanceDelta === 'number' ? Number(p.balanceDelta) : (type === 'credit' ? amount : -amount);
-              return phase.adjustBalance(kidId, Number((-delta).toFixed(2)));
-            }).then(function () {
-              phase.showToast('Deleted transaction and reversed ' + phase.dollars(amount) + '.');
+            phase.deletePaymentEntry(paymentId, kidId).then(function (deleted) {
+              if (!deleted) return;
+              phase.showToast('Deleted transaction.', {
+                onUndo: function () {
+                  phase.undoLastAction().catch(function (error) { console.error(error); });
+                }
+              });
               renderBankSettings().catch(function (error) { console.error(error); });
             }).catch(function (error) { console.error(error); phase.showToast('Failed to delete transaction.', { type: 'error' }); });
             return;

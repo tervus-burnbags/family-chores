@@ -1,28 +1,28 @@
 # Task State - Family Hub
 
-**Task:** Phase 32 — Consolidation: Design System, Code Cleanup, Listener Safety
+**Task:** Phase 33 - Unified Swipe-to-Delete + CSS Cleanup
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 32
+**Next Action:** Review Phase 33
 **Last Updated:** 2026-03-17
 
 ## Completed
 
-- [x] Phases 8–28 + Consolidation + Visual Polish
+- [x] Phases 8-28 + Consolidation + Visual Polish
 - [x] Phase 29: List fixes, Bank revamp, Icon & iOS fullscreen
-- [x] Phase 30: Fun tab overhaul — built & reviewed (12/12 tests passed)
-- [x] Phase 31: Input bar fixes, Starred favorites, Louisa balance — built & reviewed
+- [x] Phase 30: Fun tab overhaul - built & reviewed (12/12 tests passed)
+- [x] Phase 31: Input bar fixes, Starred favorites, Louisa balance - built & reviewed
+- [x] Phase 32: Consolidation - built & reviewed (CSS gaps noted for follow-up)
+- [x] Phase 33: Unified Swipe-to-Delete + CSS Cleanup
 
 ## Current
 
-- [x] **Phase 32** — Consolidation complete:
-  - Part A: Added shared design tokens and moved the Fun/Bank injected styles into the main stylesheet
-  - Part B: Consolidated shared escaping/date helpers, removed the Louisa balance correction patch, and added AbortController-based view listener cleanup
-  - Part C: Added `dbPath()` / `dbRef()` helpers and converted the core runtime plus tab modules over to the shared path helpers
+- [ ] Waiting on Gemini review for Phase 33
 
 ## Notes
 
-- Phase 31 remains a separate local commit and is untouched
-- One pre-runtime family config lookup still uses a raw path because it runs before `familyId` is promoted into the helper-backed runtime flow
-- Ready for Gemini review
+- Shared `.swipe-wrapper` and `.swipe-action` styling now covers Lists, Chores, and Bank.
+- Chore log entries now delete by swipe with undo restore through the shared runtime undo path.
+- Bank card transactions now delete by swipe with balance reversal; weekly and credit entries require confirmation.
+- List button tap targets now use the shared tap-size token from Phase 32.
