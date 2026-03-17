@@ -2861,20 +2861,21 @@
 
     .fun-tile {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 28px 16px 22px;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
       border: 0;
       border-radius: var(--radius-lg);
       background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.18), transparent 42%), linear-gradient(180deg, var(--tile-color), var(--tile-color));
       color: #fff;
       cursor: pointer;
-      min-height: 132px;
+      min-height: var(--tap);
       box-shadow: var(--shadow-sm);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       -webkit-tap-highlight-color: transparent;
+      text-align: left;
     }
 
     .fun-tile:active {
@@ -2883,26 +2884,32 @@
     }
 
     .fun-tile-icon {
-      font-size: 2.4rem;
+      font-size: 1.5rem;
       line-height: 1;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .fun-tile-icon svg {
-      width: 42px;
-      height: 42px;
+      width: 28px;
+      height: 28px;
       display: block;
     }
 
     .fun-tile-label {
-      font-size: var(--font-base);
-      font-weight: 800;
-      text-align: center;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      text-align: left;
     }
 
     .fun-tile-sub {
       font-size: var(--font-xs);
       opacity: 0.88;
-      text-align: center;
+      text-align: left;
     }
 
     .fun-card {
@@ -2960,9 +2967,9 @@
     .fun-back-btn {
       min-height: var(--tap);
       padding: 8px 12px;
-      border: 0;
+      border: 1px solid rgba(148, 163, 184, 0.16);
       border-radius: var(--radius-sm);
-      background: var(--panel-alt);
+      background: rgba(237, 244, 255, 0.9);
       color: var(--text);
       font: inherit;
       font-size: var(--font-sm);
@@ -3185,9 +3192,9 @@
     .bs-cell {
       aspect-ratio: 1 / 1;
       min-height: 34px;
-      border: 0;
+      border: 1px solid rgba(100, 140, 180, 0.3);
       border-radius: var(--radius-sm);
-      background: linear-gradient(180deg, #eef5ff, #dde9f9);
+      background: linear-gradient(180deg, #c7daf0, #a8c4e0);
       color: var(--text);
       cursor: pointer;
       position: relative;
@@ -3195,8 +3202,8 @@
     }
 
     .bs-cell.ship {
-      background: linear-gradient(180deg, rgba(74, 144, 217, 0.18), rgba(74, 144, 217, 0.28));
-      box-shadow: inset 0 0 0 1px rgba(74, 144, 217, 0.25);
+      background: linear-gradient(180deg, #6b7d94, #4a5c72);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     }
 
     .bs-cell.hit::after,
@@ -3209,14 +3216,19 @@
 
     .bs-cell.hit::after {
       background: var(--danger);
+      inset: 18%;
+      box-shadow: 0 0 6px rgba(214, 69, 69, 0.5);
     }
 
     .bs-cell.miss::after {
-      background: rgba(100, 116, 139, 0.45);
+      inset: 32%;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(100, 140, 180, 0.4);
     }
 
     .bs-cell.sunk {
-      box-shadow: inset 0 0 0 2px rgba(214, 69, 69, 0.25);
+      background: linear-gradient(180deg, #c0392b, #962d22);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
     }
 
     .bs-setup-meta,
@@ -4916,6 +4928,16 @@
         return QUESTION_WORDS.some((word) => normalized.includes(word)) || /\?$/.test(String(text || '').trim());
       }
 
+      function isKidName(value) {
+        var normalized = normalizeText(value);
+        if (!normalized) return false;
+        var kidIds = Object.keys((currentConfig && currentConfig.kids) || {});
+        return kidIds.some(function (kidId) {
+          var kid = currentConfig.kids[kidId] || {};
+          return normalized === normalizeText(kidId) || normalized === normalizeText(kid.name || kidId);
+        });
+      }
+
       function parseListIntent(normalized, originalText) {
         var createMatch = originalText.match(/\b(?:create|make|start)\s+(?:a\s+|new\s+)?list(?:\s+(?:called|named))?\s+(.+)$/i);
         if (createMatch) {
@@ -4923,7 +4945,12 @@
         }
         var addMatch = originalText.match(/\b(?:add|put)\s+(.+?)\s+(?:to|on)\s+(.+?)(?:\s+list)?$/i);
         if (addMatch) {
-          return { intent: 'add_to_list', itemText: addMatch[1].trim(), listName: addMatch[2].trim() };
+          var addItem = addMatch[1].trim();
+          var addTarget = addMatch[2].trim();
+          if (/^\$?\d+(?:\.\d{1,2})?/.test(addItem) && isKidName(addTarget)) {
+            return null;
+          }
+          return { intent: 'add_to_list', itemText: addItem, listName: addTarget };
         }
         var checkMatch = originalText.match(/\b(?:check(?:\s+off)?|mark(?:\s+off)?|cross\s+off)\s+(.+?)\s+(?:from|on)\s+(.+?)(?:\s+list)?$/i);
         if (checkMatch) {
@@ -4933,6 +4960,9 @@
       }
 
       function parseBankIntent(normalized, originalText, kids) {
+        if (/\bpoints?\b/.test(normalized) && !/\$/.test(originalText)) {
+          return null;
+        }
         if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) {
           return { intent: 'settle_debt', kids: kids };
         }
@@ -4949,7 +4979,7 @@
         if (/\b(spent|bought|purchased)\b/.test(normalized) && kids.length) {
           return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(originalText), note: originalText };
         }
-        if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) {
+        if (/\b(paid|gave|pay|got|received|earned|found)\b/.test(normalized) && kids.length) {
           return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(originalText) };
         }
         return null;
@@ -4992,61 +5022,65 @@
           var currentNoteIntent = parseNoteIntent(normalized, text);
           if (currentNoteIntent) return currentNoteIntent;
         }
-        var fallbackListIntent = activeTab !== 'lists' ? parseListIntent(normalized, text) : null;
-        if (fallbackListIntent) return fallbackListIntent;
-        var fallbackBankIntent = activeTab !== 'bank' ? parseBankIntent(normalized, text, kids) : null;
-        if (fallbackBankIntent) return fallbackBankIntent;
-        var fallbackNoteIntent = activeTab !== 'bulletin' ? parseNoteIntent(normalized, text) : null;
-        if (fallbackNoteIntent) return fallbackNoteIntent;
-        if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
-          return { intent: 'freepoints', kids, points: -parsePoints(text) };
-        }
-        if (kids.length && parsePoints(text) !== null && /\b(gets?|earns?|earned|give|add|award)\b/.test(normalized)) {
-          return { intent: 'freepoints', kids, points: parsePoints(text) };
-        }
-        if (/\bpoints?\s+for\b/.test(normalized) && kids.length && parsePoints(text) !== null) {
-          return { intent: 'freepoints', kids, points: parsePoints(text) };
-        }
-        if (/\b(change|update|should be)\b/.test(normalized) || (/\bmake\b/.test(normalized) && /\bpoints?\b/.test(normalized) && parsePoints(text) !== null)) {
-          const choreText = text.replace(/\b(change|make|update|should be)\b/gi, ' ').trim();
-          const match = inferChore(choreText);
-          return { intent: 'change_points', choreId: match && match.choreId, choreLabel: match && match.chore && match.chore.label, points: parsePoints(text), confidence: match ? match.score : 0 };
-        }
-        if (/\bpoints?\b/.test(normalized) && parsePoints(text) !== null && kids.length) {
-          var explicitPts = parsePoints(text);
-          var choreMatch = inferChore(text);
-          if (/\b(new chore|something new|something extra)\b/.test(normalized)) {
-            return { intent: 'adhoc', kids, points: explicitPts, choreLabel: extractAdhocLabel(text, kids) };
+        if (activeTab === 'chores' || activeTab === 'bulletin') {
+          if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost|spent|paid)\b/.test(normalized)) {
+            return { intent: 'freepoints', kids, points: -parsePoints(text) };
           }
-          if (/\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
-            return { intent: 'freepoints', kids, points: -explicitPts };
+          if (kids.length && parsePoints(text) !== null && /\b(gets?|earns?|earned|give|add|award)\b/.test(normalized)) {
+            return { intent: 'freepoints', kids, points: parsePoints(text) };
           }
-          if (choreMatch && choreMatch.score >= 0.5) {
-            return { intent: 'log_chore', kids, choreId: choreMatch.choreId, choreLabel: choreMatch.chore.label, points: explicitPts };
+          if (/\bpoints?\s+for\b/.test(normalized) && kids.length && parsePoints(text) !== null) {
+            return { intent: 'freepoints', kids, points: parsePoints(text) };
           }
-          if (choreMatch && choreMatch.score >= 0.3) {
-            return { intent: 'confirm_chore', kids, choreId: choreMatch.choreId, choreLabel: choreMatch.chore.label, points: explicitPts };
+          if (/\b(change|update|should be)\b/.test(normalized) || (/\bmake\b/.test(normalized) && /\bpoints?\b/.test(normalized) && parsePoints(text) !== null)) {
+            const choreText = text.replace(/\b(change|make|update|should be)\b/gi, ' ').trim();
+            const match = inferChore(choreText);
+            return { intent: 'change_points', choreId: match && match.choreId, choreLabel: match && match.chore && match.chore.label, points: parsePoints(text), confidence: match ? match.score : 0 };
           }
-          return { intent: 'freepoints', kids, points: explicitPts };
+          if (/\bpoints?\b/.test(normalized) && parsePoints(text) !== null && kids.length) {
+            var explicitPts = parsePoints(text);
+            var choreMatch = inferChore(text);
+            if (/\b(new chore|something new|something extra)\b/.test(normalized)) {
+              return { intent: 'adhoc', kids, points: explicitPts, choreLabel: extractAdhocLabel(text, kids) };
+            }
+            if (/\b(remove|subtract|take away|deduct|lose|lost|spent|paid)\b/.test(normalized)) {
+              return { intent: 'freepoints', kids, points: -explicitPts };
+            }
+            if (choreMatch && choreMatch.score >= 0.5) {
+              return { intent: 'log_chore', kids, choreId: choreMatch.choreId, choreLabel: choreMatch.chore.label, points: explicitPts };
+            }
+            if (choreMatch && choreMatch.score >= 0.3) {
+              return { intent: 'confirm_chore', kids, choreId: choreMatch.choreId, choreLabel: choreMatch.chore.label, points: explicitPts };
+            }
+            return { intent: 'freepoints', kids, points: explicitPts };
+          }
+          const clauses = splitClauses(text);
+          const actions = [];
+          for (const clause of clauses) {
+            const clauseKids = extractKidIds(clause).length ? extractKidIds(clause) : kids;
+            if (!clauseKids.length) return { intent: 'missing_kid' };
+            const match = inferChore(clause);
+            if (match && match.score >= 0.5) {
+              actions.push({ intent: 'log_chore', kids: clauseKids, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(clause) });
+              continue;
+            }
+            if (match && match.score >= 0.3) {
+              return { intent: 'confirm_chore', kids: clauseKids, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(clause) };
+            }
+          }
+          if (actions.length) return { intent: 'log_chore', multi: actions };
+          if (kids.length && parsePoints(text) !== null) return { intent: 'adhoc', kids, points: parsePoints(text), choreLabel: extractAdhocLabel(text, kids) };
         }
         if (isQuestion(text)) return { intent: 'check_status', kids };
-
-        const clauses = splitClauses(text);
-        const actions = [];
-        for (const clause of clauses) {
-          const clauseKids = extractKidIds(clause).length ? extractKidIds(clause) : kids;
-          if (!clauseKids.length) return { intent: 'missing_kid' };
-          const match = inferChore(clause);
-          if (match && match.score >= 0.5) {
-            actions.push({ intent: 'log_chore', kids: clauseKids, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(clause) });
-            continue;
-          }
-          if (match && match.score >= 0.3) {
-            return { intent: 'confirm_chore', kids: clauseKids, choreId: match.choreId, choreLabel: match.chore.label, points: Number(match.chore.points || 0), dateContext: detectDateContext(clause) };
+        if (activeTab === 'lists' && normalized.length > 0 && normalized.length < 100 && window.familyLists && typeof window.familyLists.getCurrentListContext === 'function') {
+          var currentList = window.familyLists.getCurrentListContext();
+          if (currentList && currentList.name) {
+            return { intent: 'add_to_list', listName: currentList.name, itemText: text.trim() };
           }
         }
-        if (actions.length) return { intent: 'log_chore', multi: actions };
-        if (kids.length && parsePoints(text) !== null) return { intent: 'adhoc', kids, points: parsePoints(text), choreLabel: extractAdhocLabel(text, kids) };
+        if (activeTab === 'bulletin' && normalized.length > 0 && normalized.length < 250) {
+          return { intent: 'log_note', noteText: text.trim(), color: 'neutral' };
+        }
         if (!kids.length) return { intent: 'missing_kid' };
         return { intent: 'no_match' };
       }
@@ -8964,7 +8998,11 @@
       window.familyLists = {
         createListNamed: createListNamed,
         addItemsToNamedList: addItemsToNamedList,
-        checkOffItemByText: checkOffItemByText
+        checkOffItemByText: checkOffItemByText,
+        getCurrentListContext: function () {
+          var current = listState.currentListId ? listState.listsById[listState.currentListId] : null;
+          return current ? { id: current.id, name: current.name, type: current.type } : null;
+        }
       };
 
     })();

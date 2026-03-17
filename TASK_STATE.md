@@ -1,24 +1,24 @@
 # Task State - Family Hub
 
-**Task:** Phase 34 - Hotfixes, Visual Cohesion, New Games
+**Task:** Phase 35 - Fun Tab Polish, Parser Hardening
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 34
+**Next Action:** Review Phase 35
 **Last Updated:** 2026-03-17
 
 ## Completed
 
-- [x] Phases 8-33
-- [x] Phase 34: Hotfixes, Visual Cohesion, New Games
+- [x] Phases 8-34
+- [x] Phase 35: Fun Tab Polish, Parser Hardening
 
 ## Current
 
-- [ ] Waiting on Gemini review for Phase 34
+- [ ] Waiting on Gemini review for Phase 35
 
 ## Notes
 
-- `window.bindSwipeHandlers` is now exposed so Chores can reuse the Phase 33 swipe runtime safely.
-- Bulletin now re-renders on `hub:config-changed`, and the Louisa balance correction is back with a new `louisa_balance_v2` guard key.
-- Shared `hub` card/header/empty-state styles are in place, and the remaining Phase 32 tap-target/token gaps were cleaned up.
-- Fun now includes Tic Tac Toe, Connect Four, and Battleship; Tic Tac Toe and Connect Four scores persist locally per family.
+- Fun tiles are now compact horizontal launchers, and Battleship uses higher-contrast ship/hit/miss styling.
+- The parser no longer falls through across tabs; chores are guarded to Bulletin/Chores, and Lists/Bulletin get contextual bare-text defaults.
+- Bank parsing now ignores `points` without `$`, recognizes `got/received/earned/found`, and list parsing rejects dollar-to-kid collisions.
+- Older phase review files were archived under `archive/ai/2026-03-17/`, and the one-off debug scripts moved to `.ai_runtime/`.

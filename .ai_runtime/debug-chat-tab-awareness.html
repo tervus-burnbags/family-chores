@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Chat Tab Awareness</title>
+</head>
+<body>
+  <pre id="output"></pre>
+  <script>
+    // --- Mocks to simulate index.html logic ---
+    var YES_WORDS = ['yes', 'yeah', 'yep', 'y'];
+    var NO_WORDS = ['no', 'nope', 'n'];
+    var currentConfig = {
+      kids: {
+        alex: { name: 'Alex' },
+        louisa: { name: 'Louisa' }
+      },
+      chores: {
+        feed_dog_am: { label: 'Feed dog (AM)', points: 1, keywords: ['feed', 'dog', 'morning'] },
+        brush_teeth: { label: 'Brush teeth', points: 1, keywords: ['brush', 'teeth'] }
+      }
+    };
+
+    function normalizeText(text) { return String(text || '').toLowerCase().trim(); }
+    
+    function extractKidIds(text) {
+      const normalized = normalizeText(text);
+      let ids = [];
+      if (normalized.includes('alex')) ids.push('alex');
+      if (normalized.includes('louisa')) ids.push('louisa');
+      if (normalized.includes('both')) ids = ['alex', 'louisa'];
+      return ids;
+    }
+
+    function parsePoints(text) {
+      const match = normalizeText(text).match(/(\d+)\s*points?/);
+      return match ? Number(match[1]) : null;
+    }
+
+    function parseAmount(text) {
+      const match = normalizeText(text).match(/\$?\s*(\d+(?:\.\d{1,2})?)/);
+      return match ? Number(match[1]) : null;
+    }
+
+    function scoreChore(text, chore) {
+      const tokens = new Set(normalizeText(text).split(' ').filter(Boolean));
+      let best = 0;
+      (chore.keywords || []).forEach((phrase) => {
+        const phraseTokens = normalizeText(phrase).split(' ').filter(Boolean);
+        let matched = 0;
+        phraseTokens.forEach((token) => { if (tokens.has(token)) matched += 1; });
+        best = Math.max(best, matched / phraseTokens.length);
+      });
+      return best;
+    }
+
+    function inferChore(text) {
+      let best = null;
+      Object.keys(currentConfig.chores).forEach(choreId => {
+        let chore = currentConfig.chores[choreId];
+        let score = scoreChore(text, chore);
+        if (!best || score > best.score) best = { choreId, chore, score };
+      });
+      return best;
+    }
+
+    function parseListIntent(normalized, originalText) {
+      if (normalized.includes('add') && (normalized.includes('to') || normalized.includes('list'))) return { intent: 'add_to_list' };
+      return null;
+    }
+
+    function parseBankIntent(normalized, originalText, kids) {
+      if (normalized.includes('spent') && kids.length) return { intent: 'kid_spent' };
+      return null;
+    }
+
+    function parseNoteIntent(normalized, originalText) {
+      if (normalized.startsWith('pin:')) return { intent: 'log_note' };
+      return null;
+    }
+
+    // This is the logic from index.html (simplified but structure-accurate)
+    function parseIntent(text, currentTab) {
+      const normalized = normalizeText(text);
+      const kids = extractKidIds(text);
+      var activeTab = currentTab || 'bulletin';
+
+      // 1. Global constants
+      if (YES_WORDS.includes(normalized)) return { intent: 'confirm_yes' };
+      if (NO_WORDS.includes(normalized)) return { intent: 'confirm_no' };
+      if (/\bundo\b/.test(normalized)) return { intent: 'undo' };
+
+      // 2. Active Tab Primary
+      if (activeTab === 'lists') {
+        var res = parseListIntent(normalized, text);
+        if (res) return res;
+      }
+      if (activeTab === 'bank') {
+        var res = parseBankIntent(normalized, text, kids);
+        if (res) return res;
+      }
+      if (activeTab === 'bulletin') {
+        var res = parseNoteIntent(normalized, text);
+        if (res) return res;
+      }
+
+      // 3. Fallbacks for other tabs
+      var fList = activeTab !== 'lists' ? parseListIntent(normalized, text) : null;
+      if (fList) return fList;
+      var fBank = activeTab !== 'bank' ? parseBankIntent(normalized, text, kids) : null;
+      if (fBank) return fBank;
+      var fNote = activeTab !== 'bulletin' ? parseNoteIntent(normalized, text) : null;
+      if (fNote) return fNote;
+
+      // 4. Chore logic (THE SUSPECTED CATCH-ALL)
+      if (kids.length && parsePoints(text) !== null) return { intent: 'freepoints' };
+      
+      // Intent parsing from index.html:5030-5050
+      var choreMatch = inferChore(text);
+      if (kids.length && choreMatch && choreMatch.score >= 0.5) {
+        return { intent: 'log_chore', kids, choreId: choreMatch.choreId };
+      }
+
+      return { intent: 'no_match' };
+    }
+
+    // --- Test Execution ---
+    var passed = 0, failed = 0;
+    function log(m) { document.getElementById('output').textContent += m + '\n'; }
+    function assert(cond, m) { if(cond) { passed++; log('✅ ' + m); } else { failed++; log('❌ ' + m); } }
+
+    log('Testing Tab Awareness...');
+
+    // Scenario 1: Bank tab, user says something ambiguous that sounds like a chore
+    // Actually, "Alex spent $5" should be bank.
+    var res1 = parseIntent('Alex spent $5', 'bank');
+    assert(res1.intent === 'kid_spent', 'Bank intent recognized on Bank tab');
+
+    var res2 = parseIntent('Alex spent $5', 'chores');
+    assert(res2.intent === 'kid_spent', 'Bank intent recognized via fallback on Chores tab');
+
+    // Scenario 2: Chores tab, user says "Alex brush teeth"
+    var res3 = parseIntent('Alex brush teeth', 'chores');
+    assert(res3.intent === 'log_chore', 'Chore recognized on Chores tab');
+
+    // Scenario 3: Bank tab, user says "Alex brush teeth"
+    // Goal: This should probably say "no_match" or prompt to switch tabs, NOT log a chore immediately?
+    // User says: "the chat only work for the page that you're on"
+    var res4 = parseIntent('Alex brush teeth', 'bank');
+    log('Result for "Alex brush teeth" on Bank tab: ' + res4.intent);
+    assert(res4.intent === 'no_match' || res4.intent === 'wrong_tab', 'Chore should NOT be logged automatically from the Bank tab if we want strict tab awareness');
+
+    log('\nFinal: ' + passed + ' passed, ' + failed + ' failed');
+  </script>
+</body>
+</html>
