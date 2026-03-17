@@ -2,7 +2,7 @@
   "name": "Family Hub",
   "short_name": "Hub",
   "start_url": ".",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffffff",
   "theme_color": "#4a90d9",
   "icons": [
@@ -20,4 +20,3 @@
     }
   ]
 }
-
