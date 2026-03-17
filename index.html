@@ -336,7 +336,7 @@
       border-top: 1px solid var(--line);
       padding-bottom: env(safe-area-inset-bottom);
       flex-shrink: 0;
-      z-index: 100;
+      z-index: 110;
     }
 
     /* -- Home / Bulletin -- */
@@ -3318,6 +3318,9 @@
           };
           elements.messageInput.placeholder = placeholders[name] || 'Say something...';
         }
+        if (elements.composer) {
+          elements.composer.style.display = name === 'fun' ? 'none' : '';
+        }
         renderHeaderSettingsPanel();
         Object.keys(views).forEach(function (key) {
           views[key].classList.toggle('active', key === name);
@@ -3621,6 +3624,7 @@
         currentConfig = snapshot.exists() ? snapshot.val() : buildDefaultConfig();
         updateHeaderTitle(currentConfig.familyName);
         configLoaded = true;
+        await applyBalanceCorrections();
         dispatchHubEvent('hub:config-changed');
       }
       window.loadFamilyConfigV2 = loadFamilyConfigV2;
@@ -3637,6 +3641,15 @@
           normalized = normalized.replace(new RegExp('\\b' + word + '\\b', 'g'), ' ');
         });
         return normalized.replace(/[^a-z0-9$.\s']/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      async function applyBalanceCorrections() {
+        if (!familyId || !database) return;
+        var correctionKey = 'familyChores.correction.louisa_balance_v1.' + familyId;
+        if (localStorage.getItem(correctionKey)) return;
+        await database.ref('families/' + familyId + '/balances/louisa/owed').set(14);
+        localStorage.setItem(correctionKey, 'applied');
+        console.log('Balance correction applied: Louisa set to $14');
       }
 
       function splitClauses(text) {
@@ -3853,11 +3866,31 @@
         intentRegistry.sort((a, b) => (b.priority || 0) - (a.priority || 0));
       }
 
-      function routeIntent(text) {
+      function routeIntent(text, currentTab) {
         const normalized = normalizeText(text);
         const kids = extractKidIds(text);
+        var activeTab = currentTab || 'bulletin';
+        var routeViews = {
+          undo: 'global',
+          confirm_yes: 'global',
+          confirm_no: 'global',
+          check_status: 'global',
+          log_chore: 'chores',
+          confirm_chore: 'chores',
+          freepoints: 'chores',
+          adhoc: 'chores',
+          create_list: 'lists',
+          add_to_list: 'lists',
+          check_off_list: 'lists',
+          log_note: 'bulletin',
+          remove_note: 'bulletin'
+        };
 
         for (const intentConfig of intentRegistry) {
+          var routeView = routeViews[intentConfig.id] || 'global';
+          if (activeTab !== 'chores' && routeView !== 'global' && routeView !== activeTab) {
+            continue;
+          }
           const match = intentConfig.patterns(normalized, kids);
           if (match && match.confidence > 0.5) {
             return Object.assign({}, match, { intent: intentConfig.id, kids: kids });
@@ -4077,21 +4110,88 @@
         return QUESTION_WORDS.some((word) => normalized.includes(word)) || /\?$/.test(String(text || '').trim());
       }
 
-      function parseIntent(text) {
+      function parseListIntent(normalized, originalText) {
+        var createMatch = originalText.match(/\b(?:create|make|start)\s+(?:a\s+|new\s+)?list(?:\s+(?:called|named))?\s+(.+)$/i);
+        if (createMatch) {
+          return { intent: 'create_list', listName: createMatch[1].trim() };
+        }
+        var addMatch = originalText.match(/\b(?:add|put)\s+(.+?)\s+(?:to|on)\s+(.+?)(?:\s+list)?$/i);
+        if (addMatch) {
+          return { intent: 'add_to_list', itemText: addMatch[1].trim(), listName: addMatch[2].trim() };
+        }
+        var checkMatch = originalText.match(/\b(?:check(?:\s+off)?|mark(?:\s+off)?|cross\s+off)\s+(.+?)\s+(?:from|on)\s+(.+?)(?:\s+list)?$/i);
+        if (checkMatch) {
+          return { intent: 'check_off_list', itemText: checkMatch[1].trim(), listName: checkMatch[2].trim() };
+        }
+        return null;
+      }
+
+      function parseBankIntent(normalized, originalText, kids) {
+        if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) {
+          return { intent: 'settle_debt', kids: kids };
+        }
+        var debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
+        if (/\b(i|we|me|us|parent|parents?)\b/.test(normalized) && /\bowe\b/.test(normalized) && kids.length === 1) {
+          return { intent: 'parent_owes_kid', kids: [kids[0]], amount: parseAmount(originalText), note: originalText };
+        }
+        if (debtVerbMatch && kids.length >= 2) {
+          return { intent: 'record_debt', kids: kids, amount: parseAmount(originalText), verb: debtVerbMatch[1] };
+        }
+        if (debtVerbMatch && kids.length === 1 && /\b(me|us|parents?)\b/.test(normalized)) {
+          return { intent: 'kid_owes_parent', kids: kids, amount: parseAmount(originalText) };
+        }
+        if (/\b(spent|bought|purchased)\b/.test(normalized) && kids.length) {
+          return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(originalText), note: originalText };
+        }
+        if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) {
+          return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(originalText) };
+        }
+        return null;
+      }
+
+      function parseNoteIntent(normalized, originalText) {
+        var noteMatch = originalText.match(/^(?:pin|pin:|note|add note|post note|bulletin note|remember)\s*:?\s+(.+)$/i);
+        if (noteMatch) {
+          var noteText = noteMatch[1].trim();
+          if (!noteText) return null;
+          return {
+            intent: 'log_note',
+            noteText: noteText,
+            color: /\balex\b/i.test(noteText) ? 'alex' : /\b(?:louisa|lou)\b/i.test(noteText) ? 'louisa' : 'neutral'
+          };
+        }
+        var removeMatch = originalText.match(/^(?:remove|delete|clear)\s+note\s+(.+)$/i);
+        if (removeMatch) {
+          return { intent: 'remove_note', noteText: removeMatch[1].trim() };
+        }
+        return null;
+      }
+
+      function parseIntent(text, currentTab) {
         const normalized = normalizeText(text);
         const kids = extractKidIds(text);
+        var activeTab = currentTab || 'bulletin';
         if (YES_WORDS.includes(normalized)) return { intent: 'confirm_yes' };
         if (NO_WORDS.includes(normalized)) return { intent: 'confirm_no' };
         if (/\bundo\b|take that back/.test(normalized)) return { intent: 'undo' };
-        if ((/\b(settle|settled)\b/.test(normalized) || (/\bpaid\b/.test(normalized) && /\bback\b/.test(normalized))) && kids.length >= 2) return { intent: 'settle_debt', kids };
-        const debtVerbMatch = normalized.match(/\b(owes|borrowed|lent)\b/);
-        if (/\b(i|we|me|us|parent|parents?)\b/.test(normalized) && /\bowe\b/.test(normalized) && kids.length === 1) {
-          return { intent: 'parent_owes_kid', kids: [kids[0]], amount: parseAmount(text), note: text };
+        if (activeTab === 'lists') {
+          var currentListIntent = parseListIntent(normalized, text);
+          if (currentListIntent) return currentListIntent;
         }
-        if (debtVerbMatch && kids.length >= 2) return { intent: 'record_debt', kids, amount: parseAmount(text), verb: debtVerbMatch[1] };
-        if (debtVerbMatch && kids.length === 1 && /\b(me|us|parents?)\b/.test(normalized)) return { intent: 'kid_owes_parent', kids, amount: parseAmount(text) };
-        if (/\b(spent|bought|purchased)\b/.test(normalized) && kids.length) return { intent: 'kid_spent', kids: [kids[0]], amount: parseAmount(text), note: text };
-        if (/\b(paid|gave|pay)\b/.test(normalized) && kids.length) return { intent: 'record_payment', kids: [kids[0]], amount: parseAmount(text) };
+        if (activeTab === 'bank') {
+          var currentBankIntent = parseBankIntent(normalized, text, kids);
+          if (currentBankIntent) return currentBankIntent;
+        }
+        if (activeTab === 'bulletin') {
+          var currentNoteIntent = parseNoteIntent(normalized, text);
+          if (currentNoteIntent) return currentNoteIntent;
+        }
+        var fallbackListIntent = activeTab !== 'lists' ? parseListIntent(normalized, text) : null;
+        if (fallbackListIntent) return fallbackListIntent;
+        var fallbackBankIntent = activeTab !== 'bank' ? parseBankIntent(normalized, text, kids) : null;
+        if (fallbackBankIntent) return fallbackBankIntent;
+        var fallbackNoteIntent = activeTab !== 'bulletin' ? parseNoteIntent(normalized, text) : null;
+        if (fallbackNoteIntent) return fallbackNoteIntent;
         if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost)\b/.test(normalized)) {
           return { intent: 'freepoints', kids, points: -parsePoints(text) };
         }
@@ -4656,14 +4756,13 @@
         if (familyId && !configLoaded) {
           await loadFamilyConfigV2();
         }
-        
-        // Show in Chores history if active
-        const router = elements.tabBar.querySelector('.active');
-        if (router && router.dataset.tab === 'chores') {
+
+        var currentTab = appShellState.currentView || 'bulletin';
+        if (currentTab === 'chores') {
           addMessage('user', text);
         }
 
-        let result = routeIntent(text) || parseIntent(text);
+        let result = routeIntent(text, currentTab) || parseIntent(text, currentTab);
         
         const GEMINI_KEY = typeof GEMINI_API_KEY === 'string' ? GEMINI_API_KEY.trim() : '';
         const GEMINI_ENABLED = typeof AI_PARSER_ENABLED === 'boolean' ? AI_PARSER_ENABLED : false;
@@ -5283,7 +5382,16 @@
       }
 
       function openFunActivity(activityId) {
-        state.funView = activityId || 'home';
+        if (activityId === 'favorites') {
+          state.jokeShowStarred = true;
+          state.starredJokeViewIndex = 0;
+          state.funView = 'jokes';
+        } else {
+          if (activityId === 'jokes') {
+            state.jokeShowStarred = false;
+          }
+          state.funView = activityId || 'home';
+        }
         renderFun().catch(function (error) { console.error(error); });
       }
 
@@ -5710,6 +5818,15 @@
           { id: 'wyr', icon: '🤔', label: 'Would You Rather', color: '#ec4899', sub: '' },
           { id: 'trivia', icon: '🧠', label: 'Trivia', color: '#22c55e', sub: '' }
         ];
+        if (state.starredJokes.length) {
+          tiles.push({
+            id: 'favorites',
+            icon: '⭐',
+            label: 'Favorites',
+            color: '#f59e0b',
+            sub: state.starredJokes.length + ' starred joke' + (state.starredJokes.length === 1 ? '' : 's')
+          });
+        }
         container.innerHTML = '<div class="fun-shell"><div class="fun-grid">' + tiles.map(function (tile) {
           return '<button type="button" class="fun-tile" data-fun-open="' + tile.id + '" style="--tile-color:' + tile.color + '">' +
             '<span class="fun-tile-icon">' + tile.icon + '</span>' +

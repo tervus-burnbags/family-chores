@@ -1,30 +1,27 @@
 # Task State - Family Hub
 
-**Task:** Phase 30 — Fun Tab Overhaul: Activity Hub
+**Task:** Phase 31 — Fix Input Bar, Starred Jokes Tile, Louisa Balance
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 30
+**Next Action:** Review Phase 31
 **Last Updated:** 2026-03-17
 
 ## Completed
 
 - [x] Phases 8–28 + Consolidation + Visual Polish
-- [x] Phase 29: List fixes, Bank revamp, Icon & iOS fullscreen — built & reviewed
+- [x] Phase 29: List fixes, Bank revamp, Icon & iOS fullscreen
+- [x] Phase 30: Fun tab overhaul — built & reviewed (12/12 tests passed)
 
 ## Current
 
-- [x] **Phase 30** — Fun tab overhaul complete:
-  - Activity launcher grid with five activity tiles
-  - Jokes support star/unstar favorites and starred-only browsing
-  - Mad Libs moved into a dedicated activity view
-  - Hangman added with SVG figure, letter grid, and persistent game state
-  - Would You Rather added as a conversation activity
-  - Trivia added with answer feedback and session scoring
-  - Fun tab re-tap returns from activity view to the grid
+- [x] **Phase 31** — three fixes complete:
+  - Part A: Composer hides on Fun, sits above the tab bar, and parsing now uses current-tab context
+  - Part B: Favorites tile appears on the Fun grid when starred jokes exist
+  - Part C: One-time Louisa balance correction sets owed to $14 per family
 
 ## Notes
 
-- All games are still designed for the parent-read-aloud, kids-answer car ride pattern
-- Three new data arrays were added to `kid-fun-data.js` without changing existing joke or Mad Lib data
+- The parser now prioritizes the active tab's commands before chore fallbacks
+- The Louisa correction is guarded by a family-specific localStorage flag so it only runs once
 - Ready for Gemini review
