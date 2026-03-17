@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon-source.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
@@ -1259,11 +1260,49 @@
       text-transform: uppercase;
     }
 
-    .card-pts {
-      font-size: var(--font-sm);
-      opacity: 0.8;
-      text-align: right;
+    .ytd-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 16px;
+      margin-top: 12px;
+      border-radius: 18px;
+      background: var(--panel-alt);
     }
+
+    .ytd-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .ytd-label {
+      font-size: var(--font-xs);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ytd-value {
+      font-size: var(--font-lg);
+      font-weight: 800;
+    }
+
+    .ytd-item.earned .ytd-value { color: #16a34a; }
+    .ytd-item.spent .ytd-value { color: var(--danger); }
+    .ytd-item.invested .ytd-value { color: var(--alex); }
+
+    .ytd-bar {
+      height: 6px;
+      min-width: 4px;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .ytd-item.earned .ytd-bar { background: #16a34a; }
+    .ytd-item.spent .ytd-bar { background: var(--danger); }
+    .ytd-item.invested .ytd-bar { background: var(--alex); }
 
     .card-statement {
       margin-top: 14px;
@@ -2093,6 +2132,18 @@
       color: var(--text);
     }
 
+    .list-add-category {
+      min-height: 46px;
+      max-width: 180px;
+      padding: 0 10px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-size: var(--font-sm);
+    }
+
     .list-groups,
     .list-flat {
       display: grid;
@@ -2136,6 +2187,13 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
+    }
+
+    .list-group-empty {
+      padding: 12px 16px;
+      color: var(--muted);
+      font-size: var(--font-sm);
+      font-style: italic;
     }
 
     .list-items {
@@ -2302,6 +2360,11 @@
 
       .list-add-row {
         flex-wrap: wrap;
+      }
+
+      .list-add-category {
+        flex: 1 1 180px;
+        max-width: none;
       }
 
       .list-add-btn,
@@ -4216,6 +4279,10 @@
           currentConfig.chores[lastUndoAction.choreId].points = lastUndoAction.previous;
           addMessage('system', 'Restored the previous point value.');
           showToast('Restored the previous point value.');
+        } else if (lastUndoAction.type === 'list_delete') {
+          await database.ref('families/' + familyId + '/lists/' + lastUndoAction.listId + '/items/' + lastUndoAction.itemId).set(lastUndoAction.itemData);
+          addMessage('system', 'Restored the deleted list item.');
+          showToast('Item restored.');
         }
         lastUndoAction = null;
       }
@@ -4893,6 +4960,8 @@
         get configLoaded() { return configLoaded; },
         get pendingAction() { return pendingAction; },
         set pendingAction(value) { pendingAction = value; },
+        get lastUndoAction() { return lastUndoAction; },
+        set lastUndoAction(value) { lastUndoAction = value; },
         getAllLogEntries,
         getAllPayments,
         getBalances,
@@ -4906,6 +4975,7 @@
         renderStatus,
         calculateWeeklyPay,
         dollars,
+        paymentBalanceDelta,
         toIsoWeek,
         toDateString,
         adjustBalance,
@@ -6033,31 +6103,37 @@
         await maybeRunWeeklyPay();
         var balances = await phase.getBalances();
         var debts = await getDebts(phase);
-        var entries = await phase.getAllLogEntries();
         var payments = await phase.getAllPayments();
         var now = new Date();
-        var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId, payTiers: [], weeklyBonus: { extraPts: 10, bonus: 2 } };
+        var currentYear = String(now.getFullYear());
+        var kid = (phase.currentConfig.kids && phase.currentConfig.kids[kidId]) || { name: kidId };
         var owed = Number(((balances[kidId] && balances[kidId].owed) || 0));
-        var currentWeek = phase.toIsoWeek(now);
-        var weeklyPoints = entries.filter(function (entry) { return entry.kid === kidId && entry.week === currentWeek; }).reduce(function (sum, entry) { return sum + Number(entry.points || 0); }, 0);
-        var payInfo = getWeeklyPayBreakdown(kid, weeklyPoints, phase.calculateWeeklyPay);
-        var weeklyPay = payInfo.tierPay;
-        var topMinPts = payInfo.topMinPts;
-        var wb = { extraPts: payInfo.extraPts, bonus: payInfo.bonusAmount };
-        var weeklyBonus = payInfo.bonus;
-        var threshold = thresholdInfo(kid, weeklyPoints);
-        var progressClass = threshold.mode === 'bonus' ? 'bonus' : kidId;
-        var progressLabel = threshold.mode === 'bonus' ? 'bonus track: ' + (threshold.bonusPoints || 0) + '/' + threshold.targetPoints + 'pts' : 'next: ' + threshold.next.minPts + 'pts';
-        var progressStyle = threshold.mode === 'bonus' ? 'background:linear-gradient(90deg,#22c55e,#15803d)' : '';
         var relatedDebts = debts.filter(function (debt) { return debt && !debt.settled && (debt.from === kidId || debt.to === kidId); });
         var allTxns = [];
-        entries.filter(function (entry) { return entry.kid === kidId; }).forEach(function (entry) {
-          allTxns.push({ type: 'chore', label: entry.choreLabel || 'Chore', points: Number(entry.points || 0), date: entry.date || '', timestamp: Number(entry.timestamp || 0) });
-        });
         payments.filter(function (payment) { return payment.kid === kidId; }).forEach(function (payment) {
           allTxns.push({ type: payment.type || 'payment', label: payment.note || payment.type || 'Payment', amount: Number(payment.amount || 0), date: payment.date || '', timestamp: Number(payment.timestamp || 0), balanceDelta: Number(payment.balanceDelta || (payment.type === 'weekly' || payment.type === 'credit' ? payment.amount : -payment.amount)) });
         });
         allTxns.sort(function (a, b) { return Number(b.timestamp || 0) - Number(a.timestamp || 0); });
+        var ytdEarned = 0;
+        var ytdSpent = 0;
+        var ytdInvested = 0;
+        allTxns.forEach(function (txn) {
+          if (String(txn.date || '').indexOf(currentYear) !== 0) return;
+          var delta = Number(phase.paymentBalanceDelta(txn) || 0);
+          if (txn.type === 'invest') {
+            ytdInvested += Math.abs(delta);
+          } else if (delta > 0) {
+            ytdEarned += delta;
+          } else if (delta < 0) {
+            ytdSpent += Math.abs(delta);
+          }
+        });
+        var maxYtd = Math.max(ytdEarned, ytdSpent, ytdInvested, 1);
+        var ytdSummary = '<div class="ytd-summary">' +
+          '<div class="ytd-item earned"><div class="ytd-label">Earned</div><div class="ytd-value">' + phase.dollars(ytdEarned) + '</div><div class="ytd-bar" style="width:' + Math.max(4, Math.round((ytdEarned / maxYtd) * 100)) + '%;"></div></div>' +
+          '<div class="ytd-item spent"><div class="ytd-label">Spent</div><div class="ytd-value">' + phase.dollars(ytdSpent) + '</div><div class="ytd-bar" style="width:' + Math.max(4, Math.round((ytdSpent / maxYtd) * 100)) + '%;"></div></div>' +
+          '<div class="ytd-item invested"><div class="ytd-label">Invested</div><div class="ytd-value">' + phase.dollars(ytdInvested) + '</div><div class="ytd-bar" style="width:' + Math.max(4, Math.round((ytdInvested / maxYtd) * 100)) + '%;"></div></div>' +
+        '</div>';
 
         var debtMarkup = relatedDebts.length ? relatedDebts.map(function (debt) {
           var otherKid = debt.from === kidId ? debt.to : debt.from;
@@ -6067,15 +6143,12 @@
         }).join('') : '<div class="score-empty">No active debts.</div>';
 
         var stmtRows = allTxns.slice(0, 20).map(function (item) {
-          if (item.type === 'chore') {
-            return '<div class="stmt-row"><div class="stmt-desc"><span>' + escapeHtml(item.label) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + ' · +' + item.points + 'pts</span></div><span class="stmt-amount credit">earned</span></div>';
-          }
-          var label = item.type === 'spend' ? 'Purchase' : item.type === 'weekly' ? 'Weekly pay' : item.type === 'credit' ? 'Credit' : 'Payment';
+          var label = item.type === 'spend' ? 'Purchase' : item.type === 'weekly' ? 'Weekly pay' : item.type === 'credit' ? 'Credit' : item.type === 'invest' ? 'Investment' : 'Payment';
           var delta = Number(item.balanceDelta || 0);
           return '<div class="stmt-row"><div class="stmt-desc"><span>' + escapeHtml(label + (item.label && item.label !== item.type ? ': ' + item.label : '')) + '</span><span class="stmt-note">' + escapeHtml(item.date || '') + '</span></div><span class="stmt-amount ' + (delta >= 0 ? 'credit' : 'debit') + '">' + (delta >= 0 ? '+' : '-') + phase.dollars(Math.abs(delta)) + '</span></div>';
         }).join('');
 
-        cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div><div class="card-pts">' + weeklyPoints + ' pts<br>this week</div></div></div><div class="drawer-grid"><article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
+        cardContent.innerHTML = '<div class="kid-card ' + kidId + '"><div class="card-top"><div class="card-label">Family Chores Card</div><div class="card-chip"></div></div><div class="card-balance"><div class="card-balance-amount">' + (owed >= 0 ? phase.dollars(owed) : '-' + phase.dollars(Math.abs(owed))) + '</div><div class="card-balance-label">' + (owed >= 0 ? 'Available Balance' : 'Amount Owed') + '</div></div><div class="card-bottom"><div class="card-name">' + escapeHtml(kid.name || kidId) + '</div></div></div><div class="drawer-grid">' + ytdSummary + '<article class="stat-card"><h3>Balance</h3><div class="score-actions"><div class="score-action"><span>' + escapeHtml(owed >= 0 ? 'You owe ' + (kid.name || kidId) + ' ' + phase.dollars(owed) : (kid.name || kidId) + ' owes you ' + phase.dollars(Math.abs(owed))) + '</span><div class="list-card-actions"><button type="button" data-card-action="pay-balance" data-kid="' + kidId + '">Pay</button><button type="button" data-card-action="kid-spent" data-kid="' + kidId + '">Spent</button><button type="button" data-card-action="kid-invest" data-kid="' + kidId + '">Invest</button></div></div></div></article><article class="stat-card"><h3>Debts</h3><div class="score-actions">' + debtMarkup + '</div></article><div class="card-statement"><h3>Recent Activity</h3><div class="stmt-list">' + (stmtRows || '<p class="stmt-empty">No activity yet.</p>') + '</div></div></div>';
       };
 
       async function handleCardAction(button) {
@@ -6112,6 +6185,23 @@
           }).catch(function (error) {
             console.error(error);
             phase.showToast('Failed to record spend.', { type: 'error' });
+          });
+          return;
+        }
+        if (action === 'kid-invest') {
+          var investKidId = button.dataset.kid;
+          var kidName = (((phase.currentConfig.kids || {})[investKidId] || {}).name || investKidId);
+          var investText = await window.appPrompt('How much is ' + kidName + ' investing?', 'Amount', '5', {
+            inputType: 'number'
+          });
+          var investAmount = investText === null ? null : Number(investText);
+          if (!investAmount || Number.isNaN(investAmount) || investAmount <= 0) return;
+          phase.writePayment(investKidId, investAmount, 'invest', 'Investment').then(function () {
+            phase.showToast('Investment recorded.', { kid: investKidId, onUndo: function () { phase.undoLastAction().catch(function (error) { console.error(error); }); } });
+            return window.openCardForKid(investKidId);
+          }).catch(function (error) {
+            console.error(error);
+            phase.showToast('Failed to record investment.', { type: 'error' });
           });
           return;
         }
@@ -6381,6 +6471,22 @@
         var phase = runtime();
         var ref = listsRef(phase);
         if (!ref) return;
+        var list = listState.listsById[listId];
+        var item = list && (list.items || []).find(function (entry) { return entry.id === itemId; });
+        if (item && phase) {
+          phase.lastUndoAction = {
+            type: 'list_delete',
+            listId: listId,
+            itemId: itemId,
+            itemData: {
+              text: item.text,
+              done: item.done,
+              order: Number(item.order || 0),
+              timestamp: Number(item.timestamp || Date.now()),
+              category: item.category || 'other'
+            }
+          };
+        }
         await ref.child(listId + '/items/' + itemId).remove();
       }
 
@@ -6397,7 +6503,7 @@
         await ref.child(listId + '/items').update(updates);
       }
 
-      async function addListItems(listId, value) {
+      async function addListItems(listId, value, explicitCategory) {
         var phase = runtime();
         var ref = listsRef(phase);
         if (!ref) return;
@@ -6406,9 +6512,16 @@
         var parts = String(value || '').split(/,|\band\b/).map(function (part) { return part.trim(); }).filter(Boolean);
         var categoryOrders = {};
         for (var i = 0; i < parts.length; i += 1) {
-          var category = listType === 'lakehouse'
-            ? 'pack_to'
-            : ((listType === 'grocery' || listType === 'costco') ? autoCategory(parts[i]) : 'other');
+          var category = null;
+          if (explicitCategory && explicitCategory !== 'auto') {
+            category = explicitCategory;
+          } else if (listType === 'lakehouse') {
+            category = 'pack_to';
+          } else if (listType === 'grocery' || listType === 'costco') {
+            category = autoCategory(parts[i]);
+          } else {
+            category = 'other';
+          }
           if (typeof categoryOrders[category] !== 'number') {
             categoryOrders[category] = nextItemOrder(list, category);
           }
@@ -6509,13 +6622,14 @@
         var emptyCopy = list.type === 'lakehouse'
           ? 'Add an item and it will land in the lake house packing section.'
           : 'Add an item and it will snap into the right aisle.';
+        var hideEmpty = list.type === 'grocery' || list.type === 'costco';
         var markup = categories.map(function (category) {
           var items = (list.items || []).filter(function (item) {
             return (item.category || 'other') === category.id;
           });
-          if (!items.length) return '';
+          if (!items.length && hideEmpty) return '';
           return '<section class="list-group"><div class="list-group-head"><span class="list-group-icon">' + category.icon + '</span><h4 class="list-group-title">' + escapeHtml(category.label) + '</h4></div><div class="list-items">' +
-            items.map(function (item) { return renderListItem(list, item); }).join('') +
+            (items.length ? items.map(function (item) { return renderListItem(list, item); }).join('') : '<div class="list-group-empty">No items yet</div>') +
           '</div></section>';
         }).filter(Boolean).join('');
         return markup || '<div class="list-empty"><div class="list-empty-title">Nothing here yet.</div><div class="list-empty-copy">' + emptyCopy + '</div></div>';
@@ -6535,7 +6649,18 @@
         var doneCount = (list.items || []).filter(function (item) { return item.done; }).length;
         var total = (list.items || []).length;
         var isTemplateType = Boolean(LIST_TEMPLATES[list.type]);
-        var itemsMarkup = (list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse') ? renderGroupedItems(list) : renderFlatItems(list);
+        var isGrouped = list.type === 'grocery' || list.type === 'costco' || list.type === 'lakehouse';
+        var categoryOptions = '';
+        if (isGrouped) {
+          var categories = list.type === 'lakehouse' ? LAKEHOUSE_CATEGORIES : GROCERY_CATEGORIES;
+          if (list.type === 'grocery' || list.type === 'costco') {
+            categoryOptions = '<option value="auto">Auto</option>';
+          }
+          categoryOptions += categories.map(function (category) {
+            return '<option value="' + escapeHtml(category.id) + '">' + escapeHtml(category.label) + '</option>';
+          }).join('');
+        }
+        var itemsMarkup = isGrouped ? renderGroupedItems(list) : renderFlatItems(list);
         var gearIcon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Z" stroke="currentColor" stroke-width="2"></path><path d="M4 13.5v-3l2.23-.56a6.83 6.83 0 0 1 .72-1.73L5.8 6.2l2.12-2.12 2.01 1.15c.55-.3 1.12-.54 1.72-.71L12.5 2h3l.56 2.23c.6.17 1.17.41 1.72.71l2.01-1.15 2.12 2.12-1.15 2.01c.3.56.54 1.13.71 1.73L22 10.5v3l-2.23.56a6.83 6.83 0 0 1-.71 1.72l1.15 2.01-2.12 2.12-2.01-1.15a6.83 6.83 0 0 1-1.72.71L15.5 22h-3l-.56-2.23a6.83 6.83 0 0 1-1.72-.71l-2.01 1.15-2.12-2.12 1.15-2.01a6.83 6.83 0 0 1-.71-1.72L4 13.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>';
         return '<div class="list-detail-shell"><section class="list-detail-card">' +
           '<div class="list-detail-head"><div class="list-detail-accent" style="background:' + escapeHtml(meta.color) + ';"></div><div class="list-detail-title-row"><span class="list-detail-icon" style="background:' + escapeHtml(meta.color) + ';">' + meta.icon + '</span><div class="list-detail-copy"><h3 class="list-detail-title">' + escapeHtml(list.name) + '</h3><p class="list-detail-meta">' + doneCount + '/' + total + ' done · ' + escapeHtml(meta.label) + '</p></div><button type="button" class="list-btn secondary list-settings-btn" data-list-action="toggle-settings" aria-label="List settings">' + gearIcon + '</button></div>' +
@@ -6544,7 +6669,7 @@
           '<button type="button" class="list-inline-btn secondary" data-list-action="delete-list">Delete list</button>' +
           '</div>' +
           '</div>' +
-          '<div class="list-add-row"><input type="text" class="list-add-input" id="listItemInput" placeholder="Add item..." autocomplete="off"><button type="button" class="list-add-btn" data-list-action="add-item" style="background:' + escapeHtml(meta.color) + ';color:#fff;">Add</button></div>' +
+          '<div class="list-add-row"><input type="text" class="list-add-input" id="listItemInput" placeholder="Add item..." autocomplete="off">' + (isGrouped ? '<select class="list-add-category" id="listItemCategory">' + categoryOptions + '</select>' : '') + '<button type="button" class="list-add-btn" data-list-action="add-item" style="background:' + escapeHtml(meta.color) + ';color:#fff;">Add</button></div>' +
           itemsMarkup +
           ((list.items || []).length ? '<div class="list-swipe-hint">Swipe right to check off, left to delete, drag the handle to reorder.</div>' : '<div class="list-swipe-hint">Add something to get this list moving.</div>') +
         '</section></div>';
@@ -6703,7 +6828,16 @@
             itemEl.style.transform = 'translateX(-100%)';
             itemEl.style.opacity = '0';
             setTimeout(function () {
-              deleteListItem(listId, itemId).catch(function (error) { console.error(error); });
+              deleteListItem(listId, itemId).then(function () {
+                var phase = runtime();
+                if (phase && typeof phase.showToast === 'function' && typeof phase.undoLastAction === 'function') {
+                  phase.showToast('Deleted item.', {
+                    onUndo: function () {
+                      phase.undoLastAction().catch(function (error) { console.error(error); });
+                    }
+                  });
+                }
+              }).catch(function (error) { console.error(error); });
             }, 160);
           } else if (diffX >= 80) {
             itemEl.style.transform = 'translateX(100%)';
@@ -6864,10 +6998,12 @@
             }
             if (target.dataset.listAction === 'add-item' && listState.currentListId) {
               var itemInput = document.getElementById('listItemInput');
+              var categoryInput = document.getElementById('listItemCategory');
               var value = itemInput ? String(itemInput.value || '').trim() : '';
               if (!value) return;
-              addListItems(listState.currentListId, value).then(function () {
+              addListItems(listState.currentListId, value, categoryInput ? categoryInput.value : null).then(function () {
                 if (itemInput) itemInput.value = '';
+                if (categoryInput && (categoryInput.value === 'auto' || !categoryInput.value)) categoryInput.value = 'auto';
               }).catch(function (error) { console.error(error); });
             }
           });

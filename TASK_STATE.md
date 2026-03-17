@@ -1,24 +1,28 @@
 # Task State - Family Hub
 
-**Task:** Phase 28 — Fix Template Application for Existing Lists
+**Task:** Phase 29 — List Fixes, Bank Revamp, Icon & iOS Fullscreen
 **Current Phase:** complete
 **Status:** Build Complete
 **Next Agent:** gemini
-**Next Action:** Review Phase 28
+**Next Action:** Review Phase 29
 **Last Updated:** 2026-03-16
 
 ## Completed
 
 - [x] Phases 8–27 + Consolidation + Visual Polish
+- [x] Phase 28: Fix template reset — built & reviewed
 
 ## Current
 
-- [x] **Phase 28: Fix template reset** — "Reset template" now repopulates the current list with built-in template items, add confirm dialog and toast feedback
+- [x] **Phase 29** — five parts complete:
+  - Part A: List item undo works for swipe-delete and voice undo
+  - Part B: Empty lake house categories render with empty-state rows
+  - Part C: Grouped lists support a category picker on add
+  - Part D: Bank supports invest, shows YTD earned/spent/invested, and statement is money-only
+  - Part E: New icon set is in place and manifest display is back to standalone
 
 ## Notes
 
-- `resetTemplateForType()` now clears the Firebase override and repopulates the active list from the built-in template
-- Reset now asks for destructive confirmation before replacing the current list contents
-- Save-template and reset-template actions both show explicit toast feedback with type/item context
-- Existing lake house and grocery lists can now be refreshed to current built-in template content
-- Validation complete: inline scripts parsed successfully after Phase 28 changes
+- Combined former Phases 29, 30, 31 into single Phase 29
+- iOS standalone change still requires deleting and re-adding the home screen shortcut after push
+- Ready for Gemini review

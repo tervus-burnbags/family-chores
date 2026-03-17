@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Family Hub icon">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f6ad1a"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="houseShade" x1="180" y1="176" x2="336" y2="368" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#fff5df" stop-opacity="0.98"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <circle cx="392" cy="128" r="84" fill="#ffffff" opacity="0.08"/>
+  <circle cx="118" cy="404" r="92" fill="#000000" opacity="0.05"/>
+  <path d="M256 128 392 246c6 5 7 13 3 20-4 7-12 10-20 10H137c-8 0-16-3-20-10-4-7-3-15 3-20L256 128Z" fill="url(#houseShade)"/>
+  <path d="M170 260h172c10 0 18 8 18 18v108c0 14-12 26-26 26H178c-14 0-26-12-26-26V278c0-10 8-18 18-18Z" fill="url(#houseShade)"/>
+  <rect x="228" y="304" width="56" height="108" rx="18" fill="#c97a10" opacity="0.88"/>
+  <rect x="240" y="188" width="32" height="34" rx="8" fill="#ffffff" opacity="0.96"/>
+  <circle cx="194" cy="418" r="20" fill="#4a90d9"/>
+  <circle cx="256" cy="418" r="20" fill="#8a5bd1"/>
+  <circle cx="318" cy="418" r="20" fill="#22c55e"/>
+</svg>
