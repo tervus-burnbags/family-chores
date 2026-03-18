@@ -1,16 +1,18 @@
 # Codex Instructions — Family Chores (chores)
 
+## Role Assignment
+
+Check `PROJECT_CONFIG.md` → `## Role Assignments` for your assigned role. Default: **Builder / Implementer**. Read the matching role template in `../AI_COMMAND/templates/`.
+
 ## Shared Instructions
 
 Before starting any work, read and follow:
-- `../AI_COMMAND/BOOT.md` — quick-start context (roles, workflow, file map)
-- `../AI_COMMAND/core/roles.md` — roles and override rules
-- `../AI_COMMAND/core/workflow.md` — collaboration pipeline
+- `../AI_COMMAND/BOOT.md` — entry point, precedence, modes, file map
+- `../AI_COMMAND/core/roles.md` — role definitions, artifact ownership, governance
+- `../AI_COMMAND/core/workflow.md` — pipeline, modes, phase loop
 - `../AI_COMMAND/core/coding_standards.md` — standards
 
-Your default role is **Builder / Implementer**. See `../AI_COMMAND/templates/AGENTS.md` for full instructions.
-
-**User overrides always apply.** If told to handle a task directly, do so.
+**User overrides always apply.** If told to perform a different role, do so.
 
 ## Handoff Artifacts
 

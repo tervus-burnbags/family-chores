@@ -1,6 +1,14 @@
 # Project Configuration — Family Chores (chores)
 
-This file is shared context for all three AIs. Each AI's instruction file should reference this for project details.
+This file is shared context for all agents. Each agent's instruction file references this for project details and role assignments.
+
+## Role Assignments
+
+| Role | Model | Instruction File |
+|------|-------|-----------------|
+| Architect | Claude | CLAUDE.md |
+| Builder | Codex | AGENTS.md |
+| Verifier | Gemini | GEMINI.md |
 
 ## Project Name
 

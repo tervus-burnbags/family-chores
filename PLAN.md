@@ -1136,3 +1136,382 @@ self.addEventListener('fetch', e => {
 13. **PWA install**: On Android Chrome and iOS Safari, verify "Add to Home Screen" works
 14. **Birthday**: Set a kid's birthday to today's date, reload app, verify birthday prompt appears
 
+---
+
+# Phase 30 — Bank Tab Revamp: Invest Tracking & YTD Summary
+
+## Goal
+
+Transform the Bank tab from a chore payroll ledger into a kid money dashboard. Add an "invest" transaction type so kids can see earned vs spent vs invested YTD. Align visual style with the rest of the app. Keep the credit card visual — it's the anchor of the tab.
+
+## Current State (what exists)
+
+- **Credit card visual** per kid (line ~6078) — gradient backgrounds, chip, balance, kid name, weekly points
+- **Transaction types**: `weekly`, `manual`, `spend`, `credit` (line ~4150)
+- **Action buttons**: "Pay" and "Spent" (line ~6078, inside `drawer-grid`)
+- **Recent Activity**: flat list of last 20 transactions mixing chores and payments (lines ~6069-6076)
+- **Balance system**: `writePayment()` (line ~4149) writes to Firebase, `adjustBalance()` (line ~4114) updates `families/{familyId}/balances/{kidId}/owed`
+- **balanceDelta**: always negative in `writePayment()` — spend/manual/invest all reduce balance
+- **`paymentBalanceDelta()`** (line ~4122): returns positive for `credit`/`weekly`, negative for others
+- **Kid picker**: buttons at top to switch between Alex and Louisa (line ~2731)
+- **Weekly pay auto-calc**: `maybeRunWeeklyPay()` (line ~5966) runs on card render
+
+## Changes
+
+### 1. Add "invest" transaction type
+
+In `handleCardAction()` (line ~6081), add an `invest` handler parallel to `kid-spent`:
+
+```javascript
+if (action === 'kid-invest') {
+  var investKidId = button.dataset.kid;
+  var investText = await window.appPrompt(
+    'How much is ' + (kidName) + ' investing?', 'Amount', '5',
+    { inputType: 'number' }
+  );
+  var investAmount = investText === null ? null : Number(investText);
+  if (!investAmount || Number.isNaN(investAmount) || investAmount <= 0) return;
+  phase.writePayment(investKidId, investAmount, 'invest', 'Investment').then(function () {
+    phase.showToast('Investment recorded.', { kid: investKidId });
+    return window.openCardForKid(investKidId);
+  }).catch(function (error) {
+    console.error(error);
+    phase.showToast('Failed to record investment.', { type: 'error' });
+  });
+  return;
+}
+```
+
+Add the "Invest" button to the card actions in `renderCardView()` (line ~6078), alongside Pay and Spent:
+
+```html
+<button type="button" data-card-action="kid-invest" data-kid="{kidId}">Invest</button>
+```
+
+### 2. Update transaction labeling
+
+In the statement row builder (line ~6073), add invest label:
+
+```javascript
+var label = item.type === 'spend' ? 'Purchase'
+  : item.type === 'weekly' ? 'Weekly pay'
+  : item.type === 'credit' ? 'Credit'
+  : item.type === 'invest' ? 'Investment'
+  : 'Payment';
+```
+
+### 3. YTD Summary section
+
+Add a summary section between the credit card and the action buttons. Shows three numbers for the current year:
+
+```
+┌─────────────────────────────────┐
+│   Earned     Spent    Invested  │
+│   $142.00    $87.50    $30.00   │
+│   ████████   █████     ███      │
+└─────────────────────────────────┘
+```
+
+**Calculation** — filter all payments for the current kid where `date` starts with current year:
+
+```javascript
+var currentYear = String(new Date().getFullYear());
+var yearPayments = payments.filter(function (p) {
+  return p.kid === kidId && (p.date || '').indexOf(currentYear) === 0;
+});
+
+var ytdEarned = 0, ytdSpent = 0, ytdInvested = 0;
+yearPayments.forEach(function (p) {
+  var delta = paymentBalanceDelta(p);
+  if (p.type === 'invest') {
+    ytdInvested += Math.abs(delta);
+  } else if (delta > 0) {
+    ytdEarned += delta;
+  } else if (delta < 0) {
+    ytdInvested += 0; // already handled
+    ytdSpent += Math.abs(delta);
+  }
+});
+```
+
+**HTML structure:**
+
+```html
+<div class="ytd-summary">
+  <div class="ytd-item earned">
+    <div class="ytd-label">Earned</div>
+    <div class="ytd-value">${earned}</div>
+    <div class="ytd-bar" style="width:{earnedPct}%"></div>
+  </div>
+  <div class="ytd-item spent">
+    <div class="ytd-label">Spent</div>
+    <div class="ytd-value">${spent}</div>
+    <div class="ytd-bar" style="width:{spentPct}%"></div>
+  </div>
+  <div class="ytd-item invested">
+    <div class="ytd-label">Invested</div>
+    <div class="ytd-value">${invested}</div>
+    <div class="ytd-bar" style="width:{investedPct}%"></div>
+  </div>
+</div>
+```
+
+Percentages are relative to the largest value (so the biggest bar is 100% width).
+
+### 4. Remove points from credit card
+
+The card currently shows `{weeklyPoints} pts this week` in `.card-pts`. Remove this — the Bank tab is about money, not points. Points belong on the Chores tab.
+
+Replace `.card-pts` content with the YTD net position or simply remove the element:
+
+```javascript
+// REMOVE from card-bottom:
+// '<div class="card-pts">' + weeklyPoints + ' pts<br>this week</div>'
+```
+
+Keep the card-bottom with just the kid name. The weekly points info stays on the Chores tab where it belongs.
+
+### 5. Remove chore entries from Recent Activity
+
+Currently `renderCardView()` mixes chore log entries into `allTxns` (line ~6054). Remove the chore entries — Recent Activity should only show money movements:
+
+```javascript
+// REMOVE these lines (~6054-6056):
+// entries.filter(function (entry) { return entry.kid === kidId; }).forEach(function (entry) {
+//   allTxns.push({ type: 'chore', ... });
+// });
+```
+
+Also remove the chore row rendering in `stmtRows` (line ~6070-6071) — only payment rows remain.
+
+### 6. Visual style alignment
+
+The Bank tab should feel cohesive with the rest of the app:
+
+- **Credit card**: Keep as-is — it's already good
+- **Section headers**: Use `font-size: var(--font-base); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted)` (matches existing `.card-statement h3`)
+- **Action buttons**: Use kid-colored backgrounds (already done via `.score-action button`)
+- **YTD summary bars**: Use kid colors — `var(--alex)` / `var(--louisa)` for earned, `var(--danger)` for spent, `#22c55e` (green) for invested
+
+### 7. CSS for YTD summary
+
+```css
+.ytd-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+  background: var(--panel-alt);
+  border-radius: var(--radius);
+  margin-top: 12px;
+}
+
+.ytd-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ytd-label {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ytd-value {
+  font-size: var(--font-lg);
+  font-weight: 800;
+}
+
+.ytd-item.earned .ytd-value { color: #16a34a; }
+.ytd-item.spent .ytd-value { color: var(--danger); }
+.ytd-item.invested .ytd-value { color: var(--alex); }
+
+.ytd-bar {
+  height: 6px;
+  border-radius: 3px;
+  min-width: 4px;
+  transition: width 0.3s ease;
+}
+
+.ytd-item.earned .ytd-bar { background: #16a34a; }
+.ytd-item.spent .ytd-bar { background: var(--danger); }
+.ytd-item.invested .ytd-bar { background: var(--alex); }
+```
+
+### 8. Update undo for invest type
+
+In `writePayment()` (line ~4149), undo already works for all payment types — it reverses the `balanceDelta` and removes the payment record. No special handling needed for `invest` since it uses the same `writePayment` → `adjustBalance` flow.
+
+## Layout (top to bottom)
+
+```
+┌─ Kid Picker ──────────────────────┐
+│  [Alex]  [Louisa]                 │
+├─ Credit Card ─────────────────────┤
+│  Family Chores Card          [chip]│
+│  $24.50                           │
+│  Available Balance                │
+│  ALEX                             │
+├─ YTD Summary ─────────────────────┤
+│  Earned    Spent     Invested     │
+│  $142.00   $87.50    $30.00       │
+│  ████████  █████     ███          │
+├─ Actions ─────────────────────────┤
+│  You owe Alex $24.50              │
+│  [Pay]  [Spent]  [Invest]         │
+├─ Debts ───────────────────────────┤
+│  (if any active debts)            │
+├─ Recent Activity ─────────────────┤
+│  Weekly pay         +$5.00        │
+│  Purchase: toy      -$3.50        │
+│  Investment          -$5.00       │
+│  Credit              +$2.00       │
+└───────────────────────────────────┘
+```
+
+## Files Changed
+
+| File | Changes |
+|------|---------|
+| `index.html` | Add `invest` handler to `handleCardAction()`, add Invest button to card actions, add YTD summary section to `renderCardView()`, remove points from card, remove chore entries from activity, add invest label to statement rows, add `.ytd-*` CSS |
+| `sw.js` | Bump cache version |
+
+## What NOT to Change
+
+- `writePayment()` internals — invest uses the same flow as spend (negative balanceDelta)
+- `paymentBalanceDelta()` — invest returns negative like spend/manual, which is correct
+- Weekly pay auto-calculation — leave untouched
+- Debt system — leave untouched
+- Pay tier settings — leave untouched
+- Kid picker — leave untouched
+
+## Validation Checklist
+
+1. Tap "Invest" → prompt for amount → investment recorded, balance decreases
+2. YTD summary shows correct earned/spent/invested totals for current year
+3. YTD bars scale relative to largest value
+4. Recent Activity shows only money movements (no chore log entries)
+5. Investment transactions show as "Investment" with debit styling in activity list
+6. Credit card no longer shows weekly points
+7. Undo after invest → investment removed, balance restored
+8. Switching between Alex and Louisa updates YTD summary correctly
+9. No console errors
+
+---
+
+# Phase 31 — New App Icon
+
+## Goal
+
+Replace the generic PWA icon with a distinctive, recognizable icon for the Family Hub app. Should look great on both Android and iOS home screens.
+
+## Design Concept
+
+A rounded-square icon with a warm gradient background. Center element: a simple house silhouette (pentagon/chevron roof shape) with three colored dots beneath the roof line representing the family members — blue (Alex), purple (Louisa), green (Jamie the dog). Clean, flat, geometric. Recognizable at 32px.
+
+**Color palette:**
+- Background gradient: warm amber/gold (#f59e0b → #d97706) — warm, inviting, distinct from both kid colors
+- House silhouette: white, slightly translucent (rgba 255,255,255,0.95)
+- Dots: var(--alex) blue (#4a90d9), var(--louisa) purple (#8a5bd1), green (#22c55e)
+- Subtle shadow on the house shape for depth
+
+**Shape:** Rounded square (Android adaptive icon safe zone compliant — content within center 66% circle)
+
+## Implementation
+
+### 1. Create SVG source icon
+
+Create `icons/icon-source.svg` — the master icon as an SVG. This is the source of truth for all rasterized sizes.
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
+  <!-- House shape (centered, within maskable safe zone) -->
+  <!-- Roof: chevron/triangle -->
+  <path d="M256 120 L370 230 L142 230 Z" fill="rgba(255,255,255,0.95)"/>
+  <!-- Body: rectangle below roof -->
+  <rect x="172" y="230" width="168" height="130" rx="4" fill="rgba(255,255,255,0.95)"/>
+  <!-- Door -->
+  <rect x="232" y="290" width="48" height="70" rx="4" fill="url(#bg)" opacity="0.7"/>
+  <!-- Three dots (family members) below house -->
+  <circle cx="206" cy="400" r="18" fill="#4a90d9"/>  <!-- Alex blue -->
+  <circle cx="256" cy="400" r="18" fill="#8a5bd1"/>  <!-- Louisa purple -->
+  <circle cx="306" cy="400" r="18" fill="#22c55e"/>  <!-- Jamie green -->
+</svg>
+```
+
+Codex has creative latitude on the exact proportions, shapes, and visual details — this is a conceptual guide, not a pixel-perfect spec. The key requirements are:
+- House shape as the central element
+- Three colored dots for family members
+- Warm amber/gold background
+- Clean and recognizable at small sizes
+- Content within the maskable safe zone (center 80% area)
+
+### 2. Generate PNG icons
+
+From the SVG, generate the required PNG sizes. Use an inline `<canvas>` approach in a temporary HTML file, or if Codex has access to a rasterization method:
+
+Required files:
+- `icons/icon-192.png` — 192×192 (Android home screen)
+- `icons/icon-512.png` — 512×512 (Android splash, PWA install)
+- `icons/apple-touch-icon.png` — 180×180 (iOS home screen)
+- `favicon-32.png` — 32×32 (browser tab) — currently referenced in index.html but missing
+
+**Alternative approach:** If rasterizing SVG to PNG is impractical in the single-file context, Codex can:
+1. Create the SVG file
+2. Update manifest.json to reference an SVG icon (modern browsers support this)
+3. Keep the existing PNGs as fallback until the user manually converts the SVG
+
+### 3. Update manifest.json
+
+```json
+{
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-source.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
+```
+
+### 4. Update index.html meta tags
+
+Ensure these are correct (line ~11-13):
+```html
+<link rel="icon" type="image/svg+xml" href="icons/icon-source.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+```
+
+## Files Changed
+
+| File | Changes |
+|------|---------|
+| `icons/icon-source.svg` | New — master SVG icon |
+| `icons/icon-192.png` | Replaced — new design |
+| `icons/icon-512.png` | Replaced — new design |
+| `icons/apple-touch-icon.png` | Replaced — new design |
+| `favicon-32.png` | New — browser tab icon |
+| `manifest.json` | Updated icon entries |
+| `index.html` | Updated favicon meta tags |
+| `sw.js` | Bump cache version |
+
+## Validation Checklist
+
+1. SVG icon renders correctly in browser
+2. Icon is recognizable at 32px (browser tab)
+3. Icon looks good on Android home screen (192px)
+4. Icon looks good on iOS home screen (apple-touch-icon)
+5. Maskable safe zone: core content visible when Android crops to circle
+6. manifest.json references all icon sizes
+7. No 404s for icon files
+

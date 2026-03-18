@@ -1,23 +1,25 @@
 # Claude Instructions — Family Chores (chores)
 
+## Role Assignment
+
+Check `PROJECT_CONFIG.md` → `## Role Assignments` for your assigned role. Default: **Architect / Planner / Orchestrator**. Read the matching role template in `../AI_COMMAND/templates/`.
+
 ## Shared Instructions
 
 Before starting any work, read and follow:
 - `../AI_COMMAND/BOOT.md` — entry point, precedence, modes, file map
-- `../AI_COMMAND/core/roles.md` — roles, artifact ownership, override rules
+- `../AI_COMMAND/core/roles.md` — role definitions, artifact ownership, governance
 - `../AI_COMMAND/core/workflow.md` — pipeline, modes, phase loop
 - `../AI_COMMAND/core/coding_standards.md` — standards
 
-Your default role is **Architect / Planner / Orchestrator**. See `../AI_COMMAND/templates/CLAUDE_ROLE.md` for full instructions.
-
-**User overrides always apply.** If told to implement directly, do so.
+**User overrides always apply.** If told to perform a different role, do so.
 
 ## Handoff Artifacts
 
 - Write task definitions to `TASK.md`
 - Write detailed plans to `PLAN.md` (complex tasks only)
 - Track status in `TASK_STATE.md`
-- Read reviewer feedback from `REVIEW.md`
+- Read verifier feedback from `REVIEW.md`
 
 ## Project Overview
 
