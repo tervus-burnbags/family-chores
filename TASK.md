@@ -1,767 +1,226 @@
-# Task: Phase 37 — Bug Fixes, Game Polish, UX Hardening
+# Task: Phase 38 — UI Refresh, Trivia Calibration, Battleship Grid, Template Save, Pin Routing
 
-**Task Type:** bugfix + feature
+**Task Type:** bugfix
 **Model Mode:** default
 
 ## Summary
 
-Phase 36 follow-up: two parser/wiring bugs (bank "owe" hijacked, list settings buttons dead), game UX improvements (player names, win celebration, Battleship overhaul, kid-friendly trivia), and UX hardening (swipe safety, Enter key, header padding, favorites consolidation). Ten parts (A-J).
+Six user-reported issues from Phase 37 testing: bank view doesn't refresh after transactions, trivia questions swung too easy (need 2nd-grade level), Battleship grid cells overlap and board is too small, "Save template" button fails silently for lakehouse, "pin" command only works on bulletin tab, and chore logging needs better error handling and UI feedback. Six parts (A-F).
 
 ---
 
-## Part A: Bank Parser — "owe" Hijacked by `check_status`
+## Part A: Bank View Auto-Refresh After Transactions
 
-**Problem:** Typing "i owe louisa 10" on the Bank tab shows a status query instead of recording a debt. The `routeIntent()` function (line ~4711) runs BEFORE `parseIntent()`. The `check_status` intent is registered at priority 50 with `routeView: 'global'`, and `isQuestion()` returns true because `"owe"` is in `QUESTION_WORDS` (line ~4417). So `routeIntent` returns `check_status` and `parseBankIntent` (which correctly handles `parent_owes_kid`) never runs.
+**Problem:** After saying "I owe alex 2" on the Bank tab, the transaction goes through (toast confirms) but the card view doesn't update. User must switch away and back to see the new balance.
 
-**Root cause:** `"owe"` is both a question word ("how much do I owe") and an action verb ("I owe louisa 10"). The `check_status` intent in `routeIntent` doesn't distinguish between the two.
+**Root cause:** The `parent_owes_kid` / `kid_owes_parent` handler (line ~5601-5623) calls `adjustBalance()` and `dbRef('payments').push().set()` and shows a toast, but never calls `renderCardView()` to refresh the UI. The same issue exists for `kid_spent` (line ~5589-5598), `record_payment`, `bank_ambiguous` disambiguation callbacks (line ~5576-5583), `record_debt`, and `settle_debt`.
+
+**Fix:** After every successful bank write, re-render the active view:
+
+```javascript
+// After the toast in each bank handler:
+if (appShellState.currentView === 'bank' && typeof window.renderCardView === 'function') {
+  window.renderCardView(kidId).catch(function (e) { console.error(e); });
+}
+```
+
+Apply this pattern to ALL bank intent handlers:
+1. `parent_owes_kid` / `kid_owes_parent` (line ~5601-5623)
+2. `kid_spent` (line ~5589-5598)
+3. `record_payment` (wherever this handler is)
+4. `bank_ambiguous` — both the "earned" and "spent" callbacks (line ~5576, ~5581)
+5. `record_debt` and `settle_debt` handlers
+
+**Validation:**
+- [ ] Say "I owe alex 2" on bank tab → balance updates immediately without switching tabs
+- [ ] Say "louisa spent 3 on candy" → balance updates immediately
+- [ ] Say "alex 5" (ambiguous) → pick "earned" → balance updates immediately
+- [ ] All bank operations refresh the card view after the toast
+
+---
+
+## Part B: Trivia Difficulty — Calibrate for 2nd Graders
+
+**Problem:** Phase 37 rewrote trivia questions but overcorrected. Current questions are pre-K level ("What sound does a cow make?", "What color is a banana?"). These are too easy for the target audience. User wants **2nd-grade level** (ages 7-8).
+
+**Fix:** Replace all 50 questions in `KID_TRIVIA` array in `kid-fun-data.js` (line ~998-1049) with 2nd-grade-appropriate questions. Target difficulty:
+
+**Guidelines for 2nd-grade trivia:**
+- Questions should require actual knowledge/recall, not just sensory recognition
+- Distractors should be plausible (not absurd)
+- Topics: basic science (seasons, weather, plants, animal habitats), geography (continents, oceans), math concepts (addition, shapes, fractions intro), reading/literature (fairy tales, story elements), history (holidays, famous figures), everyday knowledge
+- Avoid: periodic table, boiling points, technical vocabulary, anything requiring reading above grade level
+
+**Example calibration (these are the RIGHT difficulty):**
+- "How many continents are there?" → [5, 6, **7**, 8]
+- "What planet do we live on?" → [Mars, **Earth**, Jupiter, Moon]
+- "What do caterpillars turn into?" → [Spiders, Birds, **Butterflies**, Frogs]
+- "How many sides does a hexagon have?" → [4, 5, **6**, 8]
+- "Which season comes after winter?" → [Summer, Fall, **Spring**, December]
+- "What is the largest ocean?" → [Atlantic, Indian, Arctic, **Pacific**]
+
+**Validation:**
+- [ ] All 50 questions are appropriate for ages 7-8
+- [ ] No questions a 5-year-old could answer instantly (too easy)
+- [ ] No questions requiring knowledge beyond 2nd-grade curriculum (too hard)
+- [ ] All `answer` indices are valid (0-3) for their options arrays
+- [ ] Plausible distractors on every question (no joke answers)
+
+---
+
+## Part C: Battleship Grid Layout — Fix Overlap and Increase Size
+
+**Problem:** The Battleship grid cells are all overlapping/on top of each other. The grid is also too small for comfortable play on mobile.
+
+**Root cause:** The HTML structure nests a `.bs-grid` (8-column grid) inside a `.bs-grid-row` (9-column grid: label + 8 cells), but `.bs-grid` only has 8 columns and takes up a single column of its parent, causing all cells to collapse into one column.
 
 **Fix — two changes:**
 
-### 1. Remove "owe" from QUESTION_WORDS (line ~4417)
+### 1. Fix grid structure — flatten the cell layout
 
-```javascript
-// BEFORE:
-const QUESTION_WORDS = ['how', 'what', 'whats', "what's", 'status', 'score', 'balance', 'owe', 'doing', 'points'];
+Remove the nested `.bs-grid` wrapper. Instead, place cells directly inside `.bs-grid-row` so each cell occupies one of the 9 columns (label + 8 cells):
 
-// AFTER:
-const QUESTION_WORDS = ['how', 'what', 'whats', "what's", 'status', 'score', 'balance', 'doing', 'points'];
-```
+In `renderBattleshipGrid()` (line ~7394) and `renderBattleshipSetupGrid()` (line ~7416):
+- Remove the `<div class="bs-grid">` wrapper
+- Place cell buttons/divs directly inside `<div class="bs-grid-row">`
+- Each row should have: `<span class="bs-row-label">A</span>` + 8 cell elements
 
-This is safe because:
-- "how much do I owe" still matches via "how"
-- "what do I owe" still matches via "what"
-- Bare "owe" with an amount and a kid name should be a bank action, not a status query
+### 2. Increase grid to 10x10
 
-### 2. Guard `check_status` in `routeIntent` against bank-actionable inputs
+Change the grid from 8x8 to 10x10:
+- Update all `Array(8)` references in Battleship rendering to `Array(10)`
+- Column labels: 1-10
+- Row labels: A-J
+- Update `grid-template-columns` from `22px repeat(8, ...)` to `22px repeat(10, ...)`
+- Update ship placement validation bounds
+- Update `BATTLESHIP_SHIPS` — add back a 5th ship now that there's room:
+  ```javascript
+  var BATTLESHIP_SHIPS = [
+    { name: 'Carrier', size: 5 },
+    { name: 'Battleship', size: 4 },
+    { name: 'Cruiser', size: 3 },
+    { name: 'Destroyer', size: 3 },
+    { name: 'Sub', size: 2 }
+  ];
+  ```
+- Update the randomize/shuffle placement logic to use the 10x10 bounds
+- Update hit detection and win condition to account for new grid size and ship count
 
-In the `check_status` registered intent (line ~4763-4767), add a guard so it doesn't fire when the input looks like a bank action (has a kid name + amount):
+### 3. CSS sizing
 
-```javascript
-registerIntent({
-  id: 'check_status',
-  priority: 50,
-  patterns: (text, kids) => {
-    // Don't hijack bank-actionable inputs that have a kid + amount
-    if (kids.length && /\$?\s*\d+/.test(text) && /\b(owe|paid|spent|gave|earned)\b/.test(text)) {
-      return null;
-    }
-    return isQuestion(text) ? { confidence: 0.8 } : null;
-  }
-});
-```
+Update `.bs-cell` (line ~3285):
+- Remove fixed `min-height: 34px`
+- Let cells size naturally via `aspect-ratio: 1/1` and the grid's `1fr` columns
+- The 10x10 grid should fill the available card width
 
-**Why both changes:** Removing "owe" from QUESTION_WORDS fixes the immediate bug. The guard on `check_status` prevents similar future collisions where action verbs in a status-like sentence hijack bank parsing.
-
-### 3. Also fix verb-less input without `$`
-
-The Phase 36 spec required `$` for `bank_ambiguous`, but "i owe louisa 10" has no `$`. The `parent_owes_kid` pattern at line ~4994 already handles this correctly (no `$` required) — so once the `check_status` hijack is fixed, "i owe louisa 10" will correctly route to `parent_owes_kid`. No additional parser changes needed for this input.
-
-**Test cases:**
-- "i owe louisa 10" on Bank tab → `parent_owes_kid` (records $10 owed to Louisa)
-- "i owe louisa $10" on Bank tab → `parent_owes_kid` (same)
-- "how much do I owe" on Bank tab → `check_status` (still works via "how")
-- "what's the score" on any tab → `check_status` (still works via "what's")
-- "alex $2" on Bank tab → `bank_ambiguous` (Phase 36 feature still works)
-- "alex spent $5" on Bank tab → `kid_spent` (existing pattern still works)
-
----
-
-## Part B: List Settings Buttons — Event Delegation Fix
-
-**Problem:** The "Delete list", "Save as template", and "Reset template" buttons render into `headerSettingsPanel` (line ~9068-9070), but the click handler for `[data-list-action]` is attached to `listsContent` (line ~8967). Since `headerSettingsPanel` is NOT a descendant of `listsContent`, clicks on these buttons have no event listener. The buttons appear but do nothing.
-
-**Fix — add a click listener on `headerSettingsPanel` for list actions:**
-
-In `window.renderListSettingsInHeader` (line ~9053), after rendering the HTML, attach a click handler to the panel:
-
-```javascript
-window.renderListSettingsInHeader = function renderListSettingsInHeader() {
-  var panel = document.getElementById('headerSettingsPanel');
-  if (!panel) return;
-  var phase = runtime();
-  if (!listState.currentListId || !phase) {
-    panel.innerHTML = '<div class="settings-empty"><strong>Select a list</strong><p class="family-panel-note">Tap a list to see its settings here.</p></div>';
-    return;
-  }
-  var list = listState.listsById[listState.currentListId];
-  if (!list) {
-    panel.innerHTML = '<div class="settings-empty"><strong>List not found.</strong></div>';
-    return;
-  }
-  var listType = list.type || 'custom';
-  var isTemplateType = ['grocery', 'costco', 'lakehouse', 'packing'].indexOf(listType) !== -1;
-  panel.innerHTML = '<div class="settings-grid"><article class="stat-card"><h3 class="hub-section-head">' + escapeHtml(list.name) + ' Settings</h3>' +
-    (isTemplateType ? '<div class="settings-list"><button type="button" class="btn btn-secondary" data-list-action="save-template" style="width:100%;margin-bottom:8px;">Save as template</button><button type="button" class="btn btn-secondary" data-list-action="reset-template" style="width:100%;margin-bottom:8px;">Reset template</button></div>' : '') +
-    '<button type="button" class="btn btn-danger" data-list-action="delete-list" style="width:100%;">Delete list</button></article></div>';
-
-  // Wire up button clicks — these buttons are in headerSettingsPanel, NOT listsContent
-  panel.onclick = async function(event) {
-    var target = event.target.closest('[data-list-action]');
-    if (!target) return;
-    var action = target.dataset.listAction;
-
-    if (action === 'delete-list' && listState.currentListId) {
-      var currentListForDelete = listState.listsById[listState.currentListId];
-      if (!currentListForDelete) return;
-      if (!await window.appConfirm('Delete list?', 'Delete ' + currentListForDelete.name + '? This can\'t be undone.', true)) return;
-      deleteEntireList(listState.currentListId).catch(function(e) { console.error(e); });
-      return;
-    }
-    if (action === 'save-template' && listState.currentListId) {
-      var currentListForSave = listState.listsById[listState.currentListId];
-      saveTemplateForList(currentListForSave).then(function() {
-        if (phase && currentListForSave) {
-          phase.showToast('Saved as template for ' + listTypeMeta(currentListForSave.type).label + '.');
-        }
-      }).catch(function(e) { console.error(e); });
-      return;
-    }
-    if (action === 'reset-template' && listState.currentListId) {
-      var currentList = listState.listsById[listState.currentListId];
-      if (!currentList) return;
-      if (!await window.appConfirm('Reset to default template?', 'This will replace all items in this list with the default template. Any custom items will be lost.', true)) return;
-      resetTemplateForType(currentList.type).then(function(count) {
-        if (phase) phase.showToast('Template reset - ' + count + ' items loaded.');
-      }).catch(function(e) { console.error(e); });
-      return;
-    }
-  };
-};
-```
-
-**Key point:** The handler mirrors the existing logic from `listsContent`'s click handler (lines ~8982-9007) but is attached directly to the panel. Using `panel.onclick =` ensures it gets replaced each time the panel re-renders (no listener accumulation).
-
-**After delete:** When a list is deleted, the header settings panel should close or update. `deleteEntireList` already clears `listState.currentListId` and re-renders — verify this also closes or updates the header panel.
+**Validation:**
+- [ ] Grid renders as a clean 10x10 matrix with no overlapping cells
+- [ ] Row labels A-J on left, column labels 1-10 on top
+- [ ] 5 ships to place (Carrier 5, Battleship 4, Cruiser 3, Destroyer 3, Sub 2)
+- [ ] Randomize places all ships without overlap or out-of-bounds
+- [ ] Manual placement works within 10x10 bounds
+- [ ] Grid cells are tappable on mobile (fill available width)
+- [ ] Ship preview highlights correct cells during placement
+- [ ] Game plays to completion — all ships must be sunk to win
 
 ---
 
-## Part C: Customizable Game Player Names
+## Part D: Save Template Button — Fix Silent Failure
 
-**Problem:** Tic Tac Toe, Connect Four, and Battleship hardcode "Alex" and "Louisa" as player names via `kidLabelForMarker()` (line ~6545) and direct string references in render functions. Parents, friends, or guests can't play as themselves.
+**Problem:** "Save as template" button doesn't work for lakehouse list. Reset and delete DO work from the same header settings panel.
 
-**Fix — add editable player names:**
+**Root cause:** The `saveTemplateForList()` function (line ~9198-9207) at line 9201 has an early return: `if (!ref || !list || !LIST_TEMPLATES[list.type]) return;`. The function returns `undefined` (not a rejected promise), so the `.then()` in the click handler (line ~9379) still fires and shows the toast — but the actual Firebase write at line 9205 never runs.
 
-### 1. Add state fields (line ~6119, in the `state` object)
-
-```javascript
-gamePlayers: { p1: 'Alex', p2: 'Louisa' },
-```
-
-Initialize from `currentConfig.kids` if available (in the init section, line ~6280):
-
-```javascript
-var kidIds = Object.keys((phase.currentConfig && phase.currentConfig.kids) || {});
-if (kidIds.length >= 2) {
-  state.gamePlayers = {
-    p1: (phase.currentConfig.kids[kidIds[0]] || {}).name || 'Player 1',
-    p2: (phase.currentConfig.kids[kidIds[1]] || {}).name || 'Player 2'
-  };
-} else {
-  state.gamePlayers = { p1: 'Player 1', p2: 'Player 2' };
-}
-// Restore from localStorage if saved
-var savedPlayers = localStorage.getItem('familyChores.gamePlayers');
-if (savedPlayers) {
-  try { state.gamePlayers = JSON.parse(savedPlayers); } catch(e) {}
-}
-```
-
-### 2. Update `kidLabelForMarker()` (line ~6545)
-
-```javascript
-function kidLabelForMarker(marker) {
-  return marker === 'X' || marker === 'red' || marker === 'alex'
-    ? state.gamePlayers.p1 : state.gamePlayers.p2;
-}
-```
-
-### 3. Add a name-entry row at the top of each game
-
-Instead of a separate setup screen (too much friction), add an inline editable row at the top of each game's render output, above the status line:
-
-```javascript
-function renderPlayerNameBar() {
-  return '<div class="game-player-names">' +
-    '<label><input type="text" class="game-player-input p1" value="' + escapeBulletinHtml(state.gamePlayers.p1) + '" maxlength="12" data-player="p1"></label>' +
-    '<span class="game-vs">vs</span>' +
-    '<label><input type="text" class="game-player-input p2" value="' + escapeBulletinHtml(state.gamePlayers.p2) + '" maxlength="12" data-player="p2"></label>' +
-  '</div>';
-}
-```
-
-Insert `renderPlayerNameBar()` into `renderTTTActivity`, `renderConnectFourActivity`, and `renderBattleshipActivity` (idle/gameover screens), just inside the `fun-card` article, before the status div.
-
-### 4. Handle name input changes
-
-In the Fun tab's click/input handler, listen for changes on `.game-player-input`:
-
-```javascript
-container.addEventListener('input', function(event) {
-  if (event.target.classList.contains('game-player-input')) {
-    var player = event.target.dataset.player;
-    var name = String(event.target.value || '').trim() || (player === 'p1' ? 'Player 1' : 'Player 2');
-    state.gamePlayers[player] = name;
-    localStorage.setItem('familyChores.gamePlayers', JSON.stringify(state.gamePlayers));
-    // Update status text without full re-render
-    var statusEl = container.querySelector('.ttt-status strong, .c4-status strong, .bs-status strong');
-    if (statusEl) {
-      // Let the next render pick it up — don't need instant update for status
-    }
-  }
-});
-```
-
-Names update on the fly as users type. The scoreboard and status text update on the next render cycle (next move or new game).
-
-### 5. Update all hardcoded name references
-
-Replace direct "Alex"/"Louisa" strings in these render functions:
-- **`renderTTTActivity`** (line ~7125): scoreboard `'Alex'` / `'Louisa'` → `state.gamePlayers.p1` / `state.gamePlayers.p2`
-- **`renderConnectFourActivity`** (line ~7150): same scoreboard replacement
-- **`renderBattleshipActivity`** (line ~7189, 7193-7195, 7199, 7204, 7207): all "Alex"/"Louisa" strings → use `kidLabelForMarker` or `state.gamePlayers`
-- **CSS class usage** (`.alex` / `.louisa` on status text): change to `.p1` / `.p2` and add matching CSS, OR keep using the alex/louisa classes for color (since they map to --alex/--louisa vars)
-
-**For CSS colors:** Keep using `.alex` and `.louisa` CSS classes for the color theming (blue for p1, purple for p2). Just change the text content, not the class names. This avoids needing new CSS.
-
-### 6. Add minimal CSS
-
-```css
-.game-player-names {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.game-player-input {
-  width: 80px;
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel-alt);
-}
-.game-player-input.p1 { color: var(--alex); }
-.game-player-input.p2 { color: var(--louisa); }
-.game-vs { color: var(--muted); font-size: 0.85rem; }
-```
-
----
-
-## Part D: Enter Key on Text Inputs
-
-**Problem:** In Mad Libs, pressing Enter on the answer input (`#funMadLibAnswer`) does nothing useful — it doesn't submit the current blank and move to the next one. The user expects Enter to work like tapping the "Next" button, and for focus to stay on the input for the next blank.
-
-**Root cause:** The `funMadLibAnswer` input has no `keydown` listener. It's not inside a `<form>`, so Enter doesn't trigger any submit behavior.
-
-**Fix — add keydown Enter handler for Mad Libs:**
-
-In the Fun tab's event delegation (near the existing `input` event listener, line ~7737), add a `keydown` listener:
-
-```javascript
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'Enter' && event.target.id === 'funMadLibAnswer') {
-    event.preventDefault();
-    var nextBtn = document.getElementById('funMadLibNextBtn');
-    if (nextBtn) nextBtn.click();
-    // After re-render, refocus the new input
-    setTimeout(function() {
-      var newInput = document.getElementById('funMadLibAnswer');
-      if (newInput) newInput.focus();
-    }, 50);
-  }
-});
-```
-
-**Also check:** The game player name inputs (Part C) should NOT submit on Enter — they should just blur or do nothing, since they update on input.
-
-**Also check:** The list item input already handles Enter (line ~9021-9026) — verify it keeps focus after adding an item. If it doesn't refocus, add a similar `setTimeout` focus pattern.
-
----
-
-## Part F: Game Win Celebration
-
-**Problem:** When someone wins in Tic Tac Toe or Connect Four, it's not obvious. The winning cells get a faint green box-shadow (`.ttt-cell.win` / `.c4-cell.win`) that's barely visible. The status text says "Alex wins!" but uses the same small styling as the turn indicator. There's no visual fanfare — kids can't tell they won.
-
-**Fix — make wins unmistakable:**
-
-### 1. Bigger, bolder win status text
-
-When there's a winner, the status div should be larger, use the winner's color prominently, and feel celebratory:
-
-```css
-.ttt-status.game-won,
-.c4-status.game-won {
-  font-size: 1.4rem;
-  text-align: center;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  animation: win-pulse 0.6s ease-out;
-}
-
-@keyframes win-pulse {
-  0% { transform: scale(0.8); opacity: 0.5; }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-}
-```
-
-Add the `game-won` class conditionally in `renderTTTActivity` and `renderConnectFourActivity` when `state.tttWinner` / `state.c4Winner` is set (and not 'draw').
-
-### 2. More visible winning cells
-
-Replace the subtle box-shadow with something kids can see:
-
-```css
-.ttt-cell.win {
-  background: rgba(34, 197, 94, 0.25);
-  box-shadow: inset 0 0 0 3px #22c55e;
-  animation: win-cell-pop 0.3s ease-out;
-}
-
-.c4-cell.win {
-  box-shadow: 0 0 0 3px #22c55e;
-  animation: win-cell-pop 0.3s ease-out;
-}
-
-@keyframes win-cell-pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
-}
-```
-
-### 3. Win text should include the player marker
-
-For TTT, the status should say something like "X wins! 🎉" with the player name, not just "Alex wins!". This makes it clear WHICH marker won, since players may forget which letter they are:
-
-```javascript
-// In renderTTTActivity:
-var status = state.tttWinner === 'draw'
-  ? "It's a tie!"
-  : state.tttWinner
-    ? kidLabelForMarker(state.tttWinner) + ' (' + state.tttWinner + ') wins! 🎉'
-    : kidLabelForMarker(state.tttTurn) + "'s turn (" + state.tttTurn + ")";
-```
-
-For Connect Four, use the color:
-```javascript
-var colorLabel = state.c4Winner === 'red' ? '🔴' : '🟡';
-var winnerText = state.c4Winner === 'draw'
-  ? 'Board full — draw!'
-  : state.c4Winner
-    ? kidLabelForMarker(state.c4Winner) + ' ' + colorLabel + ' wins! 🎉'
-    : kidLabelForMarker(state.c4Turn) + "'s turn";
-```
-
----
-
-## Part E: Age-Appropriate Trivia Questions
-
-**Problem:** The current `KID_TRIVIA` questions in `kid-fun-data.js` are too hard for a 4-7 year old. Examples: "What is the boiling point of water in Fahrenheit?", "What element does 'O' stand for on the periodic table?", "What is the largest desert on Earth?" (trick answer: Antarctica), "How many stomachs does a cow have?", "What is the smallest bone in the human body?". These are 3rd-5th grade difficulty — the target users are preschool through 1st grade.
-
-**Fix — replace the entire `KID_TRIVIA` array in `kid-fun-data.js`:**
-
-Write 50 new questions appropriate for ages 4-7. Guidelines:
-
-- **Topics they know:** colors, shapes, counting to 20, animals they see (dogs, cats, farm animals, zoo favorites), food they eat, body parts, seasons, weather, family, their daily life
-- **Phrasing:** Simple, short sentences. No jargon. Use "What color is..." not "Which chromatic classification..."
-- **Choices:** 3-4 options, all plausible to a kid, no trick answers. Wrong answers should be silly/fun, not confusing
-- **Difficulty curve:** Mix easy (age 4: "What sound does a cow make?") with slightly harder (age 7: "How many days in a week?")
-- **No:** periodic table, geography trivia, boiling points, technical vocabulary, anything requiring reading above 1st grade level
-
-**Example good questions:**
-```javascript
-{ question: "What sound does a cow make?", choices: ["Woof", "Moo", "Meow", "Baa"], answer: 1 },
-{ question: "What color is a banana?", choices: ["Red", "Blue", "Yellow", "Green"], answer: 2 },
-{ question: "How many fingers do you have?", choices: ["5", "8", "10", "12"], answer: 2 },
-{ question: "Which animal says 'woof'?", choices: ["Cat", "Bird", "Dog", "Fish"], answer: 2 },
-{ question: "What shape is a ball?", choices: ["Square", "Triangle", "Circle", "Star"], answer: 2 },
-{ question: "What do you use to smell?", choices: ["Ears", "Eyes", "Nose", "Mouth"], answer: 2 },
-{ question: "How many legs does a dog have?", choices: ["2", "4", "6", "8"], answer: 1 },
-{ question: "What season do leaves fall?", choices: ["Spring", "Summer", "Fall", "Winter"], answer: 2 },
-```
-
-**Keep the same array structure** (`question`, `choices`, `answer` index). Just replace all 50 entries.
-
----
-
-## Part I: Swipe-to-Delete — Raise Threshold & Add Friction
-
-**Problem:** Swipe-to-delete triggers too easily. The threshold is 80px (line ~8872), which is about 22% of a phone screen. Combined with instant deletion (no confirmation), it's scary on long lists like groceries. Users can accidentally delete items with a casual sideways scroll.
-
-**Fix — three changes to make swipes more deliberate:**
-
-### 1. Raise the swipe-delete threshold from 80px to 130px
-
-```javascript
-// Line ~8872: change -80 to -130
-} else if (diffX <= -130) {
-// Line ~8878: change 80 to 130
-} else if (diffX >= 130) {
-```
-
-130px is about 36% of a 360px phone screen — enough to be clearly intentional.
-
-### 2. Two-stage swipe: reveal, then commit
-
-Instead of the item flying off when it crosses the threshold, switch to a **reveal pattern** like iOS Mail:
-
-- **Stage 1 (0-80px):** Item follows finger, background reveals action label ("Delete" on left, "Done ✓" on right). Item stops tracking at 130px.
-- **Stage 2 (release past 130px):** Action fires. Release between 0-130px snaps back.
-
-The background action labels are already partially there via `.swiping-left` / `.swiping-right` classes. Make sure the delete/check labels are visible and large enough to read during the swipe.
-
-### 3. Haptic-style visual snap at threshold
-
-When the swipe crosses the commit threshold, add a visual "click" — a brief scale bump or color change on the action label — so the user knows they've crossed the point of no return:
-
-```css
-.swipe-wrapper.swipe-committed .swipe-action-left {
-  background: #dc2626;  /* brighter red */
-  font-weight: 700;
-}
-```
-
-Add the `swipe-committed` class in the touchmove handler when `|diff| > 130`.
-
-### 4. Keep the undo toast
-
-The existing undo toast on delete is good — keep it. But make sure it's prominent enough (not a tiny fading toast). The toast should persist for at least 4 seconds with a clear "Undo" button.
-
-**Also:** The max translateX clamp (currently `Math.max(-120, Math.min(120, diff))` at line 8836) should increase to match the new threshold — change to `Math.max(-160, Math.min(160, diff))` so the item can visually reach the commit point.
-
----
-
-## Part G: Remove Favorites Tile from Fun Home
-
-**Problem:** Starred jokes have their own tile on the Fun home grid ("Favorites ⭐"), but there's already a toggle inside the Jokes activity (`funStarToggle` button, line ~7250) that filters to starred only. The separate tile wastes grid space and fragments the experience — users should just use the filter inside Jokes.
+Likely issue: the `list` object passed from `listState.listsById[listState.currentListId]` may not have its `type` property set correctly, OR the `items` property may not be populated in the state object (items might be stored separately or as a Firebase object rather than an array).
 
 **Fix:**
+1. Add logging to `saveTemplateForList` to identify exactly which guard condition is failing
+2. Ensure the `list` object passed includes both `type` and `items`
+3. If `list.items` is a Firebase object (keys are push IDs), convert to array before `.filter()`
+4. The `.then()` handler should only show the success toast if `saveTemplateForList` returns a truthy value (the item count):
+   ```javascript
+   saveTemplateForList(currentListForSave).then(function (count) {
+     if (count != null) {
+       var activePhase = runtime();
+       if (activePhase && currentListForSave) {
+         activePhase.showToast('Saved ' + count + ' items as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+       }
+     } else {
+       runtime().showToast('Could not save template.', { type: 'error' });
+     }
+   }).catch(function (error) { console.error(error); });
+   ```
 
-Remove the conditional Favorites tile from `renderFunHome()` (lines ~7224-7231):
-
-```javascript
-// DELETE this block:
-if (state.starredJokes.length) {
-  tiles.push({
-    id: 'favorites',
-    icon: '⭐',
-    label: 'Favorites',
-    ...
-  });
-}
-```
-
-Also remove the `favorites` case in `openFunActivity()` (line ~6431-6433) that sets `jokeShowStarred = true`. The Jokes activity's internal toggle handles this.
-
-**Keep:** The star count subtitle on the Jokes tile (`'★ ' + state.starredJokes.length + ' saved'`) — that's a nice indicator. Keep the `funStarToggle` button inside the Jokes view. Keep all starring/unstarring logic.
-
----
-
-## Part H: Battleship UX Overhaul
-
-**Problem:** Battleship is nearly unusable on mobile. The setup is tedious (5 ships × 2 players = 10 placement rounds), there's no preview of where ships will land, placed ships can't be moved, the 8x8 grid cells are tiny, and "Orientation: horizontal" is jargon for kids. The user would rather scrap it than keep it broken.
-
-**Fix — make setup fast and gameplay clearer:**
-
-### 1. Add "Randomize" button for auto-placement
-
-Add a one-tap "Randomize" button that places all remaining ships randomly. This is the primary setup method — manual placement becomes optional for people who want control.
-
-```javascript
-function randomizeBSShips(player) {
-  // Clear any already-placed ships
-  state.bsBoards[player].ships = [];
-  state.bsShipIndex = 0;
-
-  for (var i = 0; i < BATTLESHIP_SHIPS.length; i++) {
-    var ship = BATTLESHIP_SHIPS[i];
-    var placed = false;
-    var attempts = 0;
-    while (!placed && attempts < 200) {
-      state.bsShipIndex = i;
-      state.bsOrientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
-      var row = Math.floor(Math.random() * 8);
-      var col = Math.floor(Math.random() * 8);
-      if (canPlaceBSShip(player, row, col)) {
-        state.bsBoards[player].ships.push({
-          name: ship.name,
-          size: ship.size,
-          cells: shipCells(row, col, ship.size, state.bsOrientation),
-          sunk: false
-        });
-        placed = true;
-      }
-      attempts++;
-    }
-  }
-  state.bsShipIndex = BATTLESHIP_SHIPS.length;
-}
-```
-
-Show the randomized board and let the player "Shuffle" or "Accept":
-
-```javascript
-// In setup render, when all ships placed (or after randomize):
-'<div class="fun-actions">' +
-  '<button type="button" class="fun-btn" id="funBSAcceptBtn">Accept</button>' +
-  '<button type="button" class="fun-btn secondary" id="funBSShuffleBtn">Shuffle</button>' +
-'</div>'
-```
-
-### 2. Reduce to 4 ships
-
-Remove the "Boat" (size 1) — it's a random needle in a haystack and extends the game unnecessarily:
-
-```javascript
-var BATTLESHIP_SHIPS = [
-  { name: 'Carrier', size: 4 },
-  { name: 'Cruiser', size: 3 },
-  { name: 'Destroyer', size: 2 },
-  { name: 'Sub', size: 2 }
-];
-```
-
-### 3. Undo last ship during manual placement
-
-Add an "Undo" button visible during setup that removes the last placed ship:
-
-```javascript
-function undoLastBSShip() {
-  var player = currentBSPlayer();
-  if (state.bsBoards[player].ships.length > 0) {
-    state.bsBoards[player].ships.pop();
-    state.bsShipIndex = Math.max(0, state.bsShipIndex - 1);
-  }
-}
-```
-
-### 4. Replace "Orientation: horizontal" with icons
-
-Instead of text, show a visual toggle:
-```javascript
-'<button type="button" class="fun-btn secondary" id="funBSRotateBtn">' +
-  (state.bsOrientation === 'horizontal' ? '⟷ Across' : '⟵⟶ Down') +
-'</button>'
-```
-
-Or just use "↔ Across" / "↕ Down".
-
-### 5. Add row/column labels
-
-Add "A-H" on rows and "1-8" on columns to the grid so players can communicate ("Try B4"):
-
-```javascript
-// Add a header row with column numbers
-'<div class="bs-grid-wrapper">' +
-  '<div class="bs-col-labels"><span></span>' +
-  Array(8).fill(0).map(function(_, i) { return '<span>' + (i + 1) + '</span>'; }).join('') +
-  '</div>' +
-  // Each row gets a label
-  rows.map(function(row, i) {
-    return '<span class="bs-row-label">' + String.fromCharCode(65 + i) + '</span>' + row;
-  }) +
-'</div>'
-```
-
-### 6. Ship preview on touch
-
-During setup, highlight the cells where the current ship WOULD be placed when the user touches/hovers a cell. Use a CSS class like `.bs-cell.preview`:
-
-```css
-.bs-cell.preview {
-  background: rgba(74, 144, 217, 0.3);
-  border-color: var(--alex);
-}
-.bs-cell.preview-invalid {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-}
-```
-
-This requires a `touchstart`/`mouseover` handler during setup that calculates `shipCells()` for the hovered position and adds preview classes, then places on `click`/`touchend`.
+**Validation:**
+- [ ] Open lakehouse list → gear icon → "Save as template" → toast confirms with item count
+- [ ] Open grocery list → gear icon → "Save as template" → toast confirms with item count
+- [ ] If save fails, error toast shown instead of false success
+- [ ] After saving, "Reset template" restores the saved version (not the built-in default)
 
 ---
 
-## Part J: Header Top Padding
+## Part E: Pin Command — Route from Any Tab
 
-**Problem:** The header has visible dead space above the banner. `.header` has `padding-top: calc(8px + env(safe-area-inset-top))` (line ~146) and `.header-main` adds another `padding: 16px 20px 14px` (line ~159). On devices without a notch, that's 24px of empty space above "Family Hub".
+**Problem:** Saying "pin [text]" only works when already on the bulletin tab. From other tabs, the `parseNoteIntent` function is never called (it's guarded by `if (activeTab === 'bulletin')`), so the input falls through to `missing_kid` or other handlers, resulting in "which kid?" prompts.
 
-**Fix:** Reduce the base padding. The `env(safe-area-inset-top)` is necessary for iPhone notch/dynamic island, but the extra 8px base is unnecessary. And `.header-main`'s 16px top padding can be reduced:
+**Fix:** Register `pin` as a cross-tab routed intent, similar to how other global intents work:
 
-```css
-.header {
-  padding-top: env(safe-area-inset-top);  /* was calc(8px + env(...)) */
-}
+Option 1 — Add `pin` to `routeIntent` registered intents:
+- Register a `log_note` intent in `routeIntent` that matches `^pin\b` patterns
+- Set `routeView: 'bulletin'` so it routes to the bulletin tab and executes there
+- Priority should be high enough to catch it before other parsers
 
-.header-main {
-  padding: 10px 20px 10px;  /* was 16px 20px 14px */
-}
-```
+Option 2 — Move `parseNoteIntent` call before the tab guard:
+- In `parseIntent()`, call `parseNoteIntent` early (before the tab-specific blocks) when the text starts with "pin"
+- This is simpler but only handles the "pin" keyword
 
-This keeps notch safety on iPhones while removing the dead space on Android. The header will feel tighter and more connected to the content.
+Either way, saying "pin pick up dry cleaning" from any tab should create a bulletin note.
 
----
-
-## Files Changed
-
-| File | Changes |
-|------|---------|
-| `index.html` | Part A: Remove "owe" from QUESTION_WORDS, guard check_status against bank inputs |
-| `index.html` | Part B: Wire click handlers on headerSettingsPanel for list action buttons |
-| `index.html` | Part C: Add gamePlayers state, renderPlayerNameBar(), update game renders |
-| `index.html` | Part D: Enter key handler for Mad Libs input, refocus after submit |
-| `index.html` | Part F: Win celebration CSS, status text with marker/color, game-won class |
-| `index.html` | Part I: Raise swipe threshold to 130px, add committed visual state |
-| `index.html` | Part G: Remove Favorites tile from Fun home grid |
-| `index.html` | Part H: Battleship UX — randomize, undo, reduce ships, labels, preview |
-| `index.html` | Part J: Reduce header top padding |
-| `kid-fun-data.js` | Part E: Replace KID_TRIVIA with age-appropriate questions (ages 4-7) |
-| `sw.js` | Bump cache version |
-
-## What NOT to Change
-
-- `parseBankIntent` patterns — the owe/debt patterns already work correctly; the fix is in `routeIntent`
-- Game logic (win detection, board state) — leave untouched
-- List rendering or list data model — only the settings button wiring
-- Tab routing — leave untouched
-
-## Validation Checklist
-
-### Bank Parser (Part A)
-1. "i owe louisa 10" on Bank tab → records $10 owed to Louisa (not a status query)
-2. "i owe louisa $10" on Bank tab → same result
-3. "how much do I owe" on any tab → shows status (still works)
-4. "what's louisa's balance" on any tab → shows status (still works)
-5. "alex $2" on Bank tab → bank_ambiguous prompt (Phase 36 still works)
-6. "alex spent $5" on Bank tab → kid_spent (existing pattern intact)
-7. "louisa earned $3" on Bank tab → record_payment (existing pattern intact)
-
-### List Settings (Part B)
-8. Header gear on Lists tab → "Delete list" button works (shows confirmation, deletes list)
-9. Header gear on Lists tab → "Save as template" button works (for template-type lists)
-10. Header gear on Lists tab → "Reset template" button works (shows confirmation, resets items)
-11. After deleting a list, header panel updates appropriately
-
-### Game Names (Part C)
-12. Opening TTT/C4/Battleship shows name inputs pre-filled with kid names
-13. Editing a name updates the scoreboard on next move/new game
-14. Names persist after navigating away and back (localStorage)
-15. Battleship handoff screens use the edited names
-16. Empty name input falls back to "Player 1"/"Player 2"
-
-### Enter Key (Part D)
-17. Pressing Enter on Mad Libs answer input submits the current blank and advances to next
-18. Focus stays on (or returns to) the input after advancing
-19. Pressing Enter on the last blank finishes the story
-20. List item input keeps focus after Enter-to-add (verify existing behavior)
-
-### Win Celebration (Part F)
-21. TTT win → status text is large, animated, includes marker letter (e.g., "Alex (X) wins! 🎉")
-22. C4 win → status text includes color emoji (e.g., "Alex 🔴 wins! 🎉")
-23. Winning cells in TTT have a visible green border and pop animation
-24. Winning cells in C4 have a visible green border and pop animation
-25. Draw state doesn't show celebration styling
-
-### Favorites Tile (Part G)
-26. Fun home grid does NOT have a "Favorites" tile
-27. Jokes tile still shows "★ N saved" subtitle when starred jokes exist
-28. Star toggle inside Jokes activity still works
-
-### Battleship UX (Part H)
-29. "Randomize" button places all ships in valid positions with one tap
-30. "Shuffle" re-randomizes the board
-31. "Undo" during manual placement removes the last placed ship
-32. Ship count reduced to 4 (no size-1 Boat)
-33. Row labels (A-H) and column labels (1-8) visible on grid
-34. Rotate button says "↔ Across" / "↕ Down" instead of "Orientation: horizontal"
-35. Ship preview highlights cells before committing placement
-
-### Swipe Safety (Part I)
-36. Swiping 80px on a list item does NOT delete — snaps back
-37. Swiping 130px+ on a list item triggers the delete
-38. Visual "committed" feedback visible when crossing threshold
-39. Undo toast shows for at least 4 seconds with clear Undo button
-40. Swipe-right to check off also uses the higher threshold
-
-### Header Padding (Part J)
-41. No visible dead space above the header banner on Android
-42. iPhone notch/dynamic island still has safe area padding
-43. Header feels tight — brand text close to the top edge
-
-### Trivia (Part E)
-44. All 50 trivia questions are understandable by a 4-7 year old
-45. No questions require knowledge of: periodic table, boiling points, geography tricks, technical vocabulary
-46. Questions cover familiar topics: colors, shapes, animals, food, body parts, counting, seasons
-47. Choices are plausible and not tricky — wrong answers are clearly wrong to the target age
+**Validation:**
+- [ ] On chores tab: "pin pick up milk" → creates bulletin note, toast confirms
+- [ ] On bank tab: "pin remember picture day" → creates bulletin note
+- [ ] On lists tab: "pin call dentist" → creates bulletin note
+- [ ] On bulletin tab: "pin something" → still works as before
+- [ ] "pin" with no text → does NOT create an empty note (graceful handling)
 
 ---
 
-## Test Focus (for Gemini)
+## Part F: Chore Logging — Error Handling and Refresh Verification
 
-### Bank parser
-- Trace `routeIntent("i owe louisa 10", "bank")` — must NOT return `check_status`
-- Verify "owe" is NOT in `QUESTION_WORDS`
-- Verify `check_status` pattern function returns null when input has kid + amount + action verb
-- `parseBankIntent("i owe louisa 10", "i owe louisa 10", ["louisa"])` → returns `parent_owes_kid` with amount 10
-- `isQuestion("how much do i owe")` → still true (via "how")
+**Problem:** User reported "louisa made bed" showed "got it" but didn't appear to add the chore. The code path shows the toast only appears after a successful `saveLogEntries()` call, so the write likely succeeded. But there may be a UI refresh gap or a silent error swallowed by the async chain.
 
-### List settings wiring
-- Verify `renderListSettingsInHeader` attaches a click handler to `headerSettingsPanel`
-- Verify the handler calls `deleteEntireList` / `saveTemplateForList` / `resetTemplateForType`
-- Verify handler uses `appConfirm` for destructive actions
+**Fix — defensive improvements:**
+1. Wrap `executeLogAction` in try-catch so Firebase write failures show an error toast instead of silently failing:
+   ```javascript
+   try {
+     const saved = await saveLogEntries(entries);
+     // ... show success toast ...
+   } catch (error) {
+     console.error('Failed to save chore:', error);
+     showToast('Failed to save — try again.', { type: 'error' });
+   }
+   ```
 
-### Game player names
-- Verify `state.gamePlayers` exists with p1/p2 fields
-- Verify `kidLabelForMarker` reads from `state.gamePlayers`
-- Verify `renderPlayerNameBar()` is called in TTT, C4, and Battleship render functions
-- Verify no hardcoded "Alex"/"Louisa" strings remain in game render output (except CSS class names)
-- Verify localStorage read/write for `familyChores.gamePlayers`
+2. After successful chore logging, explicitly refresh the chore view if active:
+   ```javascript
+   if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
+     window.renderChoreProgress().catch(function (e) { console.error(e); });
+   }
+   ```
+   Note: `hub:log-changed` already triggers `renderChoreProgress` via the event listener at line ~10041, but an explicit call ensures the refresh happens synchronously after the save rather than relying on the event dispatch timing.
 
-### Enter key
-- Verify `keydown` listener exists for `funMadLibAnswer` that triggers `funMadLibNextBtn.click()`
-- Verify `preventDefault()` is called (so Enter doesn't cause page behavior)
-- Verify the input is refocused after the re-render (setTimeout pattern)
-- Verify list item input retains focus after Enter-to-add
+3. Similarly, wrap the bank handlers from Part A in try-catch for consistency.
 
-### Win celebration
-- Verify `.ttt-status.game-won` and `.c4-status.game-won` CSS rules exist with animation
-- Verify `win-pulse` keyframe animation is defined
-- Verify `win-cell-pop` keyframe animation is defined
-- Verify `.ttt-cell.win` has a visible border (not just faint box-shadow)
-- Verify TTT win status includes the marker letter (X or O)
-- Verify C4 win status includes color emoji (🔴 or 🟡)
-- Verify `game-won` class is conditionally added only when there's a winner (not draw)
+**Validation:**
+- [ ] "louisa made bed" → "Got it!" toast AND chore appears in the chore progress view immediately
+- [ ] If Firebase is unreachable, error toast shown instead of false "Got it!"
+- [ ] "alex brush teeth" → chore progress updates without needing to switch tabs
+- [ ] Bank transactions also show error toast on Firebase failure
 
-### Header padding
-- Verify `.header` padding-top uses `env(safe-area-inset-top)` without extra base padding
-- Verify `.header-main` top padding is reduced (≤12px)
+---
 
-### Swipe safety
-- Verify swipe delete threshold is 130px (not 80px) in touchend handler
-- Verify swipe check-off threshold is also 130px
-- Verify translateX clamp is at least 160px (not 120px)
-- Verify `swipe-committed` class (or equivalent) is added at threshold crossing
-- Verify undo toast duration is >= 4 seconds
+## Test Focus
 
-### Favorites tile
-- Verify `renderFunHome` does NOT push a tile with `id: 'favorites'`
-- Verify `funStarToggle` button still exists inside Jokes render
+Parts A and C are highest risk — A touches all bank handlers, C is a structural grid rewrite. Part B is content-only (data file). Part D is a targeted fix. Part E requires parser routing changes. Part F is defensive hardening.
 
-### Battleship UX
-- Verify `BATTLESHIP_SHIPS` has 4 entries (no size-1 Boat)
-- Verify `randomizeBSShips` (or equivalent) function exists and places all ships
-- Verify setup UI has "Randomize"/"Shuffle" and "Accept" buttons
-- Verify "Undo" button exists during manual setup and calls a function that pops the last ship
-- Verify grid has row (A-H) and column (1-8) labels
-- Verify rotate button text is user-friendly (not "horizontal"/"vertical")
-- Verify `.bs-cell.preview` CSS class exists for ship preview
-
-### Trivia
-- Verify `KID_TRIVIA` has ~50 entries in `kid-fun-data.js`
-- Spot-check 10 random questions — would a 5 year old understand the question and recognize the correct answer?
-- Verify no questions reference: periodic table, boiling points, deserts-as-trick-answers, bone names, technical terms
-- Verify array structure unchanged (`question`, `choices`, `answer` index)
+**Service worker:** Bump `sw.js` cache version after all changes.
