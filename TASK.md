@@ -1,226 +1,152 @@
-# Task: Phase 38 — UI Refresh, Trivia Calibration, Battleship Grid, Template Save, Pin Routing
+# Task: Phase 39 — Battleship Polish, Template Save Fix, Bulletin Parsing, Pin Regex
 
 **Task Type:** bugfix
 **Model Mode:** default
 
 ## Summary
 
-Six user-reported issues from Phase 37 testing: bank view doesn't refresh after transactions, trivia questions swung too easy (need 2nd-grade level), Battleship grid cells overlap and board is too small, "Save template" button fails silently for lakehouse, "pin" command only works on bulletin tab, and chore logging needs better error handling and UI feedback. Six parts (A-F).
+Four issues from Phase 38 testing: Battleship miss dots too faint, save template still broken (writes succeed but reset ignores saved data), bulletin tab text input treated as chore points instead of notes, and pin keyword missing from `log_note` regex. Four parts (A-D).
 
 ---
 
-## Part A: Bank View Auto-Refresh After Transactions
+## Part A: Battleship Miss Dots — Increase Visibility
 
-**Problem:** After saying "I owe alex 2" on the Bank tab, the transaction goes through (toast confirms) but the card view doesn't update. User must switch away and back to see the new balance.
+**Problem:** The miss markers (white dots on the water cells) are too light/faint to see clearly on mobile.
 
-**Root cause:** The `parent_owes_kid` / `kid_owes_parent` handler (line ~5601-5623) calls `adjustBalance()` and `dbRef('payments').push().set()` and shows a toast, but never calls `renderCardView()` to refresh the UI. The same issue exists for `kid_spent` (line ~5589-5598), `record_payment`, `bank_ambiguous` disambiguation callbacks (line ~5576-5583), `record_debt`, and `settle_debt`.
-
-**Fix:** After every successful bank write, re-render the active view:
-
-```javascript
-// After the toast in each bank handler:
-if (appShellState.currentView === 'bank' && typeof window.renderCardView === 'function') {
-  window.renderCardView(kidId).catch(function (e) { console.error(e); });
+**Current CSS** (line ~3318-3322):
+```css
+.bs-cell.miss::after {
+  inset: 32%;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(100, 140, 180, 0.4);
 }
 ```
 
-Apply this pattern to ALL bank intent handlers:
-1. `parent_owes_kid` / `kid_owes_parent` (line ~5601-5623)
-2. `kid_spent` (line ~5589-5598)
-3. `record_payment` (wherever this handler is)
-4. `bank_ambiguous` — both the "earned" and "spent" callbacks (line ~5576, ~5581)
-5. `record_debt` and `settle_debt` handlers
+**Fix:** Make miss dots more prominent:
+```css
+.bs-cell.miss::after {
+  inset: 30%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(60, 90, 130, 0.6);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+```
+
+Key changes: higher opacity background, thicker/darker border, subtle shadow, slightly larger (`inset: 30%` instead of `32%`).
 
 **Validation:**
-- [ ] Say "I owe alex 2" on bank tab → balance updates immediately without switching tabs
-- [ ] Say "louisa spent 3 on candy" → balance updates immediately
-- [ ] Say "alex 5" (ambiguous) → pick "earned" → balance updates immediately
-- [ ] All bank operations refresh the card view after the toast
+- [ ] Miss dots are clearly visible against the water cell background
+- [ ] Miss dots are visually distinct from hit markers (red)
+- [ ] Dots are visible on both light and dark water cell gradients
 
 ---
 
-## Part B: Trivia Difficulty — Calibrate for 2nd Graders
+## Part B: Save Template — Fix Reset to Use Saved Templates
 
-**Problem:** Phase 37 rewrote trivia questions but overcorrected. Current questions are pre-K level ("What sound does a cow make?", "What color is a banana?"). These are too easy for the target audience. User wants **2nd-grade level** (ages 7-8).
+**Problem:** "Save as template" writes to Firebase successfully, but "Reset template" always loads the hardcoded `LIST_TEMPLATES` defaults and **deletes** the saved template from Firebase. So saved templates are immediately destroyed on reset.
 
-**Fix:** Replace all 50 questions in `KID_TRIVIA` array in `kid-fun-data.js` (line ~998-1049) with 2nd-grade-appropriate questions. Target difficulty:
+**Root cause:** `resetTemplateForType()` (line ~9274-9297):
+1. Line ~9279: `await ref.child(type).remove()` — **deletes** the saved custom template from Firebase
+2. Line ~9282: `var templateItems = (LIST_TEMPLATES[type].items || []).slice()` — **always** uses hardcoded defaults, never checks for saved templates
 
-**Guidelines for 2nd-grade trivia:**
-- Questions should require actual knowledge/recall, not just sensory recognition
-- Distractors should be plausible (not absurd)
-- Topics: basic science (seasons, weather, plants, animal habitats), geography (continents, oceans), math concepts (addition, shapes, fractions intro), reading/literature (fairy tales, story elements), history (holidays, famous figures), everyday knowledge
-- Avoid: periodic table, boiling points, technical vocabulary, anything requiring reading above grade level
+The function `templateForType()` (line ~8657) correctly prefers saved templates: `return listState.templatesByType[type] || LIST_TEMPLATES[type] || null;` — but `resetTemplateForType` doesn't use it.
 
-**Example calibration (these are the RIGHT difficulty):**
-- "How many continents are there?" → [5, 6, **7**, 8]
-- "What planet do we live on?" → [Mars, **Earth**, Jupiter, Moon]
-- "What do caterpillars turn into?" → [Spiders, Birds, **Butterflies**, Frogs]
-- "How many sides does a hexagon have?" → [4, 5, **6**, 8]
-- "Which season comes after winter?" → [Summer, Fall, **Spring**, December]
-- "What is the largest ocean?" → [Atlantic, Indian, Arctic, **Pacific**]
+**Fix — redesign the save/reset flow:**
 
-**Validation:**
-- [ ] All 50 questions are appropriate for ages 7-8
-- [ ] No questions a 5-year-old could answer instantly (too easy)
-- [ ] No questions requiring knowledge beyond 2nd-grade curriculum (too hard)
-- [ ] All `answer` indices are valid (0-3) for their options arrays
-- [ ] Plausible distractors on every question (no joke answers)
+The intent of the two buttons should be:
+- **"Save as template"** — saves current list items as a custom template in Firebase at `listTemplates/{type}`
+- **"Reset template"** — reloads the list from the template (custom if saved, built-in if not). Does NOT delete the saved template.
 
----
-
-## Part C: Battleship Grid Layout — Fix Overlap and Increase Size
-
-**Problem:** The Battleship grid cells are all overlapping/on top of each other. The grid is also too small for comfortable play on mobile.
-
-**Root cause:** The HTML structure nests a `.bs-grid` (8-column grid) inside a `.bs-grid-row` (9-column grid: label + 8 cells), but `.bs-grid` only has 8 columns and takes up a single column of its parent, causing all cells to collapse into one column.
-
-**Fix — two changes:**
-
-### 1. Fix grid structure — flatten the cell layout
-
-Remove the nested `.bs-grid` wrapper. Instead, place cells directly inside `.bs-grid-row` so each cell occupies one of the 9 columns (label + 8 cells):
-
-In `renderBattleshipGrid()` (line ~7394) and `renderBattleshipSetupGrid()` (line ~7416):
-- Remove the `<div class="bs-grid">` wrapper
-- Place cell buttons/divs directly inside `<div class="bs-grid-row">`
-- Each row should have: `<span class="bs-row-label">A</span>` + 8 cell elements
-
-### 2. Increase grid to 10x10
-
-Change the grid from 8x8 to 10x10:
-- Update all `Array(8)` references in Battleship rendering to `Array(10)`
-- Column labels: 1-10
-- Row labels: A-J
-- Update `grid-template-columns` from `22px repeat(8, ...)` to `22px repeat(10, ...)`
-- Update ship placement validation bounds
-- Update `BATTLESHIP_SHIPS` — add back a 5th ship now that there's room:
-  ```javascript
-  var BATTLESHIP_SHIPS = [
-    { name: 'Carrier', size: 5 },
-    { name: 'Battleship', size: 4 },
-    { name: 'Cruiser', size: 3 },
-    { name: 'Destroyer', size: 3 },
-    { name: 'Sub', size: 2 }
-  ];
-  ```
-- Update the randomize/shuffle placement logic to use the 10x10 bounds
-- Update hit detection and win condition to account for new grid size and ship count
-
-### 3. CSS sizing
-
-Update `.bs-cell` (line ~3285):
-- Remove fixed `min-height: 34px`
-- Let cells size naturally via `aspect-ratio: 1/1` and the grid's `1fr` columns
-- The 10x10 grid should fill the available card width
-
-**Validation:**
-- [ ] Grid renders as a clean 10x10 matrix with no overlapping cells
-- [ ] Row labels A-J on left, column labels 1-10 on top
-- [ ] 5 ships to place (Carrier 5, Battleship 4, Cruiser 3, Destroyer 3, Sub 2)
-- [ ] Randomize places all ships without overlap or out-of-bounds
-- [ ] Manual placement works within 10x10 bounds
-- [ ] Grid cells are tappable on mobile (fill available width)
-- [ ] Ship preview highlights correct cells during placement
-- [ ] Game plays to completion — all ships must be sunk to win
-
----
-
-## Part D: Save Template Button — Fix Silent Failure
-
-**Problem:** "Save as template" button doesn't work for lakehouse list. Reset and delete DO work from the same header settings panel.
-
-**Root cause:** The `saveTemplateForList()` function (line ~9198-9207) at line 9201 has an early return: `if (!ref || !list || !LIST_TEMPLATES[list.type]) return;`. The function returns `undefined` (not a rejected promise), so the `.then()` in the click handler (line ~9379) still fires and shows the toast — but the actual Firebase write at line 9205 never runs.
-
-Likely issue: the `list` object passed from `listState.listsById[listState.currentListId]` may not have its `type` property set correctly, OR the `items` property may not be populated in the state object (items might be stored separately or as a Firebase object rather than an array).
-
-**Fix:**
-1. Add logging to `saveTemplateForList` to identify exactly which guard condition is failing
-2. Ensure the `list` object passed includes both `type` and `items`
-3. If `list.items` is a Firebase object (keys are push IDs), convert to array before `.filter()`
-4. The `.then()` handler should only show the success toast if `saveTemplateForList` returns a truthy value (the item count):
+Changes to `resetTemplateForType()`:
+1. **Remove** the `await ref.child(type).remove()` line — don't delete saved templates on reset
+2. **Use `templateForType(type)`** instead of `LIST_TEMPLATES[type]` to prefer saved templates:
    ```javascript
-   saveTemplateForList(currentListForSave).then(function (count) {
-     if (count != null) {
-       var activePhase = runtime();
-       if (activePhase && currentListForSave) {
-         activePhase.showToast('Saved ' + count + ' items as template for ' + listTypeMeta(currentListForSave.type).label + '.');
-       }
-     } else {
-       runtime().showToast('Could not save template.', { type: 'error' });
-     }
-   }).catch(function (error) { console.error(error); });
+   var template = templateForType(type);
+   if (!template) return 0;
+   var templateItems = (template.items || []).slice();
    ```
+3. If the user wants to truly reset to built-in defaults (discarding their custom template), that's a separate action — but for now, "Reset" means "reload from template" (custom or built-in).
+
+**Optional — add a "Reset to default" option:**
+If you want to give users a way to discard their custom template and revert to built-in:
+- Add a third button "Reset to default" that does `ref.child(type).remove()` + loads from `LIST_TEMPLATES[type]`
+- Or add a confirmation: "Reset to your saved template, or reset to factory defaults?"
+- This is optional — the minimum fix is making "Reset template" use saved templates.
 
 **Validation:**
-- [ ] Open lakehouse list → gear icon → "Save as template" → toast confirms with item count
-- [ ] Open grocery list → gear icon → "Save as template" → toast confirms with item count
-- [ ] If save fails, error toast shown instead of false success
-- [ ] After saving, "Reset template" restores the saved version (not the built-in default)
+- [ ] Save template for lakehouse → toast shows item count
+- [ ] Add a new item to the list, then "Reset template" → list reloads from saved template (includes the items that were there when you saved, NOT the built-in defaults)
+- [ ] On a list type with NO saved template, "Reset template" → loads built-in defaults (fallback works)
+- [ ] Saved templates persist across app reloads
+- [ ] Save template for grocery → works the same way
 
 ---
 
-## Part E: Pin Command — Route from Any Tab
+## Part C: Bulletin Tab — Fix Text Input Defaulting to Chore Logging
 
-**Problem:** Saying "pin [text]" only works when already on the bulletin tab. From other tabs, the `parseNoteIntent` function is never called (it's guarded by `if (activeTab === 'bulletin')`), so the input falls through to `missing_kid` or other handlers, resulting in "which kid?" prompts.
+**Problem:** Typing plain text on the Home/Bulletin tab (e.g., "pick up milk", "remember dentist") tries to log it as a chore instead of creating a pinned note. It asks "which kid?" because the chore parser runs and finds no kid name.
 
-**Fix:** Register `pin` as a cross-tab routed intent, similar to how other global intents work:
+**Root cause:** In `parseIntent()`, the block at line ~5152 runs for both `activeTab === 'chores'` AND `activeTab === 'bulletin'`:
+```javascript
+if (activeTab === 'chores' || activeTab === 'bulletin') {
+  // ... clause processing, chore inference ...
+  if (!clauseKids.length) return { intent: 'missing_kid' };  // ← returns early!
+}
+```
 
-Option 1 — Add `pin` to `routeIntent` registered intents:
-- Register a `log_note` intent in `routeIntent` that matches `^pin\b` patterns
-- Set `routeView: 'bulletin'` so it routes to the bulletin tab and executes there
-- Priority should be high enough to catch it before other parsers
+This `missing_kid` return at line ~5187 prevents execution from reaching the contextual default at line ~5201:
+```javascript
+if (activeTab === 'bulletin' && normalized.length > 0 && normalized.length < 250) {
+  return { intent: 'log_note', noteText: text.trim(), color: 'neutral' };
+}
+```
 
-Option 2 — Move `parseNoteIntent` call before the tab guard:
-- In `parseIntent()`, call `parseNoteIntent` early (before the tab-specific blocks) when the text starts with "pin"
-- This is simpler but only handles the "pin" keyword
+**Fix:** The clause-processing/chore-inference block should NOT run on the bulletin tab. Change the guard:
 
-Either way, saying "pin pick up dry cleaning" from any tab should create a bulletin note.
+```javascript
+if (activeTab === 'chores') {
+  // ... clause processing, chore inference, missing_kid ...
+}
+```
+
+Remove `|| activeTab === 'bulletin'` from that condition. The bulletin tab's contextual default at line ~5201 will then correctly catch all unmatched text and create a note.
+
+**Important:** Chore logging from the bulletin tab should still work if the user explicitly says a chore phrase with a kid name (e.g., "alex made bed"). This is handled by `routeIntent` which has chore intents registered globally. The fix only removes the **fallback chore inference** from the bulletin tab — explicit chore commands still route correctly.
 
 **Validation:**
-- [ ] On chores tab: "pin pick up milk" → creates bulletin note, toast confirms
-- [ ] On bank tab: "pin remember picture day" → creates bulletin note
-- [ ] On lists tab: "pin call dentist" → creates bulletin note
-- [ ] On bulletin tab: "pin something" → still works as before
-- [ ] "pin" with no text → does NOT create an empty note (graceful handling)
+- [ ] On Home/Bulletin tab: type "pick up milk" → creates a pinned note (not "which kid?")
+- [ ] On Home/Bulletin tab: type "remember dentist appointment" → creates a note
+- [ ] On Home/Bulletin tab: type "alex made bed" → still logs the chore correctly (via routeIntent)
+- [ ] On Chores tab: type "louisa brush teeth" → still logs chore as before
+- [ ] On Chores tab: type "made bed" (no kid name) → still asks "which kid?" as expected
 
 ---
 
-## Part F: Chore Logging — Error Handling and Refresh Verification
+## Part D: Pin Keyword in log_note Regex
 
-**Problem:** User reported "louisa made bed" showed "got it" but didn't appear to add the chore. The code path shows the toast only appears after a successful `saveLogEntries()` call, so the write likely succeeded. But there may be a UI refresh gap or a silent error swallowed by the async chain.
+**Problem:** Flagged in Phase 38 review — the `log_note` intent regex (line ~4944) doesn't include "pin" as a keyword, even though pin routing was added to the dispatcher. The regex and dispatcher are inconsistent.
 
-**Fix — defensive improvements:**
-1. Wrap `executeLogAction` in try-catch so Firebase write failures show an error toast instead of silently failing:
-   ```javascript
-   try {
-     const saved = await saveLogEntries(entries);
-     // ... show success toast ...
-   } catch (error) {
-     console.error('Failed to save chore:', error);
-     showToast('Failed to save — try again.', { type: 'error' });
-   }
-   ```
+**Current regex** (approximate):
+```javascript
+/^(?:note|add note|post note|bulletin note|remember)\s*:?\s+(.+)$/i
+```
 
-2. After successful chore logging, explicitly refresh the chore view if active:
-   ```javascript
-   if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
-     window.renderChoreProgress().catch(function (e) { console.error(e); });
-   }
-   ```
-   Note: `hub:log-changed` already triggers `renderChoreProgress` via the event listener at line ~10041, but an explicit call ensures the refresh happens synchronously after the save rather than relying on the event dispatch timing.
+**Fix:** Add `pin` to the alternation:
+```javascript
+/^(?:pin|note|add note|post note|bulletin note|remember)\s*:?\s+(.+)$/i
+```
 
-3. Similarly, wrap the bank handlers from Part A in try-catch for consistency.
+This ensures `parseNoteIntent()` directly matches "pin pick up milk" without relying on the dispatcher workaround.
 
 **Validation:**
-- [ ] "louisa made bed" → "Got it!" toast AND chore appears in the chore progress view immediately
-- [ ] If Firebase is unreachable, error toast shown instead of false "Got it!"
-- [ ] "alex brush teeth" → chore progress updates without needing to switch tabs
-- [ ] Bank transactions also show error toast on Firebase failure
+- [ ] "pin pick up dry cleaning" → creates note (via parseNoteIntent, not dispatcher fallback)
+- [ ] "note remember picture day" → still works
+- [ ] "pin" with no text → does not create empty note
 
 ---
 
 ## Test Focus
 
-Parts A and C are highest risk — A touches all bank handlers, C is a structural grid rewrite. Part B is content-only (data file). Part D is a targeted fix. Part E requires parser routing changes. Part F is defensive hardening.
+Part B is highest risk — it changes the template save/reset contract. Part C is a parser guard change that could affect chore logging if done incorrectly. Part A is CSS-only. Part D is a one-line regex fix.
 
 **Service worker:** Bump `sw.js` cache version after all changes.

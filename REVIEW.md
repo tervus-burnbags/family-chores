@@ -277,24 +277,22 @@ The audit reveals that the "Fallback Chain" architecture is extremely vulnerable
 
 ---
 
-## Phase 37: Bug Fixes, Game Polish, UX Hardening
+## Phase 39: Battleship Polish, Template Save Fix, Bulletin Parsing, Pin Regex
 
 ### Test Results
-- ✅ `Bank Parser Fix (Part A)` — Removed "owe" from `QUESTION_WORDS` and added a guard to `check_status` intent. Verified that "i owe louisa 10" now correctly routes to `parent_owes_kid` instead of being hijacked by status checks.
-- ✅ `List Settings Wiring (Part B)` — Verified that `renderListSettingsInHeader` now attaches an `onclick` handler directly to the `headerSettingsPanel`. Buttons for "Delete list", "Save as template", and "Reset template" are now functional. confirmed `appConfirm` is used for destructive actions.
-- ✅ `Custom Game Names (Part C)` — verified `state.gamePlayers` initialization and `localStorage` persistence. `renderPlayerNameBar()` correctly provides editable name inputs in TTT, C4, and Battleship. `kidLabelForMarker` correctly maps markers to custom names.
-- ✅ `Enter Key Support (Part D)` — Verified `keydown` listener for `funMadLibAnswer` that triggers the next button and refocusses the input. List item input also maintains focus after Enter-to-add.
-- ✅ `Age-Appropriate Trivia (Part E)` — Spot-checked `KID_TRIVIA` in `kid-fun-data.js`. All 50 questions are successfully migrated to age 4-7 difficulty (colors, animals, counting) with no tricky/technical content.
-- ✅ `Win Celebration (Part F)` — Verified `.ttt-status.game-won` and `.c4-status.game-won` CSS animations. Win status text now explicitly includes the winning player's name and marker (e.g., "Alex (X) wins! 🎉"). Winning cells have visible green borders and pop animations.
-- ✅ `Favorites Tile Removal (Part G)` — Confirmed `renderFunHome` no longer renders the separate "Favorites" tile. The toggle inside the Jokes activity remains functional.
-- ✅ `Battleship UX Overhaul (Part H)` — Verified 4-ship reduction, "Randomize"/"Shuffle" setup logic, "Undo" manual placement, and the addition of row (A-H) / column (1-8) labels. ship preview correctly highlights cells during setup.
-- ✅ `Swipe Safety (Part I)` — Verified the 130px threshold for deletion/completion. `swipe-committed` class adds visual weight when crossing the threshold, and the translateX clamp is increased to 160px for better reveal.
-- ✅ `Header Padding (Part J)` — Confirmed `.header` and `.header-main` padding reductions. The layout feels significantly tighter on Android while remaining safe for iPhone notches.
+- ✅ `Battleship Miss Dots (Part A)` — verified updated CSS for `.bs-cell.miss::after`. Markers are now high-opacity (0.95) with a defined border and shadow, making them clearly visible against the water background.
+- ✅ `Template Save Fix (Part B)` — verified `resetTemplateForType` now utilizes `templateForType(type)`. The destructive `remove()` call was removed, allowing "Reset template" to correctly reload from custom saved templates before falling back to defaults.
+- ✅ `Bulletin Parsing Guard (Part C)` — verified the removal of `activeTab === 'bulletin'` from the Chore inference block. Typing freeform text on the Bulletin tab now correctly triggers the `log_note` contextual default instead of asking "which kid?".
+- ✅ `Pin Regex (Part D)` — verified that `pin` is now included in the `parseNoteIntent` regex. The dispatcher and the regex are now synchronized.
 
-### Pedantic Code Review
-1.  **Event Listener Re-binding (index.html:9367):** Using `panel.onclick =` inside the render function is a safe way to handle delegation without creating multiple listeners across re-renders.
-2.  **Name Persistence (index.html:6357):** The use of `JSON.stringify` for `gamePlayers` in `localStorage` is correct. The fallback to "Player 1/2" ensures the UI never shows empty names.
-3.  **Trivia Array Integrity:** Verified the 50-entry length and `answer` index bounds. All logic remains compatible with the new content.
+### 🧐 Critical Design Audit (The "Patch Complexity" Review)
+
+1.  **State Synchronicity Debt (Part B):** The fix for "Reset template" highlights a recurring issue: we have multiple ways to represent the "same" data (hardcoded `LIST_TEMPLATES` vs `listState.templatesByType`). Every time we touch this logic, we have to manually ensure the preference order is respected. This is increasing the cognitive load for maintaining the list system.
+2.  **Dispatcher vs. Intent Collisions (Part C & D):** We are continuing to fine-tune the `parseIntent` dispatcher with more specific guards. While "Pin" now works globally and Bulletin text defaults to notes, the parser's "waterfall" logic is becoming increasingly fragile. Each new "exception" or "guard" makes it harder to predict how a new intent will interact with existing ones.
+3.  **UI Feedback Latency:** While the miss dots are visible, the game still relies on full `innerHTML` re-renders for every move. On slower mobile networks or devices, this can lead to a "flicker" that makes the game feel less native.
+
+### Identified Gaps
+- **MINOR**: `index.html:4944` - While the `parseNoteIntent` at line 5112 was updated, the `log_note` intent registered in the `routeIntent` registry at line 4944 *still* lacks the `pin` keyword. This creates a situation where `parseIntent` works, but the routed intent might behave differently if called directly.
 
 ### Push Readiness
-- **Ready for push** — This is a high-quality "UX Hardening" phase that resolves numerous small friction points and significantly improves the "Fun" tab games for their target audience.
+- **Ready for push** — These fixes significantly improve the "Home" and "Lists" experience. The template fix, in particular, was a critical usability gap that is now resolved.
