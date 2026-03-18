@@ -3261,7 +3261,7 @@
     .bs-col-labels,
     .bs-grid-row {
       display: grid;
-      grid-template-columns: 22px repeat(8, minmax(0, 1fr));
+      grid-template-columns: 22px repeat(10, minmax(0, 1fr));
       gap: 6px;
       align-items: center;
     }
@@ -3274,15 +3274,8 @@
       text-align: center;
     }
 
-    .bs-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 6px;
-    }
-
     .bs-cell {
       aspect-ratio: 1 / 1;
-      min-height: 34px;
       border: 1px solid rgba(100, 140, 180, 0.3);
       border-radius: var(--radius-sm);
       background: linear-gradient(180deg, #c7daf0, #a8c4e0);
@@ -3290,6 +3283,7 @@
       cursor: pointer;
       position: relative;
       -webkit-tap-highlight-color: transparent;
+      width: 100%;
     }
 
     .bs-cell.ship {
@@ -5138,6 +5132,10 @@
         if (YES_WORDS.includes(normalized)) return { intent: 'confirm_yes' };
         if (NO_WORDS.includes(normalized)) return { intent: 'confirm_no' };
         if (/\bundo\b|take that back/.test(normalized)) return { intent: 'undo' };
+        if (/^pin\b|^pin:/.test(String(text || '').trim())) {
+          var pinIntent = parseNoteIntent(normalized, text);
+          if (pinIntent) return pinIntent;
+        }
         if (activeTab === 'lists') {
           var currentListIntent = parseListIntent(normalized, text);
           if (currentListIntent) return currentListIntent;
@@ -5455,27 +5453,53 @@
       }
 
       async function executeLogAction(action, options) {
-        const entries = [];
-        const date = action.dateContext || new Date();
-        const dateStr = toDateString(date);
-        const week = toIsoWeek(date);
-        for (const kidId of action.kids) {
-          if (!options || !options.skipDuplicateCheck) {
-            const duplicate = await findDuplicate(kidId, action.choreId, dateStr);
-            if (duplicate) {
-              pendingAction = { type: 'duplicate', action };
-              const prompt = currentConfig.kids[kidId].name + ' already logged ' + action.choreLabel + ' today. Log again?';
-              addMessage('system', prompt);
-              showToast(prompt, { duration: 10000 });
-              return;
+        try {
+          const entries = [];
+          const date = action.dateContext || new Date();
+          const dateStr = toDateString(date);
+          const week = toIsoWeek(date);
+          for (const kidId of action.kids) {
+            if (!options || !options.skipDuplicateCheck) {
+              const duplicate = await findDuplicate(kidId, action.choreId, dateStr);
+              if (duplicate) {
+                pendingAction = { type: 'duplicate', action };
+                const prompt = currentConfig.kids[kidId].name + ' already logged ' + action.choreLabel + ' today. Log again?';
+                addMessage('system', prompt);
+                showToast(prompt, { duration: 10000 });
+                return;
+              }
             }
+            entries.push({ kid: kidId, choreId: action.choreId, choreLabel: action.choreLabel, points: action.points, timestamp: Date.now(), date: dateStr, week, note: action.note || '' });
           }
-          entries.push({ kid: kidId, choreId: action.choreId, choreLabel: action.choreLabel, points: action.points, timestamp: Date.now(), date: dateStr, week, note: action.note || '' });
+          const saved = await saveLogEntries(entries);
+          if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
+            window.renderChoreProgress().catch(function (error) { console.error(error); });
+          }
+          const message = 'Got it! ' + saved.map((entry) => currentConfig.kids[entry.kid].name + ' - ' + entry.choreLabel + ' ' + entry.points + 'pt').join(' | ') + '. Use Undo if needed.';
+          addMessage('system', message);
+          showToast(message, { onUndo: () => undoLastAction() });
+        } catch (error) {
+          console.error('Failed to save chore:', error);
+          showToast('Failed to save - try again.', { type: 'error' });
         }
-        const saved = await saveLogEntries(entries);
-        const message = 'Got it! ' + saved.map((entry) => currentConfig.kids[entry.kid].name + ' - ' + entry.choreLabel + ' ' + entry.points + 'pt').join(' | ') + '. Use Undo if needed.';
-        addMessage('system', message);
-        showToast(message, { onUndo: () => undoLastAction() });
+      }
+
+      function refreshActiveBankView(preferredKidId) {
+        if (appShellState.currentView !== 'bank' || typeof window.renderCardView !== 'function') return;
+        var picker = document.getElementById('bankKidPicker');
+        var activeKid = picker ? picker.querySelector('.active') : null;
+        var visibleKid = activeKid ? activeKid.dataset.bankKid : preferredKidId || 'alex';
+        window.renderCardView(visibleKid).catch(function (error) { console.error(error); });
+      }
+
+      async function runBankAction(action, preferredKidId) {
+        try {
+          await action();
+          refreshActiveBankView(preferredKidId);
+        } catch (error) {
+          console.error(error);
+          showToast('Bank update failed - try again.', { type: 'error' });
+        }
       }
 
       var VIEW_INTENTS = {
@@ -5555,8 +5579,10 @@
             return;
           }
           const kidId = result.kids[0];
-          const balance = await writePayment(kidId, result.amount, 'manual', 'Recorded from chat');
-          showToast('Paid ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + '. Balance: ' + dollars(balance), { kid: kidId, onUndo: () => undoLastAction() });
+          await runBankAction(async function () {
+            const balance = await writePayment(kidId, result.amount, 'manual', 'Recorded from chat');
+            showToast('Paid ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) + '. Balance: ' + dollars(balance), { kid: kidId, onUndo: () => undoLastAction() });
+          }, kidId);
           return;
         }
 
@@ -5573,13 +5599,17 @@
           }
           var normalizedChoice = normalizeText(choice);
           if (normalizedChoice.indexOf('spen') >= 0) {
-            var spentBalance = await writePayment(ambiguousKidId, ambiguousAmount, 'spend', 'Spent ' + dollars(ambiguousAmount));
-            showToast('Recorded ' + dollars(ambiguousAmount) + ' spent by ' + ambiguousKidName + '. Balance: ' + dollars(spentBalance), { kid: ambiguousKidId, onUndo: () => undoLastAction() });
+            await runBankAction(async function () {
+              var spentBalance = await writePayment(ambiguousKidId, ambiguousAmount, 'spend', 'Spent ' + dollars(ambiguousAmount));
+              showToast('Recorded ' + dollars(ambiguousAmount) + ' spent by ' + ambiguousKidName + '. Balance: ' + dollars(spentBalance), { kid: ambiguousKidId, onUndo: () => undoLastAction() });
+            }, ambiguousKidId);
             return;
           }
           if (normalizedChoice.indexOf('earn') >= 0 || normalizedChoice.indexOf('got') >= 0 || normalizedChoice.indexOf('receiv') >= 0) {
-            var earnedBalance = await writePayment(ambiguousKidId, ambiguousAmount, 'manual', 'Earned ' + dollars(ambiguousAmount));
-            showToast('Recorded ' + dollars(ambiguousAmount) + ' earned for ' + ambiguousKidName + '. Balance: ' + dollars(earnedBalance), { kid: ambiguousKidId, onUndo: () => undoLastAction() });
+            await runBankAction(async function () {
+              var earnedBalance = await writePayment(ambiguousKidId, ambiguousAmount, 'manual', 'Earned ' + dollars(ambiguousAmount));
+              showToast('Recorded ' + dollars(ambiguousAmount) + ' earned for ' + ambiguousKidName + '. Balance: ' + dollars(earnedBalance), { kid: ambiguousKidId, onUndo: () => undoLastAction() });
+            }, ambiguousKidId);
             return;
           }
           showToast('Type "earned" or "spent".', { type: 'error' });
@@ -5593,8 +5623,10 @@
           }
           const kidId = result.kids[0];
           const spendNote = (result.note || '').replace(/\b(spent|bought|purchased)\b/gi, '').replace(/\$?\d+(\.\d+)?/g, '').trim() || 'Purchase';
-          const balance = await writePayment(kidId, result.amount, 'spend', spendNote);
-          showToast(currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + ' on ' + spendNote, { kid: kidId, onUndo: () => undoLastAction() });
+          await runBankAction(async function () {
+            await writePayment(kidId, result.amount, 'spend', spendNote);
+            showToast(currentConfig.kids[kidId].name + ' spent ' + dollars(result.amount) + ' on ' + spendNote, { kid: kidId, onUndo: () => undoLastAction() });
+          }, kidId);
           return;
         }
 
@@ -5605,20 +5637,22 @@
           }
           const kidId = result.kids[0];
           const isParentOwes = result.intent === 'parent_owes_kid';
-          const balance = await adjustBalance(kidId, isParentOwes ? result.amount : -result.amount);
-          const entry = {
-            kid: kidId,
-            amount: Number(result.amount.toFixed(2)),
-            type: isParentOwes ? 'credit' : 'owed',
-            timestamp: Date.now(),
-            date: toDateString(new Date()),
-            note: isParentOwes ? 'Parent owes' : 'Owes parent',
-            balanceDelta: isParentOwes ? result.amount : -result.amount
-          };
-          const ref = dbRef('payments').push();
-          await ref.set(entry);
-          lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
-          showToast(isParentOwes ? 'You now owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) : currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount), { kid: kidId, onUndo: () => undoLastAction() });
+          await runBankAction(async function () {
+            await adjustBalance(kidId, isParentOwes ? result.amount : -result.amount);
+            const entry = {
+              kid: kidId,
+              amount: Number(result.amount.toFixed(2)),
+              type: isParentOwes ? 'credit' : 'owed',
+              timestamp: Date.now(),
+              date: toDateString(new Date()),
+              note: isParentOwes ? 'Parent owes' : 'Owes parent',
+              balanceDelta: isParentOwes ? result.amount : -result.amount
+            };
+            const ref = dbRef('payments').push();
+            await ref.set(entry);
+            lastUndoAction = { type: 'payment', paymentId: ref.key, kidId, amount: entry.amount, balanceDelta: entry.balanceDelta };
+            showToast(isParentOwes ? 'You now owe ' + currentConfig.kids[kidId].name + ' ' + dollars(result.amount) : currentConfig.kids[kidId].name + ' now owes you ' + dollars(result.amount), { kid: kidId, onUndo: () => undoLastAction() });
+          }, kidId);
           return;
         }
 
@@ -5629,18 +5663,22 @@
           }
           const fromKid = result.verb === 'lent' ? result.kids[1] : result.kids[0];
           const toKid = result.verb === 'lent' ? result.kids[0] : result.kids[1];
-          await writeDebt(fromKid, toKid, result.amount);
-          showToast(currentConfig.kids[fromKid].name + ' owes ' + currentConfig.kids[toKid].name + ' ' + dollars(result.amount), { onUndo: () => undoLastAction() });
+          await runBankAction(async function () {
+            await writeDebt(fromKid, toKid, result.amount);
+            showToast(currentConfig.kids[fromKid].name + ' owes ' + currentConfig.kids[toKid].name + ' ' + dollars(result.amount), { onUndo: () => undoLastAction() });
+          }, fromKid);
           return;
         }
 
         if (result.intent === 'settle_debt') {
-          const debt = await settleDebt(result.kids);
-          if (!debt) {
-            showToast('No active debt found between them.', { type: 'error' });
-            return;
-          }
-          showToast('Settled debt: ' + dollars(debt.amount), { onUndo: () => undoLastAction() });
+          await runBankAction(async function () {
+            const debt = await settleDebt(result.kids);
+            if (!debt) {
+              showToast('No active debt found between them.', { type: 'error' });
+              return;
+            }
+            showToast('Settled debt: ' + dollars(debt.amount), { onUndo: () => undoLastAction() });
+          }, result.kids[0]);
           return;
         }
 
@@ -5656,18 +5694,26 @@
 
         if (result.intent === 'freepoints') {
           const now = new Date();
-          await saveLogEntries(result.kids.map((kidId) => ({
-            kid: kidId,
-            choreId: 'freepoints',
-            choreLabel: 'Quick points',
-            points: result.points,
-            timestamp: Date.now(),
-            date: toDateString(now),
-            week: toIsoWeek(now),
-            note: ''
-          })));
-          const names = result.kids.map(id => currentConfig.kids[id].name).join(' & ');
-          showToast((result.points > 0 ? '+' : '') + result.points + 'pts for ' + names, { kid: result.kids.length === 1 ? result.kids[0] : null, onUndo: () => undoLastAction() });
+          try {
+            await saveLogEntries(result.kids.map((kidId) => ({
+              kid: kidId,
+              choreId: 'freepoints',
+              choreLabel: 'Quick points',
+              points: result.points,
+              timestamp: Date.now(),
+              date: toDateString(now),
+              week: toIsoWeek(now),
+              note: ''
+            })));
+            if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
+              window.renderChoreProgress().catch(function (error) { console.error(error); });
+            }
+            const names = result.kids.map(id => currentConfig.kids[id].name).join(' & ');
+            showToast((result.points > 0 ? '+' : '') + result.points + 'pts for ' + names, { kid: result.kids.length === 1 ? result.kids[0] : null, onUndo: () => undoLastAction() });
+          } catch (error) {
+            console.error(error);
+            showToast('Failed to save - try again.', { type: 'error' });
+          }
           return;
         }
 
@@ -5677,17 +5723,25 @@
             return;
           }
           const now = new Date();
-          await saveLogEntries(result.kids.map((kidId) => ({
-            kid: kidId,
-            choreId: 'adhoc',
-            choreLabel: result.choreLabel,
-            points: result.points,
-            timestamp: Date.now(),
-            date: toDateString(now),
-            week: toIsoWeek(now),
-            note: result.choreLabel
-          })));
-          showToast('Logged: ' + result.choreLabel + ' (' + result.points + 'pts)', { onUndo: () => undoLastAction() });
+          try {
+            await saveLogEntries(result.kids.map((kidId) => ({
+              kid: kidId,
+              choreId: 'adhoc',
+              choreLabel: result.choreLabel,
+              points: result.points,
+              timestamp: Date.now(),
+              date: toDateString(now),
+              week: toIsoWeek(now),
+              note: result.choreLabel
+            })));
+            if (appShellState.currentView === 'chores' && typeof window.renderChoreProgress === 'function') {
+              window.renderChoreProgress().catch(function (error) { console.error(error); });
+            }
+            showToast('Logged: ' + result.choreLabel + ' (' + result.points + 'pts)', { onUndo: () => undoLastAction() });
+          } catch (error) {
+            console.error(error);
+            showToast('Failed to save - try again.', { type: 'error' });
+          }
           return;
         }
 
@@ -6368,10 +6422,12 @@
         '</div>';
       }
 
+      var BATTLESHIP_SIZE = 10;
       var BATTLESHIP_SHIPS = [
-        { name: 'Carrier', size: 4 },
+        { name: 'Carrier', size: 5 },
+        { name: 'Battleship', size: 4 },
         { name: 'Cruiser', size: 3 },
-        { name: 'Destroyer', size: 2 },
+        { name: 'Destroyer', size: 3 },
         { name: 'Sub', size: 2 }
       ];
 
@@ -6858,7 +6914,7 @@
       function cellsAreValidForPlayer(player, cells) {
         for (var i = 0; i < cells.length; i += 1) {
           var cell = cells[i];
-          if (cell[0] < 0 || cell[0] >= 8 || cell[1] < 0 || cell[1] >= 8) return false;
+          if (cell[0] < 0 || cell[0] >= BATTLESHIP_SIZE || cell[1] < 0 || cell[1] >= BATTLESHIP_SIZE) return false;
           var overlap = state.bsBoards[player].ships.some(function (entry) {
             return entry.cells.some(function (pos) { return pos[0] === cell[0] && pos[1] === cell[1]; });
           });
@@ -6911,8 +6967,8 @@
           while (!placed && attempts < 200) {
             state.bsShipIndex = i;
             state.bsOrientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
-            var row = Math.floor(Math.random() * 8);
-            var col = Math.floor(Math.random() * 8);
+            var row = Math.floor(Math.random() * BATTLESHIP_SIZE);
+            var col = Math.floor(Math.random() * BATTLESHIP_SIZE);
             if (canPlaceBSShip(player, row, col)) {
               state.bsBoards[player].ships.push({
                 name: ship.name,
@@ -7384,7 +7440,7 @@
 
       function renderBattleshipGridFrame(rowsMarkup) {
         return '<div class="bs-grid-frame">' +
-          '<div class="bs-col-labels"><span></span>' + Array(8).fill(0).map(function (_, index) {
+          '<div class="bs-col-labels"><span></span>' + Array(BATTLESHIP_SIZE).fill(0).map(function (_, index) {
             return '<span>' + (index + 1) + '</span>';
           }).join('') + '</div>' +
           rowsMarkup +
@@ -7394,8 +7450,8 @@
       function renderBattleshipGrid(player, revealShips, attackMode) {
         var opponent = otherBSPlayer(player);
         var attacks = attackMode ? state.bsBoards[player].attacks : state.bsBoards[opponent].attacks;
-        return renderBattleshipGridFrame(Array(8).fill(0).map(function (_, row) {
-          return '<div class="bs-grid-row"><span class="bs-row-label">' + String.fromCharCode(65 + row) + '</span><div class="bs-grid">' + Array(8).fill(0).map(function (__ , col) {
+        return renderBattleshipGridFrame(Array(BATTLESHIP_SIZE).fill(0).map(function (_, row) {
+          return '<div class="bs-grid-row"><span class="bs-row-label">' + String.fromCharCode(65 + row) + '</span>' + Array(BATTLESHIP_SIZE).fill(0).map(function (__ , col) {
             var cls = 'bs-cell';
             var attack = attacks.find(function (entry) { return entry.r === row && entry.c === col; });
             if (revealShips && state.bsBoards[player].ships.some(function (ship) { return ship.cells.some(function (cell) { return cell[0] === row && cell[1] === col; }); })) {
@@ -7409,13 +7465,13 @@
               return '<button type="button" class="' + cls + '" data-bs-fire="' + row + ',' + col + '"' + (attack || state.bsPhase !== 'play' ? ' disabled' : '') + '></button>';
             }
             return '<div class="' + cls + '"></div>';
-          }).join('') + '</div></div>';
+          }).join('') + '</div>';
         }).join(''));
       }
 
       function renderBattleshipSetupGrid(player) {
-        return renderBattleshipGridFrame(Array(8).fill(0).map(function (_, row) {
-          return '<div class="bs-grid-row"><span class="bs-row-label">' + String.fromCharCode(65 + row) + '</span><div class="bs-grid">' + Array(8).fill(0).map(function (__, col) {
+        return renderBattleshipGridFrame(Array(BATTLESHIP_SIZE).fill(0).map(function (_, row) {
+          return '<div class="bs-grid-row"><span class="bs-row-label">' + String.fromCharCode(65 + row) + '</span>' + Array(BATTLESHIP_SIZE).fill(0).map(function (__, col) {
             var cls = 'bs-cell';
             if (state.bsBoards[player].ships.some(function (ship) { return ship.cells.some(function (cell) { return cell[0] === row && cell[1] === col; }); })) {
               cls += ' ship';
@@ -7424,7 +7480,7 @@
               cls += state.bsPreviewValid ? ' preview' : ' preview-invalid';
             }
             return '<button type="button" class="' + cls + '" data-bs-place="' + row + ',' + col + '"></button>';
-          }).join('') + '</div></div>';
+          }).join('') + '</div>';
         }).join(''));
       }
 
@@ -9198,11 +9254,20 @@
       async function saveTemplateForList(list) {
         var phase = runtime();
         var ref = listTemplatesRef(phase);
-        if (!ref || !list || !LIST_TEMPLATES[list.type]) return;
-        var items = (list.items || []).filter(function (item) { return !item.done; }).map(function (item) {
+        var currentList = list || (listState.currentListId ? listState.listsById[listState.currentListId] : null);
+        var supportedTypes = ['grocery', 'costco', 'lakehouse', 'packing'];
+        var listType = currentList && currentList.type ? currentList.type : currentList && currentList.name ? inferListType(currentList.name) : '';
+        if (!ref || !currentList || supportedTypes.indexOf(listType) === -1) {
+          console.warn('saveTemplateForList skipped', { hasRef: Boolean(ref), hasList: Boolean(currentList), listType: listType });
+          return null;
+        }
+        var rawItems = Array.isArray(currentList.items) ? currentList.items : Object.keys(currentList.items || {}).map(function (itemId) {
+          return Object.assign({ id: itemId }, currentList.items[itemId]);
+        });
+        var items = rawItems.filter(function (item) { return item && !item.done && String(item.text || '').trim(); }).map(function (item) {
           return { text: item.text, category: item.category || 'other' };
         });
-        await ref.child(list.type).set({ name: list.name, type: list.type, items: items });
+        await ref.child(listType).set({ name: currentList.name, type: listType, items: items });
         return items.length;
       }
 
@@ -9279,10 +9344,12 @@
             }
             if (target.dataset.listAction === 'save-template' && listState.currentListId) {
               var currentListForSave = listState.listsById[listState.currentListId];
-              saveTemplateForList(currentListForSave).then(function () {
+              saveTemplateForList(currentListForSave).then(function (count) {
                 var phase = runtime();
-                if (phase && currentListForSave) {
-                  phase.showToast('Saved as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+                if (count != null && phase && currentListForSave) {
+                  phase.showToast('Saved ' + count + ' items as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+                } else if (phase) {
+                  phase.showToast('Could not save template.', { type: 'error' });
                 }
               }).catch(function (error) { console.error(error); });
               return;
@@ -9376,10 +9443,12 @@
           }
           if (target.dataset.listAction === 'save-template' && listState.currentListId) {
             var currentListForSave = listState.listsById[listState.currentListId];
-            saveTemplateForList(currentListForSave).then(function () {
+            saveTemplateForList(currentListForSave).then(function (count) {
               var activePhase = runtime();
-              if (activePhase && currentListForSave) {
-                activePhase.showToast('Saved as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+              if (count != null && activePhase && currentListForSave) {
+                activePhase.showToast('Saved ' + count + ' items as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+              } else if (activePhase) {
+                activePhase.showToast('Could not save template.', { type: 'error' });
               }
             }).catch(function (error) { console.error(error); });
             return;
