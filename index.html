@@ -3316,9 +3316,10 @@
     }
 
     .bs-cell.miss::after {
-      inset: 32%;
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid rgba(100, 140, 180, 0.4);
+      inset: 30%;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(60, 90, 130, 0.6);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
     }
 
     .bs-cell.sunk {
@@ -5108,7 +5109,7 @@
       }
 
       function parseNoteIntent(normalized, originalText) {
-        var noteMatch = originalText.match(/^(?:pin|pin:|note|add note|post note|bulletin note|remember)\s*:?\s+(.+)$/i);
+        var noteMatch = originalText.match(/^(?:pin|note|add note|post note|bulletin note|remember)\s*:?\s+(.+)$/i);
         if (noteMatch) {
           var noteText = noteMatch[1].trim();
           if (!noteText) return null;
@@ -5148,7 +5149,7 @@
           var currentNoteIntent = parseNoteIntent(normalized, text);
           if (currentNoteIntent) return currentNoteIntent;
         }
-        if (activeTab === 'chores' || activeTab === 'bulletin') {
+        if (activeTab === 'chores') {
           if (kids.length && parsePoints(text) !== null && /\b(remove|subtract|take away|deduct|lose|lost|spent|paid)\b/.test(normalized)) {
             return { intent: 'freepoints', kids, points: -parsePoints(text) };
           }
@@ -9273,13 +9274,12 @@
 
       async function resetTemplateForType(type) {
         var phase = runtime();
-        var ref = listTemplatesRef(phase);
         var listRef = listsRef(phase);
-        if (!ref || !LIST_TEMPLATES[type]) return 0;
-        await ref.child(type).remove();
+        var template = templateForType(type);
+        if (!listRef || !template) return 0;
         var currentListId = listState.currentListId;
         if (!currentListId || !listRef) return 0;
-        var templateItems = (LIST_TEMPLATES[type].items || []).slice();
+        var templateItems = (template.items || []).slice();
         var updates = {};
         for (var i = 0; i < templateItems.length; i += 1) {
           var pushKey = listRef.child(currentListId + '/items').push().key;
