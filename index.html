@@ -143,7 +143,7 @@
       align-items: stretch;
       gap: 0;
       padding: 0;
-      padding-top: calc(8px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
       flex-shrink: 0;
       background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #3b6fa0 100%);
       border: none;
@@ -156,7 +156,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px 14px;
+      padding: 10px 20px 10px;
     }
 
     .brand {
@@ -2299,6 +2299,15 @@
       opacity: 1;
     }
 
+    .swipe-wrapper.swipe-committed .swipe-action.left,
+    .swipe-wrapper.swipe-committed .swipe-action.right,
+    .list-item-wrapper.swipe-committed .list-swipe-action.left,
+    .list-item-wrapper.swipe-committed .list-swipe-action.right {
+      opacity: 1;
+      filter: saturate(1.15);
+      font-weight: 800;
+    }
+
     .swipe-surface,
     .list-item {
       z-index: 1;
@@ -3060,6 +3069,15 @@
       color: var(--muted);
     }
 
+    .ttt-status.game-won,
+    .c4-status.game-won {
+      font-size: 1.4rem;
+      text-align: center;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      animation: win-pulse 0.6s ease-out;
+    }
+
     .ttt-status strong,
     .c4-status strong,
     .bs-status strong {
@@ -3107,8 +3125,9 @@
     }
 
     .ttt-cell.win {
-      box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.3);
+      box-shadow: inset 0 0 0 3px #22c55e;
       background: linear-gradient(180deg, #f5fff7, #e7f9ec);
+      animation: win-cell-pop 0.3s ease-out;
     }
 
     .game-scoreboard {
@@ -3185,7 +3204,74 @@
     }
 
     .c4-cell.win {
-      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25) inset;
+      box-shadow: 0 0 0 3px #22c55e inset;
+      animation: win-cell-pop 0.3s ease-out;
+    }
+
+    @keyframes win-pulse {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes win-cell-pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .game-player-names {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .game-player-input {
+      width: 88px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel-alt);
+    }
+
+    .game-player-input.p1 {
+      color: var(--alex);
+    }
+
+    .game-player-input.p2 {
+      color: var(--louisa);
+    }
+
+    .game-vs {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .bs-grid-frame {
+      display: grid;
+      gap: 6px;
+    }
+
+    .bs-col-labels,
+    .bs-grid-row {
+      display: grid;
+      grid-template-columns: 22px repeat(8, minmax(0, 1fr));
+      gap: 6px;
+      align-items: center;
+    }
+
+    .bs-col-labels span,
+    .bs-row-label {
+      font-size: var(--font-xs);
+      font-weight: 800;
+      color: var(--muted);
+      text-align: center;
     }
 
     .bs-grid {
@@ -3209,6 +3295,16 @@
     .bs-cell.ship {
       background: linear-gradient(180deg, #6b7d94, #4a5c72);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .bs-cell.preview {
+      background: rgba(74, 144, 217, 0.3);
+      border-color: var(--alex);
+    }
+
+    .bs-cell.preview-invalid {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
     }
 
     .bs-cell.hit::after,
@@ -3502,7 +3598,7 @@
       }
 
       .header-main {
-        padding: 10px 14px 14px;
+        padding: 10px 14px 10px;
       }
 
       .brand small {
@@ -4414,7 +4510,7 @@
 
   <script>
     (function () {
-      const QUESTION_WORDS = ['how', 'what', 'whats', "what's", 'status', 'score', 'balance', 'owe', 'doing', 'points'];
+      const QUESTION_WORDS = ['how', 'what', 'whats', "what's", 'status', 'score', 'balance', 'doing', 'points'];
       const YES_WORDS = ['yes', 'y', 'yeah', 'yep', 'sure', 'ok', 'okay'];
       const NO_WORDS = ['no', 'n', 'nope', 'cancel', 'stop'];
       const FILLER_WORDS = ['um', 'uh', 'like', 'so', 'well'];
@@ -4763,7 +4859,12 @@
       registerIntent({
         id: 'check_status',
         priority: 50,
-        patterns: (text) => (isQuestion(text) ? { confidence: 0.8 } : null)
+        patterns: (text, kids) => {
+          if (kids.length && /\$?\s*\d+/.test(text) && /\b(owe|paid|spent|gave|earned|received|got|found)\b/.test(text)) {
+            return null;
+          }
+          return isQuestion(text) ? { confidence: 0.8 } : null;
+        }
       });
 
       registerIntent({
@@ -6126,13 +6227,17 @@
         c4Winner: null,
         c4WinningCells: [],
         c4Scores: { red: 0, yellow: 0 },
+        gamePlayers: { p1: 'Player 1', p2: 'Player 2' },
         bsPhase: 'idle',
         bsBoards: null,
         bsTurn: 'alex',
         bsOrientation: 'horizontal',
         bsShipIndex: 0,
         bsMessage: '',
-        bsWinner: null
+        bsWinner: null,
+        bsPreviewAnchor: null,
+        bsPreviewCells: [],
+        bsPreviewValid: false
       };
       var calendarCache = {
         familyId: null,
@@ -6219,12 +6324,55 @@
         };
       }
 
+      function getDefaultGamePlayers() {
+        var phase = runtime();
+        var kidIds = Object.keys((phase && phase.currentConfig && phase.currentConfig.kids) || {});
+        if (kidIds.length >= 2) {
+          return {
+            p1: (phase.currentConfig.kids[kidIds[0]] || {}).name || 'Player 1',
+            p2: (phase.currentConfig.kids[kidIds[1]] || {}).name || 'Player 2'
+          };
+        }
+        return { p1: 'Player 1', p2: 'Player 2' };
+      }
+
+      function loadSavedGamePlayers() {
+        try {
+          var raw = localStorage.getItem('familyChores.gamePlayers');
+          if (!raw) return null;
+          var parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') return null;
+          return {
+            p1: String(parsed.p1 || '').trim() || 'Player 1',
+            p2: String(parsed.p2 || '').trim() || 'Player 2'
+          };
+        } catch (error) {
+          console.error(error);
+          return null;
+        }
+      }
+
+      function saveGamePlayers() {
+        try {
+          localStorage.setItem('familyChores.gamePlayers', JSON.stringify(state.gamePlayers));
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      function renderPlayerNameBar() {
+        return '<div class="game-player-names">' +
+          '<label><input type="text" class="game-player-input p1" value="' + escapeBulletinHtml(state.gamePlayers.p1) + '" maxlength="12" data-player="p1"></label>' +
+          '<span class="game-vs">vs</span>' +
+          '<label><input type="text" class="game-player-input p2" value="' + escapeBulletinHtml(state.gamePlayers.p2) + '" maxlength="12" data-player="p2"></label>' +
+        '</div>';
+      }
+
       var BATTLESHIP_SHIPS = [
         { name: 'Carrier', size: 4 },
         { name: 'Cruiser', size: 3 },
         { name: 'Destroyer', size: 2 },
-        { name: 'Sub', size: 2 },
-        { name: 'Boat', size: 1 }
+        { name: 'Sub', size: 2 }
       ];
 
       function validateMadLibProgress(progress) {
@@ -6289,6 +6437,9 @@
         state.c4Turn = 'red';
         state.c4Winner = null;
         state.c4WinningCells = [];
+        state.gamePlayers = getDefaultGamePlayers();
+        var savedPlayers = loadSavedGamePlayers();
+        if (savedPlayers) state.gamePlayers = savedPlayers;
         state.bsPhase = 'idle';
         state.bsBoards = createEmptyBSBoards();
         state.bsTurn = 'alex';
@@ -6296,6 +6447,9 @@
         state.bsShipIndex = 0;
         state.bsMessage = '';
         state.bsWinner = null;
+        state.bsPreviewAnchor = null;
+        state.bsPreviewCells = [];
+        state.bsPreviewValid = false;
         state.funView = 'home';
       }
 
@@ -6428,16 +6582,10 @@
       }
 
       function openFunActivity(activityId) {
-        if (activityId === 'favorites') {
-          state.jokeShowStarred = true;
-          state.starredJokeViewIndex = 0;
-          state.funView = 'jokes';
-        } else {
-          if (activityId === 'jokes') {
-            state.jokeShowStarred = false;
-          }
-          state.funView = activityId || 'home';
+        if (activityId === 'jokes') {
+          state.jokeShowStarred = false;
         }
+        state.funView = activityId || 'home';
         renderFun().catch(function (error) { console.error(error); });
       }
 
@@ -6543,7 +6691,9 @@
       }
 
       function kidLabelForMarker(marker) {
-        return marker === 'X' || marker === 'red' ? 'Alex' : 'Louisa';
+        return marker === 'X' || marker === 'red' || marker === 'alex'
+          ? state.gamePlayers.p1
+          : state.gamePlayers.p2;
       }
 
       function checkTTTWinner(board) {
@@ -6672,6 +6822,9 @@
         state.bsShipIndex = 0;
         state.bsMessage = '';
         state.bsWinner = null;
+        state.bsPreviewAnchor = null;
+        state.bsPreviewCells = [];
+        state.bsPreviewValid = false;
       }
 
       function currentBSPlayer() {
@@ -6699,6 +6852,10 @@
         var ship = BATTLESHIP_SHIPS[state.bsShipIndex];
         if (!ship) return false;
         var cells = shipCells(row, col, ship.size, state.bsOrientation);
+        return cellsAreValidForPlayer(player, cells);
+      }
+
+      function cellsAreValidForPlayer(player, cells) {
         for (var i = 0; i < cells.length; i += 1) {
           var cell = cells[i];
           if (cell[0] < 0 || cell[0] >= 8 || cell[1] < 0 || cell[1] >= 8) return false;
@@ -6708,6 +6865,25 @@
           if (overlap) return false;
         }
         return true;
+      }
+
+      function clearBSPreview() {
+        state.bsPreviewAnchor = null;
+        state.bsPreviewCells = [];
+        state.bsPreviewValid = false;
+      }
+
+      function setBSPreview(row, col) {
+        var ship = BATTLESHIP_SHIPS[state.bsShipIndex];
+        var player = currentBSPlayer();
+        if (!ship) {
+          clearBSPreview();
+          return;
+        }
+        var cells = shipCells(row, col, ship.size, state.bsOrientation);
+        state.bsPreviewAnchor = row + ',' + col;
+        state.bsPreviewCells = cells;
+        state.bsPreviewValid = cellsAreValidForPlayer(player, cells);
       }
 
       function placeBSShip(row, col) {
@@ -6721,17 +6897,62 @@
           sunk: false
         });
         state.bsShipIndex += 1;
-        if (state.bsShipIndex >= BATTLESHIP_SHIPS.length) {
-          if (state.bsPhase === 'setup-1') {
-            state.bsPhase = 'handoff-setup-2';
-            state.bsShipIndex = 0;
-          } else {
-            state.bsPhase = 'handoff-play';
-            state.bsTurn = 'alex';
-            state.bsShipIndex = 0;
+        clearBSPreview();
+        return true;
+      }
+
+      function randomizeBSShips(player) {
+        state.bsBoards[player].ships = [];
+        clearBSPreview();
+        for (var i = 0; i < BATTLESHIP_SHIPS.length; i += 1) {
+          var ship = BATTLESHIP_SHIPS[i];
+          var placed = false;
+          var attempts = 0;
+          while (!placed && attempts < 200) {
+            state.bsShipIndex = i;
+            state.bsOrientation = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+            var row = Math.floor(Math.random() * 8);
+            var col = Math.floor(Math.random() * 8);
+            if (canPlaceBSShip(player, row, col)) {
+              state.bsBoards[player].ships.push({
+                name: ship.name,
+                size: ship.size,
+                cells: shipCells(row, col, ship.size, state.bsOrientation),
+                sunk: false
+              });
+              placed = true;
+            }
+            attempts += 1;
           }
         }
-        return true;
+        state.bsShipIndex = state.bsBoards[player].ships.length;
+      }
+
+      function undoLastBSShip() {
+        var player = currentBSPlayer();
+        if (!state.bsBoards[player].ships.length) return;
+        state.bsBoards[player].ships.pop();
+        state.bsShipIndex = Math.max(0, state.bsBoards[player].ships.length);
+        clearBSPreview();
+      }
+
+      function acceptBattleshipSetup() {
+        if (state.bsShipIndex < BATTLESHIP_SHIPS.length) return false;
+        if (state.bsPhase === 'setup-1') {
+          state.bsPhase = 'handoff-setup-2';
+          state.bsShipIndex = 0;
+          state.bsOrientation = 'horizontal';
+          clearBSPreview();
+          return true;
+        }
+        if (state.bsPhase === 'setup-2') {
+          state.bsPhase = 'handoff-play';
+          state.bsTurn = 'alex';
+          state.bsShipIndex = 0;
+          clearBSPreview();
+          return true;
+        }
+        return false;
       }
 
       function readyBattleship() {
@@ -6739,6 +6960,7 @@
           state.bsPhase = 'setup-2';
           state.bsOrientation = 'horizontal';
           state.bsMessage = '';
+          clearBSPreview();
           return;
         }
         if (state.bsPhase === 'handoff-play') {
@@ -7110,34 +7332,41 @@
         var status = state.tttWinner === 'draw'
           ? 'It\'s a tie!'
           : state.tttWinner
-            ? kidLabelForMarker(state.tttWinner) + ' wins!'
-            : kidLabelForMarker(state.tttTurn) + '\'s turn';
+            ? kidLabelForMarker(state.tttWinner) + ' (' + state.tttWinner + ') wins! 🎉'
+            : kidLabelForMarker(state.tttTurn) + '\'s turn (' + state.tttTurn + ')';
+        var statusClass = 'ttt-status' + ((state.tttWinner && state.tttWinner !== 'draw') ? ' game-won' : '');
+        var statusTone = state.tttWinner === 'O' ? 'louisa' : 'alex';
         container.innerHTML = '<div class="fun-shell">' +
           '<div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Tic Tac Toe</h2></div>' +
           '<article class="fun-card hub-card">' +
-            '<div class="ttt-status"><strong class="' + (state.tttTurn === 'X' ? 'alex' : 'louisa') + '">' + escapeBulletinHtml(status) + '</strong></div>' +
+            renderPlayerNameBar() +
+            '<div class="' + statusClass + '"><strong class="' + statusTone + '">' + escapeBulletinHtml(status) + '</strong></div>' +
             '<div class="ttt-board">' + state.tttBoard.map(function (cell, index) {
               var classes = 'ttt-cell';
               if (cell) classes += ' ' + cell.toLowerCase();
               if (state.tttWinningLine.indexOf(index) >= 0) classes += ' win';
               return '<button type="button" class="' + classes + '" data-ttt-cell="' + index + '"' + (state.tttWinner || cell ? ' disabled' : '') + '>' + (cell || '') + '</button>';
             }).join('') + '</div>' +
-            '<div class="game-scoreboard"><span><strong class="alex">Alex</strong> ' + state.tttScores.X + '</span><span><strong class="louisa">Louisa</strong> ' + state.tttScores.O + '</span></div>' +
+            '<div class="game-scoreboard"><span><strong class="alex">' + escapeBulletinHtml(state.gamePlayers.p1) + '</strong> ' + state.tttScores.X + '</span><span><strong class="louisa">' + escapeBulletinHtml(state.gamePlayers.p2) + '</strong> ' + state.tttScores.O + '</span></div>' +
             '<div class="fun-actions"><button type="button" class="fun-btn" id="funTTTNewBtn">New Game</button><button type="button" class="fun-btn secondary" id="funTTTResetBtn">Reset Scores</button></div>' +
           '</article>' +
         '</div>';
       }
 
       function renderConnectFourActivity(container) {
+        var colorLabel = state.c4Winner === 'red' ? '🔴' : '🟡';
         var winnerText = state.c4Winner === 'draw'
-          ? 'Board full - draw'
+          ? 'Board full - draw!'
           : state.c4Winner
-            ? kidLabelForMarker(state.c4Winner) + ' wins!'
+            ? kidLabelForMarker(state.c4Winner) + ' ' + colorLabel + ' wins! 🎉'
             : kidLabelForMarker(state.c4Turn) + '\'s turn';
+        var winnerClass = 'c4-status' + ((state.c4Winner && state.c4Winner !== 'draw') ? ' game-won' : '');
+        var winnerTone = state.c4Winner === 'yellow' ? 'louisa' : 'alex';
         container.innerHTML = '<div class="fun-shell">' +
           '<div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Connect Four</h2></div>' +
           '<article class="fun-card hub-card">' +
-            '<div class="c4-status"><strong class="' + (state.c4Turn === 'red' ? 'alex' : 'louisa') + '">' + escapeBulletinHtml(winnerText) + '</strong></div>' +
+            renderPlayerNameBar() +
+            '<div class="' + winnerClass + '"><strong class="' + winnerTone + '">' + escapeBulletinHtml(winnerText) + '</strong></div>' +
             '<div class="c4-controls">' + Array(7).fill(0).map(function (_, col) {
               return '<button type="button" class="c4-column" data-c4-col="' + col + '"' + (state.c4Winner || state.c4Board[0][col] ? ' disabled' : '') + '>↓</button>';
             }).join('') + '</div>' +
@@ -7147,67 +7376,84 @@
                 return '<div class="c4-cell' + (win ? ' win' : '') + '">' + (cell ? '<div class="c4-piece ' + cell + '"></div>' : '') + '</div>';
               }).join('');
             }).join('') + '</div>' +
-            '<div class="game-scoreboard"><span><strong class="alex">Alex</strong> ' + state.c4Scores.red + '</span><span><strong class="louisa">Louisa</strong> ' + state.c4Scores.yellow + '</span></div>' +
+            '<div class="game-scoreboard"><span><strong class="alex">' + escapeBulletinHtml(state.gamePlayers.p1) + '</strong> ' + state.c4Scores.red + '</span><span><strong class="louisa">' + escapeBulletinHtml(state.gamePlayers.p2) + '</strong> ' + state.c4Scores.yellow + '</span></div>' +
             '<div class="fun-actions"><button type="button" class="fun-btn" id="funC4NewBtn">New Game</button><button type="button" class="fun-btn secondary" id="funC4ResetBtn">Reset Scores</button></div>' +
           '</article>' +
+        '</div>';
+      }
+
+      function renderBattleshipGridFrame(rowsMarkup) {
+        return '<div class="bs-grid-frame">' +
+          '<div class="bs-col-labels"><span></span>' + Array(8).fill(0).map(function (_, index) {
+            return '<span>' + (index + 1) + '</span>';
+          }).join('') + '</div>' +
+          rowsMarkup +
         '</div>';
       }
 
       function renderBattleshipGrid(player, revealShips, attackMode) {
         var opponent = otherBSPlayer(player);
         var attacks = attackMode ? state.bsBoards[player].attacks : state.bsBoards[opponent].attacks;
-        return '<div class="bs-grid">' + Array(8).fill(0).map(function (_, row) {
-          return Array(8).fill(0).map(function (__ , col) {
+        return renderBattleshipGridFrame(Array(8).fill(0).map(function (_, row) {
+          return '<div class="bs-grid-row"><span class="bs-row-label">' + String.fromCharCode(65 + row) + '</span><div class="bs-grid">' + Array(8).fill(0).map(function (__ , col) {
             var cls = 'bs-cell';
             var attack = attacks.find(function (entry) { return entry.r === row && entry.c === col; });
             if (revealShips && state.bsBoards[player].ships.some(function (ship) { return ship.cells.some(function (cell) { return cell[0] === row && cell[1] === col; }); })) {
               cls += ' ship';
+            }
+            if (revealShips && state.bsBoards[player].ships.some(function (ship) { return ship.sunk && ship.cells.some(function (cell) { return cell[0] === row && cell[1] === col; }); })) {
+              cls += ' sunk';
             }
             if (attack) cls += attack.hit ? ' hit' : ' miss';
             if (attackMode) {
               return '<button type="button" class="' + cls + '" data-bs-fire="' + row + ',' + col + '"' + (attack || state.bsPhase !== 'play' ? ' disabled' : '') + '></button>';
             }
             return '<div class="' + cls + '"></div>';
-          }).join('');
-        }).join('') + '</div>';
+          }).join('') + '</div></div>';
+        }).join(''));
       }
 
       function renderBattleshipSetupGrid(player) {
-        return '<div class="bs-grid">' + Array(8).fill(0).map(function (_, row) {
-          return Array(8).fill(0).map(function (__, col) {
+        return renderBattleshipGridFrame(Array(8).fill(0).map(function (_, row) {
+          return '<div class="bs-grid-row"><span class="bs-row-label">' + String.fromCharCode(65 + row) + '</span><div class="bs-grid">' + Array(8).fill(0).map(function (__, col) {
             var cls = 'bs-cell';
             if (state.bsBoards[player].ships.some(function (ship) { return ship.cells.some(function (cell) { return cell[0] === row && cell[1] === col; }); })) {
               cls += ' ship';
             }
+            if (state.bsPreviewCells.some(function (cell) { return cell[0] === row && cell[1] === col; })) {
+              cls += state.bsPreviewValid ? ' preview' : ' preview-invalid';
+            }
             return '<button type="button" class="' + cls + '" data-bs-place="' + row + ',' + col + '"></button>';
-          }).join('');
-        }).join('') + '</div>';
+          }).join('') + '</div></div>';
+        }).join(''));
       }
 
       function renderBattleshipActivity(container) {
         if (state.bsPhase === 'idle') {
-          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card centered"><p>Set up ships for Alex and Louisa, then pass the phone back and forth after each turn.</p><div class="fun-actions"><button type="button" class="fun-btn invest" id="funBSStartBtn">Start Battleship</button></div></article></div>';
+          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card centered">' + renderPlayerNameBar() + '<p>Set up ships for ' + escapeBulletinHtml(state.gamePlayers.p1) + ' and ' + escapeBulletinHtml(state.gamePlayers.p2) + ', then pass the phone back and forth after each turn.</p><div class="fun-actions"><button type="button" class="fun-btn invest" id="funBSStartBtn">Start Battleship</button></div></article></div>';
           return;
         }
         if (state.bsPhase === 'handoff-setup-2' || state.bsPhase === 'handoff-play') {
           var target = state.bsPhase === 'handoff-setup-2' ? 'louisa' : state.bsTurn;
-          var targetName = target === 'alex' ? 'Alex' : 'Louisa';
-          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card bs-handoff"><div class="bs-handoff-icon">↻</div><h3>Pass to ' + targetName + '</h3><p>Don\'t peek.</p><button type="button" class="fun-btn" id="funBSReadyBtn">I\'m Ready</button></article></div>';
+          var targetName = kidLabelForMarker(target);
+          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card bs-handoff">' + renderPlayerNameBar() + '<div class="bs-handoff-icon">↻</div><h3>Pass to ' + escapeBulletinHtml(targetName) + '</h3><p>Don\'t peek.</p><button type="button" class="fun-btn" id="funBSReadyBtn">I\'m Ready</button></article></div>';
           return;
         }
         if (state.bsPhase === 'gameover') {
-          var winnerName = state.bsWinner === 'alex' ? 'Alex' : 'Louisa';
-          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card"><div class="bs-status"><strong>' + winnerName + ' wins!</strong></div><p>' + escapeBulletinHtml(state.bsMessage || 'Fleet destroyed.') + '</p>' + renderBattleshipGrid(otherBSPlayer(state.bsWinner), true, false) + '<div class="fun-actions"><button type="button" class="fun-btn invest" id="funBSStartBtn">New Game</button></div></article></div>';
+          var winnerName = kidLabelForMarker(state.bsWinner);
+          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card">' + renderPlayerNameBar() + '<div class="bs-status"><strong class="' + (state.bsWinner === 'alex' ? 'alex' : 'louisa') + '">' + escapeBulletinHtml(winnerName) + ' wins! 🎉</strong></div><p>' + escapeBulletinHtml(state.bsMessage || 'Fleet destroyed.') + '</p>' + renderBattleshipGrid(otherBSPlayer(state.bsWinner), true, false) + '<div class="fun-actions"><button type="button" class="fun-btn invest" id="funBSStartBtn">New Game</button></div></article></div>';
           return;
         }
         var player = currentBSPlayer();
-        var playerName = player === 'alex' ? 'Alex' : 'Louisa';
+        var playerName = kidLabelForMarker(player);
         if (state.bsPhase === 'setup-1' || state.bsPhase === 'setup-2') {
           var ship = BATTLESHIP_SHIPS[state.bsShipIndex];
-          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card"><div class="bs-status"><strong>' + playerName + '</strong> place your ' + escapeBulletinHtml(ship.name) + ' (' + ship.size + ')</div><div class="bs-setup-meta"><span>Orientation: ' + escapeBulletinHtml(state.bsOrientation) + '</span><span>' + state.bsBoards[player].ships.length + '/' + BATTLESHIP_SHIPS.length + ' ships placed</span></div>' + renderBattleshipSetupGrid(player) + '<div class="fun-actions"><button type="button" class="fun-btn secondary" id="funBSRotateBtn">Rotate</button></div></article></div>';
+          var shipsPlaced = state.bsBoards[player].ships.length;
+          var placementReady = shipsPlaced >= BATTLESHIP_SHIPS.length;
+          container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card">' + renderPlayerNameBar() + '<div class="bs-status"><strong>' + escapeBulletinHtml(playerName) + '</strong> ' + (placementReady ? 'check your board' : 'place your ' + escapeBulletinHtml(ship.name) + ' (' + ship.size + ')') + '</div><div class="bs-setup-meta"><span>' + (state.bsOrientation === 'horizontal' ? '↔ Across' : '↕ Down') + '</span><span>' + shipsPlaced + '/' + BATTLESHIP_SHIPS.length + ' ships placed</span></div>' + renderBattleshipSetupGrid(player) + '<div class="fun-actions"><button type="button" class="fun-btn secondary" id="funBSRotateBtn">' + (state.bsOrientation === 'horizontal' ? '↔ Across' : '↕ Down') + '</button><button type="button" class="fun-btn secondary" id="funBSUndoBtn"' + (shipsPlaced ? '' : ' disabled') + '>Undo</button><button type="button" class="fun-btn secondary" id="funBSShuffleBtn">' + (placementReady ? 'Shuffle' : 'Randomize') + '</button><button type="button" class="fun-btn" id="funBSAcceptBtn"' + (placementReady ? '' : ' disabled') + '>Accept</button></div></article></div>';
           return;
         }
-        container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card"><div class="bs-status"><strong>' + playerName + '</strong> attacking</div><div class="bs-legend"><span>' + escapeBulletinHtml(state.bsMessage || 'Pick a square to fire.') + '</span></div>' + renderBattleshipGrid(player, false, true) + '</article></div>';
+        container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card">' + renderPlayerNameBar() + '<div class="bs-status"><strong>' + escapeBulletinHtml(playerName) + '</strong> attacking</div><div class="bs-legend"><span>' + escapeBulletinHtml(state.bsMessage || 'Pick a square to fire.') + '</span></div>' + renderBattleshipGrid(player, false, true) + '</article></div>';
       }
 
       function renderFunHome(container) {
@@ -7221,15 +7467,6 @@
           { id: 'connect4', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="2"></rect><circle cx="8" cy="10" r="1.8" fill="currentColor"></circle><circle cx="12" cy="10" r="1.8" fill="currentColor" opacity=".7"></circle><circle cx="16" cy="10" r="1.8" fill="currentColor" opacity=".45"></circle><circle cx="8" cy="14" r="1.8" fill="currentColor" opacity=".7"></circle><circle cx="12" cy="14" r="1.8" fill="currentColor"></circle><circle cx="16" cy="14" r="1.8" fill="currentColor" opacity=".7"></circle></svg>', label: 'Connect Four', color: '#2563eb', sub: '' },
           { id: 'battleship', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 16c2.2 0 2.2-1 4.4-1s2.2 1 4.4 1 2.2-1 4.4-1 2.2 1 4.4 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M7 12h10l-1.5-3H8.5L7 12Zm3-3V6l2 1.4L14 6v3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>', label: 'Battleship', color: '#0f766e', sub: '' }
         ];
-        if (state.starredJokes.length) {
-          tiles.push({
-            id: 'favorites',
-            icon: '⭐',
-            label: 'Favorites',
-            color: '#f59e0b',
-            sub: state.starredJokes.length + ' starred joke' + (state.starredJokes.length === 1 ? '' : 's')
-          });
-        }
         container.innerHTML = '<div class="fun-shell"><div class="fun-grid">' + tiles.map(function (tile) {
           return '<button type="button" class="fun-tile" data-fun-open="' + tile.id + '" style="--tile-color:' + tile.color + '">' +
             '<span class="fun-tile-icon">' + tile.icon + '</span>' +
@@ -7684,13 +7921,45 @@
 
         if (event.target.closest('#funBSRotateBtn')) {
           state.bsOrientation = state.bsOrientation === 'horizontal' ? 'vertical' : 'horizontal';
+          clearBSPreview();
           renderFun().catch(function (error) { console.error(error); });
           return;
+        }
+
+        if (event.target.closest('#funBSUndoBtn')) {
+          undoLastBSShip();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funBSShuffleBtn')) {
+          randomizeBSShips(currentBSPlayer());
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funBSAcceptBtn')) {
+          if (acceptBattleshipSetup()) {
+            renderFun().catch(function (error) { console.error(error); });
+          }
+          return;
+        }
+
+        var bsPreview = event.target.closest('[data-bs-place]');
+        if (bsPreview) {
+          var previewParts = String(bsPreview.dataset.bsPlace || '').split(',');
+          var previewKey = previewParts[0] + ',' + previewParts[1];
+          if (state.bsPreviewAnchor !== previewKey) {
+            setBSPreview(Number(previewParts[0]), Number(previewParts[1]));
+            renderFun().catch(function (error) { console.error(error); });
+            return;
+          }
         }
 
         var bsPlace = event.target.closest('[data-bs-place]');
         if (bsPlace) {
           var placeParts = String(bsPlace.dataset.bsPlace || '').split(',');
+          setBSPreview(Number(placeParts[0]), Number(placeParts[1]));
           if (placeBSShip(Number(placeParts[0]), Number(placeParts[1]))) {
             renderFun().catch(function (error) { console.error(error); });
           }
@@ -7746,6 +8015,25 @@
         }
         if (event.target.id === 'funMadLibAnswer') {
           updateMadLibAnswer(event.target.value || '');
+          return;
+        }
+        if (event.target.classList.contains('game-player-input')) {
+          var player = event.target.dataset.player;
+          if (!player) return;
+          state.gamePlayers[player] = String(event.target.value || '').trim() || (player === 'p1' ? 'Player 1' : 'Player 2');
+          saveGamePlayers();
+        }
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.target.id === 'funMadLibAnswer') {
+          event.preventDefault();
+          var nextBtn = document.getElementById('funMadLibNextBtn');
+          if (nextBtn) nextBtn.click();
+          setTimeout(function () {
+            var newInput = document.getElementById('funMadLibAnswer');
+            if (newInput) newInput.focus();
+          }, 50);
         }
       });
 
@@ -8711,6 +8999,7 @@
             gestureState.wrapperEl.classList.remove('dragging-active');
             gestureState.wrapperEl.classList.remove('swiping-left');
             gestureState.wrapperEl.classList.remove('swiping-right');
+            gestureState.wrapperEl.classList.remove('swipe-committed');
           }
           resetGestureState();
         }
@@ -8785,6 +9074,7 @@
           wrapper.classList.toggle('dragging-active', canDrag);
           wrapper.classList.remove('swiping-left');
           wrapper.classList.remove('swiping-right');
+          wrapper.classList.remove('swipe-committed');
           item.classList.add(canDrag ? 'dragging' : 'swiping');
         }, signal ? { passive: true, signal: signal } : { passive: true });
 
@@ -8832,8 +9122,9 @@
                 gestureState.wrapperEl.classList.remove('swiping-left');
                 gestureState.wrapperEl.classList.remove('swiping-right');
               }
+              gestureState.wrapperEl.classList.toggle('swipe-committed', Math.abs(diff) >= 130);
             }
-            gestureState.itemEl.style.transform = 'translateX(' + Math.max(-120, Math.min(120, diff)) + 'px)';
+            gestureState.itemEl.style.transform = 'translateX(' + Math.max(-160, Math.min(160, diff)) + 'px)';
             gestureState.itemEl.style.opacity = String(Math.max(0.35, 1 - (Math.abs(diff) / 260)));
           }
         }, signal ? { passive: false, signal: signal } : { passive: false });
@@ -8869,13 +9160,13 @@
                 }
               }
             }
-          } else if (diffX <= -80) {
+          } else if (diffX <= -130) {
             itemEl.style.transform = 'translateX(-100%)';
             itemEl.style.opacity = '0';
             setTimeout(function () {
               handleSwipeAction(actionWrapper || itemEl.closest('.swipe-wrapper'), 'left').catch(function (error) { console.error(error); });
             }, 160);
-          } else if (diffX >= 80) {
+          } else if (diffX >= 130) {
             if ((actionWrapper && actionWrapper.dataset.swipeType) === 'list-item') {
               itemEl.style.transform = 'translateX(100%)';
               itemEl.style.opacity = '0';
@@ -9014,6 +9305,9 @@
               addListItems(listState.currentListId, value, categoryInput ? categoryInput.value : null).then(function () {
                 if (itemInput) itemInput.value = '';
                 if (categoryInput && (categoryInput.value === 'auto' || !categoryInput.value)) categoryInput.value = 'auto';
+                setTimeout(function () {
+                  if (itemInput) itemInput.focus();
+                }, 0);
               }).catch(function (error) { console.error(error); });
             }
           }, signal ? { signal: signal } : undefined);
@@ -9056,11 +9350,13 @@
         var phase = runtime();
         if (!listState.currentListId || !phase) {
           panel.innerHTML = '<div class="settings-empty"><strong>Select a list</strong><p class="family-panel-note">Tap a list to see its settings here.</p></div>';
+          panel.onclick = null;
           return;
         }
         var list = listState.listsById[listState.currentListId];
         if (!list) {
           panel.innerHTML = '<div class="settings-empty"><strong>List not found.</strong></div>';
+          panel.onclick = null;
           return;
         }
         var listType = list.type || 'custom';
@@ -9068,6 +9364,36 @@
         panel.innerHTML = '<div class="settings-grid"><article class="stat-card"><h3 class="hub-section-head">' + escapeHtml(list.name) + ' Settings</h3>' +
           (isTemplateType ? '<div class="settings-list"><button type="button" class="btn btn-secondary" data-list-action="save-template" style="width:100%;margin-bottom:8px;">Save as template</button><button type="button" class="btn btn-secondary" data-list-action="reset-template" style="width:100%;margin-bottom:8px;">Reset template</button></div>' : '') +
           '<button type="button" class="btn btn-danger" data-list-action="delete-list" style="width:100%;">Delete list</button></article></div>';
+        panel.onclick = async function (event) {
+          var target = event.target.closest('[data-list-action]');
+          if (!target) return;
+          if (target.dataset.listAction === 'delete-list' && listState.currentListId) {
+            var currentListForDelete = listState.listsById[listState.currentListId];
+            if (!currentListForDelete) return;
+            if (!await window.appConfirm('Delete list?', 'Delete ' + currentListForDelete.name + '? This can\'t be undone.', true)) return;
+            deleteEntireList(listState.currentListId).catch(function (error) { console.error(error); });
+            return;
+          }
+          if (target.dataset.listAction === 'save-template' && listState.currentListId) {
+            var currentListForSave = listState.listsById[listState.currentListId];
+            saveTemplateForList(currentListForSave).then(function () {
+              var activePhase = runtime();
+              if (activePhase && currentListForSave) {
+                activePhase.showToast('Saved as template for ' + listTypeMeta(currentListForSave.type).label + '.');
+              }
+            }).catch(function (error) { console.error(error); });
+            return;
+          }
+          if (target.dataset.listAction === 'reset-template' && listState.currentListId) {
+            var currentList = listState.listsById[listState.currentListId];
+            if (!currentList) return;
+            if (!await window.appConfirm('Reset to default template?', 'This will replace all items in this list with the default template. Any custom items will be lost.', true)) return;
+            resetTemplateForType(currentList.type).then(function (count) {
+              var activePhase = runtime();
+              if (activePhase) activePhase.showToast('Template reset - ' + count + ' items loaded.');
+            }).catch(function (error) { console.error(error); });
+          }
+        };
       };
 
     })();
