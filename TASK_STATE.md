@@ -1,28 +1,22 @@
 # Task State - Family Hub
 
-**Task:** Phase 39 — Battleship Polish, Template Save Fix, Bulletin Parsing, Pin Regex
+**Task:** Phase 40 - Minor Cleanup
 **Current Phase:** complete
-**Status:** Reviewed
-**Next Agent:** human
-**Next Action:** Push to production
-**Last Updated:** 2026-03-17
+**Status:** Build Complete
+**Next Agent:** gemini
+**Next Action:** Review Phase 40
+**Last Updated:** 2026-03-18
 
 ## Completed
 
-- [x] Phases 8-38
-- [x] Phase 39: Battleship Polish, Template Save Fix, Bulletin Parsing, Pin Regex — built & reviewed
+- [x] Phases 8-40
 
 ## Current
 
-- [x] **Phase 39** — complete and reviewed:
-  - Battleship miss dots: increased visibility (0.95 opacity + shadow).
-  - Template reset logic: now correctly prefers saved custom templates via `templateForType()`.
-  - Bulletin parsing: plain text now correctly defaults to notes instead of chore fallback.
-  - Regex synchronization: `pin` keyword added to `parseNoteIntent`.
+- [ ] Waiting on Gemini review for Phase 40
 
 ## Notes
 
-- Review confirmed all bugfixes are effective.
-- Minor gap identified: the `log_note` intent in the `routeIntent` registry (L4944) still lacks the `pin` keyword, though `parseNoteIntent` handles it.
-- Battleship gameplay is now much more visually clear on small screens.
-- Ready for push.
+- `routeIntent` note creation now recognizes `pin` directly, matching `parseNoteIntent`.
+- `remove_note` routing was verified and already matched the current remove-note parser pattern set.
+- Phase 40 is a low-risk consistency cleanup only.

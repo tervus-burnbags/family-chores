@@ -4942,7 +4942,7 @@
         id: 'log_note',
         priority: 72,
         patterns: (text) => {
-          const match = text.match(/^(?:note|add note|post note|bulletin note|remember)\s+(.+)$/i);
+          const match = text.match(/^(?:pin|note|add note|post note|bulletin note|remember)\s+(.+)$/i);
           if (!match) return null;
           const noteText = match[1].trim();
           if (!noteText) return null;
