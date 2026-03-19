@@ -4313,6 +4313,13 @@
       if (typeof firebaseConfig !== 'object') {
         throw new Error('firebase-config.js is missing a valid firebaseConfig object.');
       }
+      var requiredFirebaseKeys = ['apiKey', 'authDomain', 'databaseURL', 'projectId', 'appId'];
+      var missingFirebaseKeys = requiredFirebaseKeys.filter(function (key) {
+        return !firebaseConfig[key] || typeof firebaseConfig[key] !== 'string';
+      });
+      if (missingFirebaseKeys.length) {
+        throw new Error('firebase-config.js is missing: ' + missingFirebaseKeys.join(', '));
+      }
 
       firebase.initializeApp(firebaseConfig);
       auth = firebase.auth();
@@ -4354,6 +4361,33 @@
       if (familyId && typeof window.loadFamilyConfigV2 === 'function') {
         await window.loadFamilyConfigV2();
       }
+    }
+
+    function explainFirebaseError(error) {
+      var code = error && error.code ? String(error.code) : '';
+      var message = error && error.message ? String(error.message) : 'Unknown Firebase error.';
+      var detail = message;
+
+      if (code === 'auth/operation-not-allowed') {
+        detail = 'Anonymous Auth is disabled in Firebase Console. Enable it under Authentication > Sign-in method.';
+      } else if (code === 'auth/network-request-failed') {
+        detail = 'Network request failed. Check ad blockers, firewall, or access to googleapis.com and firebaseio.com.';
+      } else if (code === 'app/invalid-api-key') {
+        detail = 'Invalid Firebase API key in firebase-config.js.';
+      } else if (code === 'auth/invalid-api-key') {
+        detail = 'Firebase rejected the API key in firebase-config.js.';
+      } else if (code === 'auth/app-not-authorized') {
+        detail = 'This domain is not authorized for the Firebase project, or the config points at the wrong project.';
+      } else if (code === 'database/permission-denied') {
+        detail = 'Firebase Realtime Database denied access. Check database rules and the configured project.';
+      } else if (/firebase-config\.js is missing/i.test(message)) {
+        detail = message;
+      }
+
+      return {
+        code: code || 'unknown',
+        detail: detail
+      };
     }
 
     function registerServiceWorker() {
@@ -4488,8 +4522,9 @@
     registerServiceWorker();
     initFirebase().catch((error) => {
       console.error(error);
+      var firebaseFailure = explainFirebaseError(error);
       elements.familyLabel.textContent = 'Firebase connection failed';
-      addMessage('system', 'Firebase setup failed. Check your config and project settings.', error.message);
+      addMessage('system', 'Firebase setup failed. Check your config and project settings.', firebaseFailure.code + ': ' + firebaseFailure.detail);
     });
   </script>
 
@@ -10167,7 +10202,6 @@
   </script>
 </body>
 </html>
-
 
 
 
