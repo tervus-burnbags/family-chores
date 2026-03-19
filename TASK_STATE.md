@@ -1,22 +1,25 @@
 # Task State - Family Hub
 
-**Task:** Phase 40 - Minor Cleanup
+**Task:** Phase 40 — Minor Cleanup
 **Current Phase:** complete
-**Status:** Build Complete
-**Next Agent:** gemini
-**Next Action:** Review Phase 40
+**Status:** Reviewed
+**Next Agent:** human
+**Next Action:** Push to production
 **Last Updated:** 2026-03-18
 
 ## Completed
 
-- [x] Phases 8-40
+- [x] Phases 8-39
+- [x] Phase 40: Minor Cleanup — built & reviewed
 
 ## Current
 
-- [ ] Waiting on Gemini review for Phase 40
+- [x] **Phase 40** — complete and reviewed:
+  - Synchronized `pin` keyword into `log_note` intent regex.
+  - Verified consistency of `remove_note` intent regex.
 
 ## Notes
 
-- `routeIntent` note creation now recognizes `pin` directly, matching `parseNoteIntent`.
-- `remove_note` routing was verified and already matched the current remove-note parser pattern set.
-- Phase 40 is a low-risk consistency cleanup only.
+- Review confirmed successful regex synchronization.
+- Resolved the minor technical debt flagged in the Phase 39 review.
+- Ready for push.

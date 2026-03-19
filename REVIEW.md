@@ -296,3 +296,15 @@ The audit reveals that the "Fallback Chain" architecture is extremely vulnerable
 
 ### Push Readiness
 - **Ready for push** — These fixes significantly improve the "Home" and "Lists" experience. The template fix, in particular, was a critical usability gap that is now resolved.
+
+---
+
+## Phase 40: Minor Cleanup
+
+### Test Results
+- ✅ `Pin Regex Synchronization (Part A)` — Verified that `pin` is now included in the `log_note` intent registered within `routeIntent` (L4945). The `parseNoteIntent` and `routeIntent` regular expressions are now completely synchronized.
+- ✅ `Remove Note Synchronization (Part B)` — Verified that the `remove_note` intent in `routeIntent` uses the same pattern (`/^(?:remove|delete|clear)\s+note\s+(.+)$/i`) as the fallback parsing logic. Both are fully consistent.
+- ✅ `Regex Execution` — Ran a suite of regex tests confirming "pin pick up milk" successfully captures the text group, while empty "pin " gracefully fails as expected.
+
+### Push Readiness
+- **Ready for push** — This was a low-risk, high-value sync pass that clears up the minor technical debt flagged in the Phase 39 review.
