@@ -1,5 +1,6 @@
 # Firebase config (contains project keys)
 firebase-config.js
+firebase-config.test.js
 
 # OS files
 .DS_Store

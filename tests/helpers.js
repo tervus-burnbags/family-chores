@@ -1,34 +1,72 @@
 // tests/helpers.js — shared test utilities
 //
-// SETUP: Set your family code in .env.test (never commit this file):
-//   FAMILY_CODE=YOURCODE
+// Tests run against Vercel but intercept firebase-config.js to point
+// at the isolated test Firebase project (family-hub-test-8f868).
+// No real family data is touched.
 //
-// Or pass inline: FAMILY_CODE=YOURCODE npx playwright test
+// Required: set FAMILY_CODE to an 8-char code for the TEST database.
+// Create one by opening the app pointed at the test Firebase and
+// clicking "Create New Family", or just pick any 8-char string —
+// the test DB is empty so it'll auto-create the family.
+//
+// Run: FAMILY_CODE=TESTFAM1 npx playwright test
 
-const FAMILY_CODE = process.env.FAMILY_CODE || '';
+const fs = require('fs');
+const path = require('path');
 
-if (!FAMILY_CODE) {
-  console.warn('\n⚠️  FAMILY_CODE env var not set. Auth-dependent tests will fail.\n   Run: FAMILY_CODE=YOURCODE npx playwright test\n');
-}
+const FAMILY_CODE = process.env.FAMILY_CODE || 'TESTFAM1';
+
+// Read the test firebase config to inject as a route intercept
+const TEST_CONFIG_PATH = path.join(__dirname, '..', 'firebase-config.test.js');
+const TEST_CONFIG_JS = fs.readFileSync(TEST_CONFIG_PATH, 'utf8');
 
 /**
- * Navigate to the app and inject the family code via localStorage
- * BEFORE the app initialises, bypassing the setup modal.
- * Waits for the tab bar to confirm the app is ready.
+ * Navigate to the app with:
+ * - firebase-config.js intercepted → points at test Firebase project
+ * - family code injected into localStorage → skips setup modal
  */
 async function loginAs(page, familyCode = FAMILY_CODE) {
-  // addInitScript runs before any page JS — this is the correct injection point
+  // Capture browser console messages so we can see Firebase errors in test output
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' || msg.text().includes('firebase') || msg.text().includes('family')) {
+      console.log(`[browser ${msg.type()}] ${msg.text()}`);
+    }
+  });
+  page.on('pageerror', (err) => console.log(`[page error] ${err.message}`));
+
+  // Intercept the firebase config request and serve test credentials
+  await page.route('**/firebase-config.js', (route) => {
+    console.log('[intercept] firebase-config.js intercepted — serving test config');
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: TEST_CONFIG_JS,
+    });
+  });
+
+  // Set localStorage AND install a flag that gets set when config loads
   await page.addInitScript((code) => {
     localStorage.setItem('familyChores.familyId', code);
+    // Listen for the config-loaded event dispatched by the app
+    window.__hubConfigLoaded = false;
+    document.addEventListener('hub:config-changed', function () {
+      window.__hubConfigLoaded = true;
+    });
   }, familyCode);
+
   await page.goto('/');
-  // Wait for tab bar — confirms app loaded and auth succeeded
+
+  // Wait for tab bar — confirms HTML rendered
   await page.waitForSelector('[data-tab]', { timeout: 15000 });
-  // Wait for modal to close (if any)
+
+  // Wait for hub:config-changed AND confirm the setup modal is gone.
+  // The event can fire from edge-case paths even when config load fails,
+  // so we also check the modal is closed as a signal that auth + DB read
+  // fully succeeded.
   await page.waitForFunction(() => {
     const modal = document.getElementById('familyModal');
-    return !modal || !modal.classList.contains('open');
-  }, { timeout: 10000 });
+    const modalClosed = modal && !modal.classList.contains('open');
+    return window.__hubConfigLoaded === true && modalClosed;
+  }, { timeout: 20000 });
 }
 
 /**
@@ -36,22 +74,17 @@ async function loginAs(page, familyCode = FAMILY_CODE) {
  */
 async function switchTab(page, tabName) {
   await page.click(`[data-tab="${tabName}"]`);
-  // Wait for the corresponding view to become active
-  await page.waitForSelector(`#view${capitalize(tabName)}.active, [id="view${capitalize(tabName)}"].active`, {
-    timeout: 5000
-  }).catch(() => {
-    // Fallback: just wait a moment for the transition
-    return page.waitForTimeout(500);
-  });
+  await page.waitForSelector(`#view${capitalize(tabName)}.active`, {
+    timeout: 5000,
+  }).catch(() => page.waitForTimeout(500));
 }
 
 /**
- * Submit text via the main chat input.
+ * Submit text via the main chat input and wait for a toast response.
  */
 async function sendInput(page, text) {
   await page.fill('#messageInput', text);
   await page.keyboard.press('Enter');
-  // Wait for a toast or system message response
   await page.waitForSelector('.toast', { timeout: 8000 });
 }
 
