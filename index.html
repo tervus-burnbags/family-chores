@@ -5820,6 +5820,10 @@
             }
             return;
           }
+          if (!result.kids || !result.kids.length) {
+            showToast('Which kid? (Alex, Louisa, or both)', { duration: 8000 });
+            return;
+          }
           await executeLogAction(result, {});
         }
       }

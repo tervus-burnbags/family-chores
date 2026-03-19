@@ -24,6 +24,8 @@ async function seed() {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // Chores must include keywords so the rule-based intent parser can match them.
+  // Mirror a subset of the app's hardcoded CHORES constant with the same keyword format.
   const familyConfig = {
     familyName: 'Test Family',
     kids: {
@@ -31,16 +33,12 @@ async function seed() {
       louisa: { name: 'Louisa', color: 'purple' }
     },
     chores: {
-      make_bed:     { label: 'Make bed',       points: 2 },
-      brush_teeth:  { label: 'Brush teeth',    points: 1 },
-      clean_room:   { label: 'Clean room',     points: 3 },
-      take_out_trash: { label: 'Take out trash', points: 2 },
-      do_dishes:    { label: 'Do dishes',      points: 2 },
-      feed_pet:     { label: 'Feed pet',       points: 1 },
-      homework:     { label: 'Homework',       points: 3 },
-      set_table:    { label: 'Set table',      points: 1 },
-      clear_table:  { label: 'Clear table',    points: 1 },
-      vacuum:       { label: 'Vacuum',         points: 3 }
+      make_bed:       { label: 'Make bed',            points: 1, kids: ['alex', 'louisa'], keywords: ['made bed', 'make bed', 'made their bed', 'beds'] },
+      brush_teeth:    { label: 'Brush teeth',         points: 1, kids: ['alex', 'louisa'], keywords: ['brushed teeth', 'brush teeth', 'brushed'] },
+      clean_room:     { label: 'Clean room',          points: 2, kids: ['alex', 'louisa'], keywords: ['cleaned room', 'clean room', 'tidied room'] },
+      feed_dog_am:    { label: 'Feed dog (AM)',        points: 1, kids: ['alex', 'louisa'], keywords: ['fed the dog this morning', 'fed dog', 'dog food morning'] },
+      feed_dog_pm:    { label: 'Feed dog (PM)',        points: 1, kids: ['alex', 'louisa'], keywords: ['fed the dog tonight', 'fed dog pm', 'dog food evening'] },
+      homework:       { label: 'Homework',             points: 2, kids: ['alex', 'louisa'], keywords: ['did homework', 'homework done', 'finished homework'] }
     },
     payTiers: {
       alex:   [{ minPts: 0, pay: 0 }, { minPts: 10, pay: 5 }, { minPts: 20, pay: 10 }],
@@ -60,7 +58,7 @@ async function seed() {
 
   console.log(`✓ Seeded test database for family: ${FAMILY_CODE}`);
   console.log(`  Kids: Alex, Louisa`);
-  console.log(`  Chores: ${Object.keys(familyConfig.chores).length} chores`);
+  console.log(`  Chores: ${Object.keys(familyConfig.chores).length} chores with keywords`);
   process.exit(0);
 }
 

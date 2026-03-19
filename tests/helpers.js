@@ -58,14 +58,20 @@ async function loginAs(page, familyCode = FAMILY_CODE) {
   // Wait for tab bar — confirms HTML rendered
   await page.waitForSelector('[data-tab]', { timeout: 15000 });
 
-  // Wait for hub:config-changed AND confirm the setup modal is gone.
-  // The event can fire from edge-case paths even when config load fails,
-  // so we also check the modal is closed as a signal that auth + DB read
-  // fully succeeded.
+  // Wait for hub:config-changed, modal closed, AND chore config loaded.
+  // hub:config-changed fires when configLoaded=true, but Firebase onValue
+  // listeners may not have delivered currentConfig.chores yet. We wait
+  // for that too so intent parsing works immediately after loginAs returns.
   await page.waitForFunction(() => {
     const modal = document.getElementById('familyModal');
     const modalClosed = modal && !modal.classList.contains('open');
-    return window.__hubConfigLoaded === true && modalClosed;
+    const runtime = window.phaseRuntime;
+    // configLoaded=true means Firebase config loaded. currentConfig.chores
+    // is populated from Firebase (seeded with keywords), so intent parsing works.
+    const choresReady = runtime && runtime.configLoaded === true &&
+      runtime.currentConfig && runtime.currentConfig.chores &&
+      Object.keys(runtime.currentConfig.chores).length > 0;
+    return window.__hubConfigLoaded === true && modalClosed && choresReady;
   }, { timeout: 20000 });
 }
 
