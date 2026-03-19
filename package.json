@@ -1,0 +1,27 @@
+{
+  "name": "chores",
+  "version": "1.0.0",
+  "description": "",
+  "main": "firebase-config.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:mobile": "playwright test --project=mobile-android --project=mobile-ios",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tervus-burnbags/family-chores.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/tervus-burnbags/family-chores/issues"
+  },
+  "homepage": "https://github.com/tervus-burnbags/family-chores#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

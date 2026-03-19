@@ -13,3 +13,10 @@ Thumbs.db
 
 # Private local notes / family codes
 *.txt
+
+.vercel
+
+# Playwright
+node_modules/
+test-results/
+playwright-report/
