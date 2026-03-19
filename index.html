@@ -4411,7 +4411,8 @@
       elements.joinFamilyButton.addEventListener('click', () => {
         joinFamily().catch((error) => {
           console.error(error);
-          setModalStatus('Unable to join the family right now.', true);
+          var firebaseFailure = explainFirebaseError(error);
+          setModalStatus('Unable to join the family right now. ' + firebaseFailure.code + ': ' + firebaseFailure.detail, true);
         });
       });
 
@@ -10202,7 +10203,6 @@
   </script>
 </body>
 </html>
-
 
 
 
