@@ -10176,7 +10176,15 @@
             '</ol></section>';
         }
 
-        var sourceHtml = r.source ? '<p class="recipe-source">' + escapeHtml(r.source) + '</p>' : '';
+        var addedLabel = '';
+        if (r.createdAt) {
+          try {
+            addedLabel = 'Added ' + new Date(r.createdAt).toLocaleDateString(undefined, {
+              year: 'numeric', month: 'short', day: 'numeric'
+            });
+          } catch (err) { addedLabel = ''; }
+        }
+        var sourceHtml = addedLabel ? '<p class="recipe-source">' + escapeHtml(addedLabel) + '</p>' : '';
 
         var html = '';
         html += '<button type="button" class="recipe-detail-back" id="recipeDetailBack">← All recipes</button>';

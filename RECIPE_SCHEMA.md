@@ -37,8 +37,7 @@ This is the canonical contract for recipes stored in Family Hub. Any LLM-authore
     "Bulk ferment until the dough is jiggly and 50% larger, ~4 hours at 75°F.",
     "Shape into a tight boule. Cold-retard in a floured banneton, 12–24 hours.",
     "Bake covered at 500°F for 20 min, then uncovered at 450°F for 25 min."
-  ],
-  "source": "ChatGPT 2026-06-03"                    // optional but recommended — who/what authored this version
+  ]
 }
 ```
 
@@ -58,7 +57,8 @@ The import script generates `id`, `createdAt`, `updatedAt`, and initializes `not
 | `totalTime`   | string                    | no       | Only include if it differs meaningfully from prep+cook. |
 | `ingredients` | `Ingredient[]`            | **yes**  | Non-empty. See below. |
 | `steps`       | string[]                  | **yes**  | Non-empty. Imperative sentences. ≤ 2 sentences each ideally. |
-| `source`      | string                    | no       | Provenance. E.g. `"ChatGPT 2026-06-03"`, `"Claude revision 2026-06-15"`. |
+
+The detail view shows an "Added [date]" line derived from the server-managed `createdAt` timestamp. **Do not include a `source` field in input** — it's stripped on import. If you want to track revision history, use the recipe's `notes` field.
 
 ### `Ingredient` shape
 
@@ -144,8 +144,7 @@ The contract — keep these consistent so the app's ingredient column reads clea
     "Scrape into the pan. Smooth the top and sprinkle generously with demerara sugar.",
     "Bake 50–60 min, until a skewer comes out clean and the top is deeply bronzed.",
     "Cool in the pan 15 min, then lift onto a rack."
-  ],
-  "source": "ChatGPT 2026-06-03"
+  ]
 }
 ```
 

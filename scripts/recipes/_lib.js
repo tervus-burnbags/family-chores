@@ -136,7 +136,7 @@ function validateRecipe(input) {
       });
     }
   }
-  ['servings', 'prepTime', 'cookTime', 'totalTime', 'source', 'category'].forEach(function (f) {
+  ['servings', 'prepTime', 'cookTime', 'totalTime', 'category'].forEach(function (f) {
     if (input[f] != null && typeof input[f] !== 'string') {
       errors.push('`' + f + '` must be a string if present.');
     }
@@ -183,7 +183,7 @@ function validateRecipe(input) {
 // Strip server-managed fields from input.
 function sanitizeInput(input) {
   const clean = {};
-  ['title', 'description', 'servings', 'prepTime', 'cookTime', 'totalTime', 'source'].forEach(function (f) {
+  ['title', 'description', 'servings', 'prepTime', 'cookTime', 'totalTime'].forEach(function (f) {
     if (input[f] != null) clean[f] = String(input[f]);
   });
   if (input.category != null && String(input.category).trim()) {
