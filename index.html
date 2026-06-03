@@ -4648,6 +4648,9 @@
         if (name === 'recipes' && typeof window.renderRecipes === 'function') {
           window.renderRecipes();
         }
+        if (typeof window.updateRecipesWakeLock === 'function') {
+          window.updateRecipesWakeLock(name === 'recipes');
+        }
       }
 
       window.addEventListener('hashchange', function () {
@@ -10295,6 +10298,56 @@
         renderRecipesImpl();
         return true;
       };
+
+      // --- Screen Wake Lock (Recipes tab only) ---
+      // Keep the screen on while the user is reading a recipe so they don't have
+      // to touch sticky/floury hands to the phone. Released the moment they
+      // leave the Recipes tab, hide the page, or the OS reclaims the lock.
+      var wakeLockState = { sentinel: null, wanted: false };
+
+      function acquireWakeLock() {
+        if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+        if (wakeLockState.sentinel) return;
+        navigator.wakeLock.request('screen').then(function (sentinel) {
+          if (!wakeLockState.wanted) {
+            sentinel.release().catch(function () {});
+            return;
+          }
+          wakeLockState.sentinel = sentinel;
+          sentinel.addEventListener('release', function () {
+            if (wakeLockState.sentinel === sentinel) wakeLockState.sentinel = null;
+            // OS may auto-release on visibility change; reacquire when we come back.
+            if (wakeLockState.wanted && document.visibilityState === 'visible') {
+              acquireWakeLock();
+            }
+          });
+        }).catch(function (err) {
+          // Most common: page not focused, or unsupported. Silent — non-essential feature.
+          if (err && err.name !== 'NotAllowedError') {
+            console.debug('Wake lock unavailable:', err.name || err);
+          }
+        });
+      }
+
+      function releaseWakeLock() {
+        if (wakeLockState.sentinel) {
+          var s = wakeLockState.sentinel;
+          wakeLockState.sentinel = null;
+          s.release().catch(function () {});
+        }
+      }
+
+      window.updateRecipesWakeLock = function (shouldHold) {
+        wakeLockState.wanted = !!shouldHold;
+        if (shouldHold) acquireWakeLock();
+        else releaseWakeLock();
+      };
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && wakeLockState.wanted) {
+          acquireWakeLock();
+        }
+      });
     })();
   </script>
   <script>

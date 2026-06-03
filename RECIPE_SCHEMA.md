@@ -82,14 +82,28 @@ The contract — keep these consistent so the app's ingredient column reads clea
 
 | Unit          | Use for                                                                |
 | ------------- | ---------------------------------------------------------------------- |
-| `g`           | **Default for baking.** Flour, sugar, butter, cocoa, salt, yeast, dough hydration water, meats, cheeses, anything where precision matters. |
-| `ml`          | Liquids when volume is more natural than weight (stocks, milk in soup, oil in dressing). Prefer `g` for baking water. |
-| `tsp`         | Spices, extracts, small amounts of oil/vinegar, baking powder, baking soda. |
-| `Tbsp`        | Same as `tsp` but for slightly larger amounts (3 tsp = 1 Tbsp). Capital T. |
-| `cup`         | Bulky non-baking items where cup measures are idiomatic ("1 cup chopped onion", "2 cup spinach, packed"). Do not use for baking ingredients. |
+| `g`           | **Bulk dry ingredients ≥ 10 g:** flour, granulated/brown/powdered sugar (in larger amounts), butter, cocoa, yeast, meats, cheeses, dough hydration water. Bulk wet ingredients: oils, milk, cream, yogurt, sour cream — these stay in g even though they're liquids. |
+| `ml`          | Liquids when volume is more natural than weight (stocks, broths, wine reductions). Prefer `g` for baking water and dairy. |
+| `tsp`         | **Powders and small amounts**, even when the source recipe gives grams. Convert any of: baking powder, baking soda, ground spices (cinnamon, cardamom, cumin, etc.), extracts (vanilla, almond), **salt at small amounts (≤ ~6 g)**, small amounts of oil/vinegar, glaze milk. Grams feel "too small" for these — tsp/Tbsp reads more naturally. |
+| `Tbsp`        | Same as `tsp` but for slightly larger amounts (3 tsp = 1 Tbsp). Capital T. **Powdered sugar in glazes** (1 Tbsp ≈ 8 g). |
+| `cup`         | Bulky non-baking items where cup measures are idiomatic ("1 cup chopped onion", "2 cup spinach, packed"). |
 | `ea`          | Whole items: `2 ea eggs`, `1 ea lemon`, `3 ea garlic cloves`. |
 | `pinch`       | Trace amounts. |
 | `""` (empty)  | "To taste" — pair with `"item": "salt and pepper, to taste"` and `"qty": 0`. |
+
+### Conversion cheat sheet (when normalizing from grams to tsp/Tbsp)
+
+| Ingredient | 1 tsp ≈ | 1 Tbsp ≈ |
+| --- | --- | --- |
+| Baking powder | 5 g | 15 g |
+| Baking soda | 6 g | 18 g |
+| Fine salt | 6 g | 18 g |
+| Kosher salt (Diamond Crystal) | 5 g | 15 g |
+| Ground cinnamon / cardamom | 2 g | 6 g |
+| Granulated sugar | 4 g | 12 g |
+| Powdered sugar | — | 8 g |
+| Vanilla extract | 4 g | 12 g |
+| Milk / cream | 5 g | 15 g |
 
 ### Style Rules
 
