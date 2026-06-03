@@ -1515,3 +1515,107 @@ Ensure these are correct (line ~11-13):
 6. manifest.json references all icon sizes
 7. No 404s for icon files
 
+
+---
+
+# Phase 41 — Recipes (June 2026)
+
+## Why
+
+Recipes are now part of the family's day-to-day kitchen workflow. The user designs them with an external LLM (ChatGPT / Claude), tries them, and wants a place to (a) view the canonical version on any device and (b) jot notes after cooking so the next LLM revision incorporates real feedback. The app stores recipes + notes; LLMs do the authoring.
+
+## Shape
+
+- **Inbound:** External LLM produces a recipe (any format) → user saves as PDF in `recipes-inbox/` → user asks Claude to import → Claude reads the PDF, normalizes to canonical JSON per `RECIPE_SCHEMA.md`, runs `scripts/recipes/import-recipe.js` → recipe appears in Firebase under `/recipes/{id}` at the family root → app picks it up via the existing realtime listener pattern.
+- **In-app:** A 6th tab "Recipes" shows the list (search by title/tag/ingredient) and a detail view (canonical layout). The **only** mutable field is `notes` (single free-form textarea, debounced sync). Recipe body is read-only.
+- **Outbound update:** User accumulates notes ("dough too sticky, added 30g more flour", "salt too high, halve it"). User asks Claude to revise → Claude calls `fetch-recipe.js`, generates a revised JSON, runs `update-recipe.js` → overwrite + clear notes + bump `updatedAt`. **No version history.**
+
+## Canonical Recipe JSON
+
+See `RECIPE_SCHEMA.md` for the contract. Summary:
+
+```jsonc
+{
+  "id": "rcp_...",                 // server-assigned at import
+  "title": "...",                  // Title Case
+  "description": "...",            // 1–2 sentence summary
+  "tags": ["bread", "sourdough"],  // lowercase, kebab-style
+  "servings": "4 servings | 1 loaf | 12 cookies",
+  "prepTime": "30 min",
+  "cookTime": "45 min",
+  "totalTime": "",                 // optional, for long ferments etc.
+  "ingredients": [
+    { "qty": 500, "unit": "g", "item": "bread flour", "note": "optional parenthetical" }
+  ],
+  "steps": ["Step one.", "Step two.", "..."],
+  "source": "ChatGPT 2026-06-03",
+  "createdAt": 0,
+  "updatedAt": 0,
+  "notes": ""                      // ONLY mutable field from the app
+}
+```
+
+### Unit Conventions
+
+Locked in `RECIPE_SCHEMA.md` so every LLM-authored recipe is consistent:
+
+| Use            | For                                                                |
+| -------------- | ------------------------------------------------------------------ |
+| `g`            | Flour, sugar, butter, cocoa, salt, yeast, meats, cheeses by weight |
+| `ml`           | Liquids when volume is more natural (stocks, milk in soups)        |
+| `tsp` / `Tbsp` | Spices, extracts, small oil/vinegar, baking powder, baking soda    |
+| `cup`          | Bulky non-baking items (chopped onion, leafy greens)               |
+| `ea`           | Whole items (eggs, lemons, onions)                                 |
+| `pinch`        | Trace amounts                                                      |
+
+Rule of thumb: **baking is grams; cooking by feel is volume.**
+
+## In-App UI
+
+- **Tab bar:** 6 tabs (Home, Chores, Lists, Bank, Fun, Recipes). Tight at 360px — flagged for review; drop label size by 1px if necessary, do not collapse a tab into a menu.
+- **List pane:** search at top, rows sorted by `updatedAt` desc, each row = title + truncated description + tag chips.
+- **Detail pane:** title + tags + source line, meta row (servings · prep · cook · total), two-column ingredient list (right-aligned qty with tabular-nums, item on the right), numbered steps, notes textarea at bottom.
+- **Notes textarea:** 500ms debounced write to `/recipes/{id}/notes`. "Saving… → Saved" indicator. Placeholder: *"What did you change? How did it turn out? Claude will use this to revise the recipe."*
+- **No edit affordances** for recipe body fields. Read-only by design.
+
+## Admin Tooling
+
+```
+RECIPE_SCHEMA.md              # canonical contract, unit conventions, worked example
+recipes-inbox/                # gitignored; user drops PDFs here
+scripts/recipes/
+  package.json                # firebase-admin only
+  README.md                   # one-time setup: service-account key, family-id.txt
+  import-recipe.js
+  update-recipe.js            # overwrite body, clear notes, bump updatedAt
+  fetch-recipe.js             # prints current recipe + notes
+  list-recipes.js
+```
+
+Each script validates against the schema before writing, so a bad import fails loud rather than corrupting the recipe collection.
+
+## Firebase Schema
+
+Path: `/families/{familyId}/recipes/{recipeId}` (same family-rooted pattern as `lists`, `bulletin`, etc.). Family-shared, no per-kid scoping.
+
+## Out of Scope (for Phase 41)
+
+- In-app recipe creation/editing (LLM-only).
+- Universal composer intent for recipes.
+- Categories, favorites, images, print views.
+- Version history (decided: overwrite-only).
+- Direct LLM API integration.
+
+## Validation Checklist
+
+1. Tab bar holds 6 tabs without visual breakage at 360–414px wide.
+2. Recipes list renders from Firebase, sorts by `updatedAt` desc.
+3. Search filters by title, tag, and ingredient item.
+4. Detail view renders all sections with no edit affordances on recipe body.
+5. Notes write debounces and shows save state. No write storm.
+6. Hash routing for `#recipes` works.
+7. Composer placeholder includes a `recipes` key; composer remains usable for non-recipe intents on this tab.
+8. `import-recipe.js` rejects malformed JSON (missing required fields, non-numeric `qty`, empty `ingredients` / `steps`) with clear errors.
+9. `update-recipe.js` clears `notes` and advances `updatedAt`; preserves `id` and `createdAt`.
+10. Service worker cache version bumped; new view loads after install update.
+11. No regressions in Bulletin, Chores, Lists, Bank, Fun.

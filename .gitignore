@@ -21,3 +21,9 @@ Thumbs.db
 node_modules/
 test-results/
 playwright-report/
+
+# Recipes admin tooling
+recipes-inbox/*
+!recipes-inbox/.gitkeep
+!recipes-inbox/README.md
+scripts/recipes/service-account.json

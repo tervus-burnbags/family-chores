@@ -3623,6 +3623,352 @@
         height: 18px;
       }
     }
+
+    /* -- Recipes -- */
+
+    .recipes-shell {
+      display: grid;
+      gap: 12px;
+    }
+
+    .recipes-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 4px 0;
+    }
+
+    .recipes-search {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      background: var(--panel);
+      font-size: var(--font-base);
+      color: var(--text);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .recipes-search:focus {
+      outline: none;
+      border-color: var(--alex);
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.18);
+    }
+
+    .recipes-count {
+      font-size: var(--font-xs);
+      color: var(--muted);
+      padding: 0 6px;
+    }
+
+    .recipes-empty {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: var(--font-sm);
+      background: var(--panel);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-md);
+    }
+
+    .recipes-empty strong {
+      display: block;
+      font-size: var(--font-md);
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .recipes-empty code {
+      background: var(--panel-alt);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
+    .recipes-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .recipe-row {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-xs);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+      font: inherit;
+      color: inherit;
+    }
+
+    .recipe-row:hover {
+      box-shadow: var(--shadow-sm);
+    }
+
+    .recipe-row:active {
+      transform: scale(0.995);
+    }
+
+    .recipe-row-title {
+      font-size: var(--font-md);
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 4px;
+    }
+
+    .recipe-row-desc {
+      font-size: var(--font-sm);
+      color: var(--muted);
+      margin: 0 0 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .recipe-row-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .recipe-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--panel-alt);
+      color: var(--alex);
+      border-radius: var(--radius-pill);
+      font-size: var(--font-xs);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .recipe-row-noted {
+      margin-left: auto;
+      font-size: var(--font-xs);
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    /* Detail */
+    .recipe-detail {
+      display: grid;
+      gap: 16px;
+    }
+
+    .recipe-detail-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--alex);
+      font-size: var(--font-sm);
+      font-weight: 600;
+      padding: 6px 8px 6px 0;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+
+    .recipe-detail-back:hover {
+      text-decoration: underline;
+    }
+
+    .recipe-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .recipe-card h1 {
+      margin: 0 0 6px;
+      font-size: var(--font-xl);
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .recipe-card .recipe-description {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: var(--font-base);
+      line-height: 1.5;
+    }
+
+    .recipe-card .recipe-source {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: var(--font-xs);
+      font-style: italic;
+    }
+
+    .recipe-card .recipe-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .recipe-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 22px;
+      padding: 12px 14px;
+      background: var(--panel-alt);
+      border-radius: var(--radius-md);
+      margin-bottom: 4px;
+    }
+
+    .recipe-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .recipe-meta-item dt {
+      font-size: var(--font-xs);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+
+    .recipe-meta-item dd {
+      margin: 0;
+      font-size: var(--font-base);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .recipe-section h2 {
+      margin: 0 0 10px;
+      font-size: var(--font-md);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .recipe-ingredients {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 14px;
+      row-gap: 6px;
+      align-items: baseline;
+    }
+
+    .recipe-ingredient-qty {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .recipe-ingredient-item {
+      color: var(--text);
+    }
+
+    .recipe-ingredient-note {
+      color: var(--muted);
+      font-size: var(--font-sm);
+      font-style: italic;
+    }
+
+    .recipe-steps {
+      margin: 0;
+      padding-left: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .recipe-steps li {
+      color: var(--text);
+      font-size: var(--font-base);
+      line-height: 1.55;
+    }
+
+    .recipe-steps li::marker {
+      color: var(--alex);
+      font-weight: 700;
+    }
+
+    .recipe-notes {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .recipe-notes-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .recipe-notes-head h2 {
+      margin: 0;
+      font-size: var(--font-md);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .recipe-notes-status {
+      font-size: var(--font-xs);
+      color: var(--muted);
+      min-height: 1em;
+    }
+
+    .recipe-notes-status.saving { color: var(--warning); }
+    .recipe-notes-status.saved  { color: var(--success); }
+
+    .recipe-notes textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      font: inherit;
+      font-size: var(--font-base);
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .recipe-notes textarea:focus {
+      outline: none;
+      border-color: var(--alex);
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.18);
+      background: var(--panel);
+    }
+
+    .recipe-notes-hint {
+      margin: 8px 0 0;
+      font-size: var(--font-xs);
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 380px) {
+      .tab-label {
+        font-size: 0.68rem;
+      }
+      .recipe-card {
+        padding: 16px;
+      }
+      .recipe-ingredients {
+        column-gap: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -3685,6 +4031,13 @@
       </section>
     </div>
 
+    <!-- Recipes View -->
+    <div class="view" id="viewRecipes">
+      <div id="recipesContent" class="view-content">
+        <p style="color:var(--muted);text-align:center;padding:40px 16px">Loading...</p>
+      </div>
+    </div>
+
 
     <form class="panel composer" id="composer">
       <label class="visually-hidden" for="messageInput">Type a chore update</label>
@@ -3706,6 +4059,10 @@
       <a class="tab" href="#lists" data-tab="lists">
         <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
         <span class="tab-label">Lists</span>
+      </a>
+      <a class="tab" href="#recipes" data-tab="recipes">
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 011.05-1.54 5 5 0 017.08 0A5.11 5.11 0 0116.59 6 4 4 0 0118 13.87V21H6z"/><line x1="6" y1="17" x2="18" y2="17"/></svg></span>
+        <span class="tab-label">Recipes</span>
       </a>
       <a class="tab" href="#bank" data-tab="bank">
         <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
@@ -4207,6 +4564,7 @@
         chores: document.getElementById('viewChores'),
         fun: document.getElementById('viewFun'),
         lists: document.getElementById('viewLists'),
+        recipes: document.getElementById('viewRecipes'),
         bank: document.getElementById('viewBank')
       };
       var tabs = elements.tabBar.querySelectorAll('.tab');
@@ -4221,7 +4579,8 @@
             chores: '"Alex brushed teeth" or "3 points for Louisa"',
             bank: '"Paid Alex $5", "Louisa spent $3", or "Alex $2"',
             lists: '"Add milk to grocery" or "Create shopping list"',
-            bulletin: '"Pin: picture day Tuesday"'
+            bulletin: '"Pin: picture day Tuesday"',
+            recipes: 'Search recipes by title, tag, or ingredient'
           };
           elements.messageInput.placeholder = placeholders[name] || 'Say something...';
         }
@@ -4257,6 +4616,9 @@
         if (name === 'lists' && typeof window.renderListsHome === 'function') {
           window.renderListsHome();
         }
+        if (name === 'recipes' && typeof window.renderRecipes === 'function') {
+          window.renderRecipes();
+        }
       }
 
       window.addEventListener('hashchange', function () {
@@ -4277,6 +4639,13 @@
         }
         if (name === 'lists' && appShellState.currentView === 'lists') {
           if (typeof window.returnToListsHome === 'function' && window.returnToListsHome()) {
+            return;
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        if (name === 'recipes' && appShellState.currentView === 'recipes') {
+          if (typeof window.returnToRecipesHome === 'function' && window.returnToRecipesHome()) {
             return;
           }
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -9495,6 +9864,348 @@
         };
       };
 
+    })();
+  </script>
+  <script>
+    // === Recipes Module ===
+    (function () {
+      var recipesState = {
+        familyId: null,
+        teardown: null,
+        recipesById: {},
+        currentRecipeId: null,
+        searchQuery: '',
+        notesDebounceTimer: null,
+        notesPendingId: null,
+        notesPendingValue: ''
+      };
+
+      function runtime() { return window.phaseRuntime; }
+
+      function recipesRef(phase) {
+        if (!phase || !phase.database || !phase.familyId) return null;
+        return phase.dbRef('recipes');
+      }
+
+      function recipeRef(phase, recipeId) {
+        if (!phase || !phase.database || !phase.familyId || !recipeId) return null;
+        return phase.dbRef('recipes/' + recipeId);
+      }
+
+      function escapeHtml(s) {
+        var phase = runtime();
+        if (phase && typeof phase.escapeHtml === 'function') return phase.escapeHtml(s);
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+        });
+      }
+
+      function normalizeRecipes(snapshotValue) {
+        var data = snapshotValue || {};
+        var result = {};
+        Object.keys(data).forEach(function (id) {
+          var r = data[id] || {};
+          result[id] = {
+            id: id,
+            title: String(r.title || 'Untitled Recipe'),
+            description: String(r.description || ''),
+            tags: Array.isArray(r.tags) ? r.tags.map(String) : [],
+            servings: String(r.servings || ''),
+            prepTime: String(r.prepTime || ''),
+            cookTime: String(r.cookTime || ''),
+            totalTime: String(r.totalTime || ''),
+            ingredients: Array.isArray(r.ingredients) ? r.ingredients.map(function (ing) {
+              ing = ing || {};
+              return {
+                qty: ing.qty == null ? '' : ing.qty,
+                unit: String(ing.unit || ''),
+                item: String(ing.item || ''),
+                note: String(ing.note || '')
+              };
+            }) : [],
+            steps: Array.isArray(r.steps) ? r.steps.map(String) : [],
+            source: String(r.source || ''),
+            createdAt: Number(r.createdAt || 0),
+            updatedAt: Number(r.updatedAt || 0),
+            notes: String(r.notes || '')
+          };
+        });
+        return result;
+      }
+
+      function recipeArray() {
+        return Object.keys(recipesState.recipesById).map(function (id) {
+          return recipesState.recipesById[id];
+        }).sort(function (a, b) {
+          return Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0);
+        });
+      }
+
+      function filterRecipes(query) {
+        var q = String(query || '').trim().toLowerCase();
+        if (!q) return recipeArray();
+        return recipeArray().filter(function (r) {
+          if (r.title.toLowerCase().indexOf(q) >= 0) return true;
+          for (var i = 0; i < r.tags.length; i++) {
+            if (r.tags[i].toLowerCase().indexOf(q) >= 0) return true;
+          }
+          for (var j = 0; j < r.ingredients.length; j++) {
+            if (String(r.ingredients[j].item || '').toLowerCase().indexOf(q) >= 0) return true;
+          }
+          return false;
+        });
+      }
+
+      function subscribeRecipes() {
+        var phase = runtime();
+        if (!phase) return;
+        var ref = recipesRef(phase);
+        if (!ref) return;
+        if (recipesState.familyId === phase.familyId) return;
+        if (typeof recipesState.teardown === 'function') {
+          recipesState.teardown();
+        }
+        recipesState.familyId = phase.familyId;
+        var handler = function (snapshot) {
+          recipesState.recipesById = normalizeRecipes(snapshot.exists() ? snapshot.val() : {});
+          if (location.hash.replace('#', '') === 'recipes') {
+            // Don't blow away an actively-edited notes textarea
+            var activeNotes = document.getElementById('recipeNotesInput');
+            if (activeNotes && document.activeElement === activeNotes) return;
+            renderRecipesImpl();
+          }
+        };
+        ref.on('value', handler);
+        recipesState.teardown = function () { ref.off('value', handler); };
+      }
+
+      function buildListBodyHtml() {
+        var matches = filterRecipes(recipesState.searchQuery);
+        var total = Object.keys(recipesState.recipesById).length;
+        if (total === 0) {
+          return '<div class="recipes-empty"><strong>No recipes yet</strong>Drop a PDF into <code>recipes-inbox/</code> and ask Claude to import it. It will sync here for the whole family.</div>';
+        }
+        var html = '<div class="recipes-count">Showing ' + matches.length + ' of ' + total + ' recipe' + (total === 1 ? '' : 's') + '</div>';
+        html += '<div class="recipes-list">';
+        matches.forEach(function (r) {
+          var tagsHtml = r.tags.slice(0, 3).map(function (t) {
+            return '<span class="recipe-tag">' + escapeHtml(t) + '</span>';
+          }).join('');
+          var notedBadge = r.notes && r.notes.trim() ? '<span class="recipe-row-noted">Has notes</span>' : '';
+          html += '<button type="button" class="recipe-row" data-recipe-id="' + escapeHtml(r.id) + '">';
+          html +=   '<div class="recipe-row-title">' + escapeHtml(r.title) + '</div>';
+          if (r.description) {
+            html += '<div class="recipe-row-desc">' + escapeHtml(r.description) + '</div>';
+          }
+          html +=   '<div class="recipe-row-meta">' + tagsHtml + notedBadge + '</div>';
+          html += '</button>';
+        });
+        html += '</div>';
+        if (matches.length === 0 && total > 0) {
+          html += '<div class="recipes-empty">No recipes match "' + escapeHtml(recipesState.searchQuery) + '".</div>';
+        }
+        return html;
+      }
+
+      function renderListBody(container) {
+        var body = container.querySelector('#recipesListBody');
+        if (!body) return;
+        body.innerHTML = buildListBodyHtml();
+        body.querySelectorAll('.recipe-row').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            openRecipe(btn.getAttribute('data-recipe-id'));
+          });
+        });
+      }
+
+      function renderListImpl(container) {
+        if (!container.querySelector('.recipes-shell')) {
+          container.innerHTML =
+            '<div class="recipes-shell">' +
+              '<div class="recipes-toolbar">' +
+                '<input type="search" class="recipes-search" id="recipesSearchInput" placeholder="Search recipes…" autocomplete="off">' +
+              '</div>' +
+              '<div id="recipesListBody"></div>' +
+            '</div>';
+          var input = container.querySelector('#recipesSearchInput');
+          input.value = recipesState.searchQuery;
+          input.addEventListener('input', function (e) {
+            recipesState.searchQuery = e.target.value;
+            renderListBody(container);
+          });
+        }
+        renderListBody(container);
+      }
+
+      function renderDetailImpl(container, recipeId) {
+        var r = recipesState.recipesById[recipeId];
+        if (!r) {
+          recipesState.currentRecipeId = null;
+          renderListImpl(container);
+          return;
+        }
+
+        var tagsHtml = r.tags.map(function (t) {
+          return '<span class="recipe-tag">' + escapeHtml(t) + '</span>';
+        }).join('');
+
+        var metaItems = [];
+        if (r.servings)  metaItems.push({ k: 'Servings',  v: r.servings });
+        if (r.prepTime)  metaItems.push({ k: 'Prep',      v: r.prepTime });
+        if (r.cookTime)  metaItems.push({ k: 'Cook',      v: r.cookTime });
+        if (r.totalTime) metaItems.push({ k: 'Total',     v: r.totalTime });
+        var metaHtml = '';
+        if (metaItems.length) {
+          metaHtml = '<dl class="recipe-meta">' + metaItems.map(function (m) {
+            return '<div class="recipe-meta-item"><dt>' + escapeHtml(m.k) + '</dt><dd>' + escapeHtml(m.v) + '</dd></div>';
+          }).join('') + '</dl>';
+        }
+
+        var ingredientsHtml = '';
+        if (r.ingredients.length) {
+          ingredientsHtml = '<section class="recipe-section"><h2>Ingredients</h2><div class="recipe-ingredients">' +
+            r.ingredients.map(function (ing) {
+              var qty = (ing.qty === '' || ing.qty == null || ing.qty === 0) ? '' : ing.qty;
+              var unit = ing.unit || '';
+              var qtyLabel = String(qty);
+              if (unit && unit !== 'ea') qtyLabel = (qtyLabel ? qtyLabel + ' ' : '') + unit;
+              var itemHtml = escapeHtml(ing.item);
+              if (ing.note) itemHtml += ' <span class="recipe-ingredient-note">(' + escapeHtml(ing.note) + ')</span>';
+              return '<span class="recipe-ingredient-qty">' + escapeHtml(qtyLabel) + '</span>' +
+                     '<span class="recipe-ingredient-item">' + itemHtml + '</span>';
+            }).join('') +
+            '</div></section>';
+        }
+
+        var stepsHtml = '';
+        if (r.steps.length) {
+          stepsHtml = '<section class="recipe-section"><h2>Steps</h2><ol class="recipe-steps">' +
+            r.steps.map(function (s) { return '<li>' + escapeHtml(s) + '</li>'; }).join('') +
+            '</ol></section>';
+        }
+
+        var sourceHtml = r.source ? '<p class="recipe-source">' + escapeHtml(r.source) + '</p>' : '';
+
+        var html = '';
+        html += '<button type="button" class="recipe-detail-back" id="recipeDetailBack">← All recipes</button>';
+        html += '<article class="recipe-card">';
+        html +=   '<h1>' + escapeHtml(r.title) + '</h1>';
+        if (r.description) html += '<p class="recipe-description">' + escapeHtml(r.description) + '</p>';
+        html +=   sourceHtml;
+        if (tagsHtml) html += '<div class="recipe-tags">' + tagsHtml + '</div>';
+        html +=   metaHtml;
+        html +=   ingredientsHtml;
+        html +=   stepsHtml;
+        html += '</article>';
+        html += '<section class="recipe-notes">';
+        html +=   '<div class="recipe-notes-head"><h2>Notes</h2><span class="recipe-notes-status" id="recipeNotesStatus"></span></div>';
+        html +=   '<textarea id="recipeNotesInput" placeholder="What did you change? How did it turn out? Claude will use this to revise the recipe."></textarea>';
+        html +=   '<p class="recipe-notes-hint">Saved automatically. Notes clear when Claude revises the recipe.</p>';
+        html += '</section>';
+
+        container.innerHTML = '<div class="recipe-detail">' + html + '</div>';
+
+        var notesInput = container.querySelector('#recipeNotesInput');
+        if (notesInput) {
+          notesInput.value = r.notes;
+        }
+
+        var backBtn = container.querySelector('#recipeDetailBack');
+        if (backBtn) {
+          backBtn.addEventListener('click', function () {
+            flushPendingNotes();
+            recipesState.currentRecipeId = null;
+            renderRecipesImpl();
+          });
+        }
+
+        if (notesInput) {
+          notesInput.addEventListener('input', function () {
+            scheduleNotesWrite(recipeId, notesInput.value);
+          });
+          notesInput.addEventListener('blur', function () {
+            flushPendingNotes();
+          });
+        }
+      }
+
+      function setNotesStatus(state, text) {
+        var el = document.getElementById('recipeNotesStatus');
+        if (!el) return;
+        el.className = 'recipe-notes-status' + (state ? ' ' + state : '');
+        el.textContent = text || '';
+      }
+
+      function scheduleNotesWrite(recipeId, value) {
+        recipesState.notesPendingId = recipeId;
+        recipesState.notesPendingValue = value;
+        setNotesStatus('saving', 'Saving…');
+        if (recipesState.notesDebounceTimer) clearTimeout(recipesState.notesDebounceTimer);
+        recipesState.notesDebounceTimer = setTimeout(function () {
+          writeNotesNow();
+        }, 500);
+      }
+
+      function flushPendingNotes() {
+        if (recipesState.notesDebounceTimer) {
+          clearTimeout(recipesState.notesDebounceTimer);
+          recipesState.notesDebounceTimer = null;
+          writeNotesNow();
+        }
+      }
+
+      function writeNotesNow() {
+        var phase = runtime();
+        var id = recipesState.notesPendingId;
+        var value = recipesState.notesPendingValue == null ? '' : recipesState.notesPendingValue;
+        if (!phase || !id) return;
+        var ref = recipeRef(phase, id);
+        if (!ref) return;
+        ref.child('notes').set(value).then(function () {
+          setNotesStatus('saved', 'Saved');
+          setTimeout(function () {
+            var el = document.getElementById('recipeNotesStatus');
+            if (el && el.classList.contains('saved')) setNotesStatus('', '');
+          }, 1500);
+        }).catch(function (err) {
+          console.error('Recipe notes write failed', err);
+          setNotesStatus('', 'Save failed. Will retry on next change.');
+        });
+        recipesState.notesDebounceTimer = null;
+      }
+
+      function openRecipe(recipeId) {
+        flushPendingNotes();
+        recipesState.currentRecipeId = recipeId;
+        renderRecipesImpl();
+        try { window.scrollTo(0, 0); } catch (err) {}
+      }
+
+      function renderRecipesImpl() {
+        var container = document.getElementById('recipesContent');
+        if (!container) return;
+        subscribeRecipes();
+        var phase = runtime();
+        if (!phase || !phase.familyId) {
+          container.innerHTML = '<div class="recipes-empty"><strong>Join a family first</strong>Recipes sync across the family. Create or join a family from Settings to see and add recipes.</div>';
+          return;
+        }
+        if (recipesState.currentRecipeId && recipesState.recipesById[recipesState.currentRecipeId]) {
+          renderDetailImpl(container, recipesState.currentRecipeId);
+        } else {
+          recipesState.currentRecipeId = null;
+          renderListImpl(container);
+        }
+      }
+
+      window.renderRecipes = function () { renderRecipesImpl(); };
+      window.returnToRecipesHome = function () {
+        if (!recipesState.currentRecipeId) return false;
+        recipesState.currentRecipeId = null;
+        flushPendingNotes();
+        renderRecipesImpl();
+        return true;
+      };
     })();
   </script>
   <script>

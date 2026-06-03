@@ -1,0 +1,16 @@
+{
+  "name": "family-hub-recipes-admin",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Admin scripts for importing and updating recipes in the Family Hub Firebase Realtime Database.",
+  "type": "commonjs",
+  "scripts": {
+    "import": "node import-recipe.js",
+    "update": "node update-recipe.js",
+    "fetch": "node fetch-recipe.js",
+    "list": "node list-recipes.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
