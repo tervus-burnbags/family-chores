@@ -136,7 +136,7 @@ function validateRecipe(input) {
       });
     }
   }
-  ['servings', 'prepTime', 'cookTime', 'totalTime', 'source'].forEach(function (f) {
+  ['servings', 'prepTime', 'cookTime', 'totalTime', 'source', 'category'].forEach(function (f) {
     if (input[f] != null && typeof input[f] !== 'string') {
       errors.push('`' + f + '` must be a string if present.');
     }
@@ -163,6 +163,9 @@ function validateRecipe(input) {
       if (ing.note != null && typeof ing.note !== 'string') {
         errors.push('ingredients[' + i + '].note must be a string if present.');
       }
+      if (ing.component != null && typeof ing.component !== 'string') {
+        errors.push('ingredients[' + i + '].component must be a string if present.');
+      }
     });
   }
   if (!Array.isArray(input.steps) || input.steps.length === 0) {
@@ -183,6 +186,9 @@ function sanitizeInput(input) {
   ['title', 'description', 'servings', 'prepTime', 'cookTime', 'totalTime', 'source'].forEach(function (f) {
     if (input[f] != null) clean[f] = String(input[f]);
   });
+  if (input.category != null && String(input.category).trim()) {
+    clean.category = String(input.category).trim().toLowerCase();
+  }
   clean.tags = Array.isArray(input.tags) ? input.tags.map(String) : [];
   clean.ingredients = input.ingredients.map(function (ing) {
     const out = {
@@ -191,6 +197,9 @@ function sanitizeInput(input) {
       item: String(ing.item).trim()
     };
     if (ing.note != null && String(ing.note).trim()) out.note = String(ing.note);
+    if (ing.component != null && String(ing.component).trim()) {
+      out.component = String(ing.component).trim().toLowerCase();
+    }
     return out;
   });
   clean.steps = input.steps.map(function (s) { return String(s).trim(); });

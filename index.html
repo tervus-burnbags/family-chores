@@ -3686,6 +3686,18 @@
       font-size: 0.85em;
     }
 
+    .recipes-category {
+      margin: 22px 4px 8px;
+      font-size: var(--font-md);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.01em;
+    }
+
+    .recipes-category:first-of-type {
+      margin-top: 10px;
+    }
+
     .recipes-list {
       display: grid;
       gap: 10px;
@@ -3855,12 +3867,29 @@
       font-weight: 700;
     }
 
+    .recipe-component {
+      margin: 16px 0 6px;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      color: var(--alex);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .recipe-component:first-child {
+      margin-top: 0;
+    }
+
     .recipe-ingredients {
       display: grid;
       grid-template-columns: max-content 1fr;
       column-gap: 14px;
       row-gap: 6px;
       align-items: baseline;
+    }
+
+    .recipe-ingredients + .recipe-component {
+      margin-top: 18px;
     }
 
     .recipe-ingredient-qty {
@@ -9910,6 +9939,7 @@
             title: String(r.title || 'Untitled Recipe'),
             description: String(r.description || ''),
             tags: Array.isArray(r.tags) ? r.tags.map(String) : [],
+            category: String(r.category || '').toLowerCase(),
             servings: String(r.servings || ''),
             prepTime: String(r.prepTime || ''),
             cookTime: String(r.cookTime || ''),
@@ -9920,7 +9950,8 @@
                 qty: ing.qty == null ? '' : ing.qty,
                 unit: String(ing.unit || ''),
                 item: String(ing.item || ''),
-                note: String(ing.note || '')
+                note: String(ing.note || ''),
+                component: String(ing.component || '').toLowerCase()
               };
             }) : [],
             steps: Array.isArray(r.steps) ? r.steps.map(String) : [],
@@ -9979,6 +10010,29 @@
         recipesState.teardown = function () { ref.off('value', handler); };
       }
 
+      var CATEGORY_ORDER = ['mains', 'sides', 'breads', 'soups', 'baked-goods', 'snacks', 'sweets', 'desserts', 'drinks', 'sauces'];
+
+      function titleCaseLabel(s) {
+        return String(s || '').split(/[-\s]+/).filter(Boolean).map(function (w) {
+          return w.charAt(0).toUpperCase() + w.slice(1);
+        }).join(' ');
+      }
+
+      function rowHtml(r) {
+        var tagsHtml = r.tags.slice(0, 3).map(function (t) {
+          return '<span class="recipe-tag">' + escapeHtml(t) + '</span>';
+        }).join('');
+        var notedBadge = r.notes && r.notes.trim() ? '<span class="recipe-row-noted">Has notes</span>' : '';
+        var html = '<button type="button" class="recipe-row" data-recipe-id="' + escapeHtml(r.id) + '">';
+        html +=     '<div class="recipe-row-title">' + escapeHtml(r.title) + '</div>';
+        if (r.description) {
+          html +=   '<div class="recipe-row-desc">' + escapeHtml(r.description) + '</div>';
+        }
+        html +=     '<div class="recipe-row-meta">' + tagsHtml + notedBadge + '</div>';
+        html += '</button>';
+        return html;
+      }
+
       function buildListBodyHtml() {
         var matches = filterRecipes(recipesState.searchQuery);
         var total = Object.keys(recipesState.recipesById).length;
@@ -9986,24 +10040,35 @@
           return '<div class="recipes-empty"><strong>No recipes yet</strong>Drop a PDF into <code>recipes-inbox/</code> and ask Claude to import it. It will sync here for the whole family.</div>';
         }
         var html = '<div class="recipes-count">Showing ' + matches.length + ' of ' + total + ' recipe' + (total === 1 ? '' : 's') + '</div>';
-        html += '<div class="recipes-list">';
-        matches.forEach(function (r) {
-          var tagsHtml = r.tags.slice(0, 3).map(function (t) {
-            return '<span class="recipe-tag">' + escapeHtml(t) + '</span>';
-          }).join('');
-          var notedBadge = r.notes && r.notes.trim() ? '<span class="recipe-row-noted">Has notes</span>' : '';
-          html += '<button type="button" class="recipe-row" data-recipe-id="' + escapeHtml(r.id) + '">';
-          html +=   '<div class="recipe-row-title">' + escapeHtml(r.title) + '</div>';
-          if (r.description) {
-            html += '<div class="recipe-row-desc">' + escapeHtml(r.description) + '</div>';
-          }
-          html +=   '<div class="recipe-row-meta">' + tagsHtml + notedBadge + '</div>';
-          html += '</button>';
-        });
-        html += '</div>';
-        if (matches.length === 0 && total > 0) {
-          html += '<div class="recipes-empty">No recipes match "' + escapeHtml(recipesState.searchQuery) + '".</div>';
+        if (matches.length === 0) {
+          return html + '<div class="recipes-empty">No recipes match "' + escapeHtml(recipesState.searchQuery) + '".</div>';
         }
+
+        var groups = {};
+        matches.forEach(function (r) {
+          var c = (r.category || '').toLowerCase();
+          if (!groups[c]) groups[c] = [];
+          groups[c].push(r);
+        });
+
+        var orderedKeys = [];
+        CATEGORY_ORDER.forEach(function (c) {
+          if (groups[c]) orderedKeys.push(c);
+        });
+        Object.keys(groups).forEach(function (c) {
+          if (c && CATEGORY_ORDER.indexOf(c) < 0) orderedKeys.push(c);
+        });
+        if (groups['']) orderedKeys.push('');
+
+        orderedKeys.forEach(function (cat) {
+          var rows = groups[cat] || [];
+          if (!rows.length) return;
+          html += '<h2 class="recipes-category">' + escapeHtml(cat ? titleCaseLabel(cat) : 'Other') + '</h2>';
+          html += '<div class="recipes-list">';
+          rows.forEach(function (r) { html += rowHtml(r); });
+          html += '</div>';
+        });
+
         return html;
       }
 
@@ -10061,20 +10126,44 @@
           }).join('') + '</dl>';
         }
 
+        function renderIngredient(ing) {
+          var qty = (ing.qty === '' || ing.qty == null || ing.qty === 0) ? '' : ing.qty;
+          var unit = ing.unit || '';
+          var qtyLabel = String(qty);
+          if (unit && unit !== 'ea') qtyLabel = (qtyLabel ? qtyLabel + ' ' : '') + unit;
+          var itemHtml = escapeHtml(ing.item);
+          if (ing.note) itemHtml += ' <span class="recipe-ingredient-note">(' + escapeHtml(ing.note) + ')</span>';
+          return '<span class="recipe-ingredient-qty">' + escapeHtml(qtyLabel) + '</span>' +
+                 '<span class="recipe-ingredient-item">' + itemHtml + '</span>';
+        }
+
         var ingredientsHtml = '';
         if (r.ingredients.length) {
-          ingredientsHtml = '<section class="recipe-section"><h2>Ingredients</h2><div class="recipe-ingredients">' +
-            r.ingredients.map(function (ing) {
-              var qty = (ing.qty === '' || ing.qty == null || ing.qty === 0) ? '' : ing.qty;
-              var unit = ing.unit || '';
-              var qtyLabel = String(qty);
-              if (unit && unit !== 'ea') qtyLabel = (qtyLabel ? qtyLabel + ' ' : '') + unit;
-              var itemHtml = escapeHtml(ing.item);
-              if (ing.note) itemHtml += ' <span class="recipe-ingredient-note">(' + escapeHtml(ing.note) + ')</span>';
-              return '<span class="recipe-ingredient-qty">' + escapeHtml(qtyLabel) + '</span>' +
-                     '<span class="recipe-ingredient-item">' + itemHtml + '</span>';
-            }).join('') +
-            '</div></section>';
+          var hasComponents = r.ingredients.some(function (ing) { return ing.component; });
+          ingredientsHtml = '<section class="recipe-section"><h2>Ingredients</h2>';
+          if (!hasComponents) {
+            ingredientsHtml += '<div class="recipe-ingredients">' +
+              r.ingredients.map(renderIngredient).join('') +
+              '</div>';
+          } else {
+            var currentComp = null;
+            var openGroup = false;
+            r.ingredients.forEach(function (ing) {
+              var comp = ing.component || '';
+              if (comp !== currentComp) {
+                if (openGroup) ingredientsHtml += '</div>';
+                if (comp) {
+                  ingredientsHtml += '<h3 class="recipe-component">' + escapeHtml(titleCaseLabel(comp)) + '</h3>';
+                }
+                ingredientsHtml += '<div class="recipe-ingredients">';
+                currentComp = comp;
+                openGroup = true;
+              }
+              ingredientsHtml += renderIngredient(ing);
+            });
+            if (openGroup) ingredientsHtml += '</div>';
+          }
+          ingredientsHtml += '</section>';
         }
 
         var stepsHtml = '';

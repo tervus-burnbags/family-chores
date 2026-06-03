@@ -50,6 +50,7 @@ The import script generates `id`, `createdAt`, `updatedAt`, and initializes `not
 | ------------- | ------------------------- | -------- | ----- |
 | `title`       | string                    | yes      | **Plain and descriptive — what the dish is.** Title Case, ≤ 70 chars. **No cute names, marketing copy, or possessives.** "Banana Bread" not "One-Bowl Banana Bread"; "Mini Banana Muffins" not "Oh-Shit Mini Banana Muffins"; "Butter Chicken with Naan" not "Mom's Famous Butter Chicken". Strip cuteness from source filenames. |
 | `description` | string                    | no       | Factual one-liner — what the dish actually is. **No marketing copy or evocative adjectives** ("loud-banana", "pillowy", "crowd-pleasing"). "Soft skillet flatbread, ~6 inches." is good; "Pillowy, brown-butter-kissed tortillas." is not. |
+| `category`    | string                    | no       | Lowercase kebab-style. Drives the list-view grouping. Preferred values (rendered in this order): `mains`, `sides`, `breads`, `soups`, `baked-goods`, `snacks`, `sweets`, `desserts`, `drinks`, `sauces`. Anything else is allowed and falls under an alphabetically-appended bucket; missing/empty lands under "Other". |
 | `tags`        | string[]                  | no       | Lowercase, kebab-style. Descriptive categories ("bread", "weeknight", "mexican"), not vibes ("comfort-food", "crowd-pleaser"). 1–5 tags. |
 | `servings`    | string                    | no       | E.g. `"4 servings"`, `"1 loaf"`, `"makes 12 cookies"`. |
 | `prepTime`    | string                    | no       | Human-readable. `"30 min"`, `"30 min active"`. |
@@ -66,7 +67,12 @@ The import script generates `id`, `createdAt`, `updatedAt`, and initializes `not
   "qty": 500,          // required, number (not a string). Use 0.25 for fractions, not "1/4".
   "unit": "g",         // required, one of the allowed units below. Use "" for "to taste".
   "item": "bread flour", // required, lowercase. Singular when natural ("egg" not "eggs", unless count > 1).
-  "note": "90°F"       // optional, parenthetical (temperature, brand, prep instruction like "finely chopped")
+  "note": "90°F",      // optional, parenthetical (temperature, brand, prep instruction like "finely chopped")
+  "component": "batter" // optional, lowercase. Groups multi-component recipes in the detail view.
+                       //   Common values: "batter", "dough", "crumble", "topping", "glaze",
+                       //   "sauce", "marinade", "filling", "garnish", "spice blend", "berry prep",
+                       //   "finishing garlic butter", etc. Free-form; whatever the recipe naturally uses.
+                       //   Omit on single-component recipes.
 }
 ```
 
