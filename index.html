@@ -4585,7 +4585,7 @@
           elements.messageInput.placeholder = placeholders[name] || 'Say something...';
         }
         if (elements.composer) {
-          elements.composer.style.display = name === 'fun' ? 'none' : '';
+          elements.composer.style.display = (name === 'fun' || name === 'recipes') ? 'none' : '';
         }
         renderHeaderSettingsPanel();
         Object.keys(views).forEach(function (key) {
