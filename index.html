@@ -3867,6 +3867,43 @@
       font-weight: 700;
     }
 
+    .recipe-section + .recipe-section {
+      margin-top: 28px;
+    }
+
+    .recipe-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .recipe-section-head h2 {
+      margin: 0;
+    }
+
+    .recipe-reset-btn {
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      padding: 4px 12px;
+      font-size: var(--font-xs);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .recipe-reset-btn:hover {
+      background: var(--panel-alt);
+      color: var(--text);
+    }
+
+    .recipe-reset-btn[hidden] {
+      display: none;
+    }
+
     .recipe-component {
       margin: 16px 0 6px;
       font-size: var(--font-sm);
@@ -3898,10 +3935,28 @@
       font-weight: 600;
       color: var(--text);
       white-space: nowrap;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.12s ease;
     }
 
     .recipe-ingredient-item {
       color: var(--text);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.12s ease;
+    }
+
+    .recipe-ingredient-qty.checked,
+    .recipe-ingredient-item.checked {
+      text-decoration: line-through;
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    .recipe-ingredient-qty.checked .recipe-ingredient-note,
+    .recipe-ingredient-item.checked .recipe-ingredient-note {
+      color: var(--muted);
     }
 
     .recipe-ingredient-note {
@@ -3921,11 +3976,33 @@
       color: var(--text);
       font-size: var(--font-base);
       line-height: 1.55;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.12s ease;
+      padding: 2px 0;
     }
 
     .recipe-steps li::marker {
       color: var(--alex);
       font-weight: 700;
+    }
+
+    .recipe-steps li.checked {
+      text-decoration: line-through;
+      color: var(--muted);
+      opacity: 0.55;
+    }
+
+    .recipe-steps li.checked .recipe-step-qty {
+      color: var(--muted);
+    }
+
+    .recipe-step-qty {
+      color: var(--alex);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      font-size: 0.95em;
     }
 
     .recipe-notes {
@@ -10021,6 +10098,136 @@
         }).join(' ');
       }
 
+      // --- Step annotation: inline (qty unit) after first mention of each ingredient ---
+
+      function escapeRegex(s) {
+        return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function formatStepQty(ing) {
+        if (ing.qty === 0 || ing.qty == null || ing.qty === '') return '';
+        var unit = String(ing.unit || '');
+        if (!unit || unit === 'ea' || unit === 'pinch') return '';
+        return String(ing.qty) + ' ' + unit;
+      }
+
+      function ingredientAliases(item) {
+        var words = String(item || '').toLowerCase().split(/\s+/).filter(Boolean);
+        var aliases = [];
+        for (var n = words.length; n >= 1; n--) {
+          var a = words.slice(words.length - n).join(' ');
+          if (aliases.indexOf(a) < 0) aliases.push(a);
+        }
+        return aliases; // longest first
+      }
+
+      function preferredComponentForStep(stepText, ingredients) {
+        var comps = {};
+        ingredients.forEach(function (ing) {
+          if (ing.component) comps[ing.component] = true;
+        });
+        var lower = String(stepText || '').toLowerCase();
+        for (var c in comps) {
+          if (lower.indexOf(c) >= 0) return c;
+        }
+        return null;
+      }
+
+      function annotateStepHtml(stepText, ingredients) {
+        if (!stepText) return '';
+        if (!ingredients || !ingredients.length) return escapeHtml(stepText);
+        var preferred = preferredComponentForStep(stepText, ingredients);
+
+        var candidates = [];
+        ingredients.forEach(function (ing, idx) {
+          if (!ing.item) return;
+          var qtyLabel = formatStepQty(ing);
+          if (!qtyLabel) return;
+          ingredientAliases(ing.item).forEach(function (alias) {
+            candidates.push({
+              ingIdx: idx,
+              alias: alias,
+              aliasLen: alias.length,
+              isPreferred: (preferred && ing.component === preferred) ? 1 : 0,
+              qtyLabel: qtyLabel
+            });
+          });
+        });
+
+        // Sort: preferred-component first, then longer aliases first
+        candidates.sort(function (a, b) {
+          if (a.isPreferred !== b.isPreferred) return b.isPreferred - a.isPreferred;
+          return b.aliasLen - a.aliasLen;
+        });
+
+        var used = new Array(stepText.length);
+        var annotatedIngs = {};
+        var matches = [];
+
+        candidates.forEach(function (c) {
+          if (annotatedIngs[c.ingIdx]) return;
+          var re = new RegExp('\\b' + escapeRegex(c.alias) + '\\b', 'i');
+          var m = re.exec(stepText);
+          if (!m) return;
+          var start = m.index;
+          var end = start + m[0].length;
+          for (var i = start; i < end; i++) if (used[i]) return;
+          // Skip if the match is already followed by a parenthesized clause (avoid double-annotation)
+          var rest = stepText.slice(end);
+          if (/^\s*\(/.test(rest)) return;
+          matches.push({ start: start, end: end, qtyLabel: c.qtyLabel });
+          for (var j = start; j < end; j++) used[j] = true;
+          annotatedIngs[c.ingIdx] = true;
+        });
+
+        if (!matches.length) return escapeHtml(stepText);
+
+        matches.sort(function (a, b) { return a.start - b.start; });
+
+        var html = '';
+        var pos = 0;
+        matches.forEach(function (m) {
+          html += escapeHtml(stepText.slice(pos, m.end));
+          html += ' <span class="recipe-step-qty">(' + escapeHtml(m.qtyLabel) + ')</span>';
+          pos = m.end;
+        });
+        html += escapeHtml(stepText.slice(pos));
+        return html;
+      }
+
+      // --- Check-off persistence ---
+
+      function checkKey(recipeId) { return 'recipes-checks-v1:' + recipeId; }
+
+      function loadChecks(recipeId) {
+        try {
+          var raw = localStorage.getItem(checkKey(recipeId));
+          if (!raw) return { ingredients: {}, steps: {} };
+          var parsed = JSON.parse(raw);
+          return {
+            ingredients: (parsed && parsed.ingredients) || {},
+            steps: (parsed && parsed.steps) || {}
+          };
+        } catch (e) {
+          return { ingredients: {}, steps: {} };
+        }
+      }
+
+      function saveChecks(recipeId, state) {
+        try {
+          var hasAny = Object.keys(state.ingredients).length > 0 || Object.keys(state.steps).length > 0;
+          if (hasAny) {
+            localStorage.setItem(checkKey(recipeId), JSON.stringify(state));
+          } else {
+            localStorage.removeItem(checkKey(recipeId));
+          }
+        } catch (e) {}
+      }
+
+      function hasAnyChecks(state) {
+        return Object.keys(state.ingredients).length > 0 || Object.keys(state.steps).length > 0;
+      }
+
       function rowHtml(r) {
         var tagsHtml = r.tags.slice(0, 3).map(function (t) {
           return '<span class="recipe-tag">' + escapeHtml(t) + '</span>';
@@ -10129,29 +10336,35 @@
           }).join('') + '</dl>';
         }
 
-        function renderIngredient(ing) {
+        function renderIngredient(ing, idx) {
           var qty = (ing.qty === '' || ing.qty == null || ing.qty === 0) ? '' : ing.qty;
           var unit = ing.unit || '';
           var qtyLabel = String(qty);
           if (unit && unit !== 'ea') qtyLabel = (qtyLabel ? qtyLabel + ' ' : '') + unit;
           var itemHtml = escapeHtml(ing.item);
           if (ing.note) itemHtml += ' <span class="recipe-ingredient-note">(' + escapeHtml(ing.note) + ')</span>';
-          return '<span class="recipe-ingredient-qty">' + escapeHtml(qtyLabel) + '</span>' +
-                 '<span class="recipe-ingredient-item">' + itemHtml + '</span>';
+          return '<span class="recipe-ingredient-qty" data-ing-row="' + idx + '">' + escapeHtml(qtyLabel) + '</span>' +
+                 '<span class="recipe-ingredient-item" data-ing-row="' + idx + '">' + itemHtml + '</span>';
         }
 
         var ingredientsHtml = '';
         if (r.ingredients.length) {
           var hasComponents = r.ingredients.some(function (ing) { return ing.component; });
-          ingredientsHtml = '<section class="recipe-section"><h2>Ingredients</h2>';
+          ingredientsHtml = '<section class="recipe-section">' +
+            '<div class="recipe-section-head">' +
+              '<h2>Ingredients</h2>' +
+              '<button type="button" class="recipe-reset-btn" id="recipeResetBtn" hidden>Reset checks</button>' +
+            '</div>';
           if (!hasComponents) {
-            ingredientsHtml += '<div class="recipe-ingredients">' +
-              r.ingredients.map(renderIngredient).join('') +
-              '</div>';
+            ingredientsHtml += '<div class="recipe-ingredients">';
+            r.ingredients.forEach(function (ing, i) {
+              ingredientsHtml += renderIngredient(ing, i);
+            });
+            ingredientsHtml += '</div>';
           } else {
             var currentComp = null;
             var openGroup = false;
-            r.ingredients.forEach(function (ing) {
+            r.ingredients.forEach(function (ing, i) {
               var comp = ing.component || '';
               if (comp !== currentComp) {
                 if (openGroup) ingredientsHtml += '</div>';
@@ -10162,7 +10375,7 @@
                 currentComp = comp;
                 openGroup = true;
               }
-              ingredientsHtml += renderIngredient(ing);
+              ingredientsHtml += renderIngredient(ing, i);
             });
             if (openGroup) ingredientsHtml += '</div>';
           }
@@ -10172,7 +10385,9 @@
         var stepsHtml = '';
         if (r.steps.length) {
           stepsHtml = '<section class="recipe-section"><h2>Steps</h2><ol class="recipe-steps">' +
-            r.steps.map(function (s) { return '<li>' + escapeHtml(s) + '</li>'; }).join('') +
+            r.steps.map(function (s, i) {
+              return '<li data-step-idx="' + i + '">' + annotateStepHtml(s, r.ingredients) + '</li>';
+            }).join('') +
             '</ol></section>';
         }
 
@@ -10225,6 +10440,70 @@
           });
           notesInput.addEventListener('blur', function () {
             flushPendingNotes();
+          });
+        }
+
+        // --- Hydrate and wire check-offs ---
+        var checks = loadChecks(recipeId);
+        var resetBtn = container.querySelector('#recipeResetBtn');
+
+        function refreshResetBtn() {
+          if (!resetBtn) return;
+          resetBtn.hidden = !hasAnyChecks(checks);
+        }
+
+        // Hydrate ingredient checks
+        Object.keys(checks.ingredients).forEach(function (idx) {
+          container.querySelectorAll('[data-ing-row="' + idx + '"]').forEach(function (el) {
+            el.classList.add('checked');
+          });
+        });
+        // Hydrate step checks
+        Object.keys(checks.steps).forEach(function (idx) {
+          var li = container.querySelector('[data-step-idx="' + idx + '"]');
+          if (li) li.classList.add('checked');
+        });
+        refreshResetBtn();
+
+        // Click delegation on the article (ingredients) and steps section
+        var card = container.querySelector('.recipe-card');
+        if (card) {
+          card.addEventListener('click', function (e) {
+            var row = e.target.closest('[data-ing-row]');
+            if (row) {
+              var idx = row.getAttribute('data-ing-row');
+              var nowChecked = !row.classList.contains('checked');
+              container.querySelectorAll('[data-ing-row="' + idx + '"]').forEach(function (el) {
+                el.classList.toggle('checked', nowChecked);
+              });
+              if (nowChecked) checks.ingredients[idx] = 1;
+              else delete checks.ingredients[idx];
+              saveChecks(recipeId, checks);
+              refreshResetBtn();
+              return;
+            }
+            var stepLi = e.target.closest('[data-step-idx]');
+            if (stepLi) {
+              var sIdx = stepLi.getAttribute('data-step-idx');
+              var nowSChecked = !stepLi.classList.contains('checked');
+              stepLi.classList.toggle('checked', nowSChecked);
+              if (nowSChecked) checks.steps[sIdx] = 1;
+              else delete checks.steps[sIdx];
+              saveChecks(recipeId, checks);
+              refreshResetBtn();
+              return;
+            }
+          });
+        }
+
+        if (resetBtn) {
+          resetBtn.addEventListener('click', function () {
+            checks = { ingredients: {}, steps: {} };
+            container.querySelectorAll('.checked').forEach(function (el) {
+              el.classList.remove('checked');
+            });
+            saveChecks(recipeId, checks);
+            refreshResetBtn();
           });
         }
       }
