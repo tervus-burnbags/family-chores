@@ -10165,10 +10165,20 @@
           if (ing.component) comps[ing.component] = true;
         });
         var lower = String(stepText || '').toLowerCase();
-        for (var c in comps) {
-          if (lower.indexOf(c) >= 0) return c;
-        }
-        return null;
+        // Pick the component whose keyword appears earliest in the step text.
+        // A step like "Make the crumble: stir the flour... Chill while making the batter"
+        // must prefer "crumble" (earlier) over "batter" (later) so flour annotates
+        // with the crumble's quantity, not the batter's.
+        var best = null;
+        var bestPos = Infinity;
+        Object.keys(comps).forEach(function (c) {
+          var p = lower.indexOf(c);
+          if (p >= 0 && p < bestPos) {
+            bestPos = p;
+            best = c;
+          }
+        });
+        return best;
       }
 
       function annotateStepHtml(stepText, ingredients) {
