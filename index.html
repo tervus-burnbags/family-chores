@@ -3830,6 +3830,172 @@
       display: block;
     }
 
+    .recipe-detail-action-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .recipe-detail-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      padding: 7px 14px;
+      font-size: var(--font-sm);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s ease, transform 0.08s ease;
+    }
+
+    .recipe-detail-print:hover {
+      background: var(--panel-alt);
+    }
+
+    .recipe-detail-print:active {
+      transform: scale(0.97);
+    }
+
+    .recipe-detail-print svg {
+      display: block;
+    }
+
+    @media print {
+      @page {
+        margin: 0.5in;
+      }
+
+      html, body, .app {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+      }
+
+      header,
+      .app-header,
+      .header-main,
+      .tab-bar,
+      .composer,
+      .toast-container,
+      .overlay,
+      .modal,
+      #headerSettingsPanel,
+      .recipe-detail-actions,
+      .recipe-notes,
+      .recipe-reset-btn,
+      .recipes-toolbar,
+      .recipes-list,
+      .recipes-category,
+      .recipes-count,
+      .recipes-empty {
+        display: none !important;
+      }
+
+      .view {
+        display: none !important;
+      }
+
+      #viewRecipes {
+        display: block !important;
+      }
+
+      .recipe-detail {
+        display: block !important;
+        gap: 0 !important;
+      }
+
+      .recipe-card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        max-width: 100% !important;
+      }
+
+      .recipe-card h1 {
+        font-size: 22pt;
+        margin-bottom: 4pt;
+      }
+
+      .recipe-description {
+        font-size: 11pt;
+        margin-bottom: 8pt;
+      }
+
+      .recipe-source {
+        font-size: 9pt;
+        margin-bottom: 10pt;
+      }
+
+      .recipe-meta {
+        background: transparent !important;
+        border: 1px solid #ccc;
+        padding: 8pt 10pt !important;
+        margin-bottom: 12pt;
+        page-break-inside: avoid;
+      }
+
+      .recipe-meta-item dt {
+        color: #555 !important;
+      }
+
+      .recipe-section + .recipe-section {
+        margin-top: 14pt !important;
+      }
+
+      .recipe-section h2 {
+        font-size: 13pt;
+      }
+
+      .recipe-component {
+        color: #000 !important;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 2pt;
+        margin-top: 10pt;
+      }
+
+      .recipe-ingredients,
+      .recipe-steps {
+        page-break-inside: auto;
+      }
+
+      .recipe-ingredients > * {
+        page-break-inside: avoid;
+      }
+
+      .recipe-steps li {
+        page-break-inside: avoid;
+        margin-bottom: 4pt;
+      }
+
+      .recipe-tag {
+        background: transparent !important;
+        border: 1px solid #888;
+        color: #000 !important;
+      }
+
+      .recipe-step-qty {
+        color: #000 !important;
+      }
+
+      /* Don't carry tap-to-check strikethroughs into the printed copy */
+      .recipe-ingredient-qty.checked,
+      .recipe-ingredient-item.checked,
+      .recipe-steps li.checked {
+        text-decoration: none !important;
+        color: inherit !important;
+        opacity: 1 !important;
+      }
+    }
+
     .recipe-card {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -10563,10 +10729,16 @@
         var html = '';
         html += '<div class="recipe-detail-actions">';
         html +=   '<button type="button" class="recipe-detail-back" id="recipeDetailBack">← All recipes</button>';
-        html +=   '<button type="button" class="recipe-detail-share" id="recipeDetailShare" aria-label="Share recipe">' +
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>' +
-                    'Share' +
-                  '</button>';
+        html +=   '<div class="recipe-detail-action-group">';
+        html +=     '<button type="button" class="recipe-detail-print" id="recipeDetailPrint" aria-label="Print recipe">' +
+                      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>' +
+                      'Print' +
+                    '</button>';
+        html +=     '<button type="button" class="recipe-detail-share" id="recipeDetailShare" aria-label="Share recipe">' +
+                      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>' +
+                      'Share' +
+                    '</button>';
+        html +=   '</div>';
         html += '</div>';
         html += '<article class="recipe-card">';
         html +=   '<h1>' + escapeHtml(r.title) + '</h1>';
@@ -10604,6 +10776,14 @@
           shareBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             shareRecipe(r);
+          });
+        }
+
+        var printBtn = container.querySelector('#recipeDetailPrint');
+        if (printBtn) {
+          printBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            window.print();
           });
         }
 
