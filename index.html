@@ -3869,7 +3869,14 @@
 
     @media print {
       @page {
-        margin: 0.5in;
+        margin: 0.6in 0.7in 0.8in;
+        @bottom-center {
+          content: "Family Hub  ·  " counter(page);
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 8.5pt;
+          font-style: italic;
+          color: #888;
+        }
       }
 
       html, body, .app {
@@ -3877,6 +3884,10 @@
         padding: 0 !important;
         margin: 0 !important;
         min-height: 0 !important;
+        color: #000 !important;
+        font-family: Georgia, "Times New Roman", serif !important;
+        font-size: 10.5pt;
+        line-height: 1.45;
       }
 
       header,
@@ -3918,72 +3929,213 @@
         padding: 0 !important;
         border-radius: 0 !important;
         max-width: 100% !important;
+        background: white !important;
       }
 
       .recipe-card h1 {
-        font-size: 22pt;
-        margin-bottom: 4pt;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 26pt;
+        font-weight: 700;
+        text-align: center;
+        margin: 0 0 6pt;
+        letter-spacing: 0.01em;
+        line-height: 1.1;
       }
 
       .recipe-description {
+        font-style: italic;
         font-size: 11pt;
-        margin-bottom: 8pt;
+        text-align: center;
+        margin: 0 auto 10pt;
+        max-width: 90%;
+        color: #333 !important;
+        line-height: 1.4;
       }
 
       .recipe-source {
+        font-style: italic;
+        font-size: 8.5pt;
+        text-align: center;
+        color: #888 !important;
+        margin: 0 0 12pt;
+      }
+
+      /* Decorative rule below the title block */
+      .recipe-source::after,
+      .recipe-tags + .recipe-meta {
+        /* placeholder hook */
+      }
+
+      .recipe-tags {
+        display: flex !important;
+        justify-content: center;
+        gap: 6pt !important;
+        margin: 0 0 14pt !important;
+        padding-bottom: 14pt;
+        border-bottom: 1pt solid #000;
+        position: relative;
+      }
+
+      .recipe-tag {
+        background: transparent !important;
+        border: none !important;
+        color: #555 !important;
+        font-family: Georgia, "Times New Roman", serif;
         font-size: 9pt;
-        margin-bottom: 10pt;
+        font-style: italic;
+        padding: 0 !important;
+        text-transform: lowercase;
+      }
+
+      .recipe-tag + .recipe-tag::before {
+        content: "·";
+        margin-right: 6pt;
+        color: #aaa;
       }
 
       .recipe-meta {
         background: transparent !important;
-        border: 1px solid #ccc;
-        padding: 8pt 10pt !important;
-        margin-bottom: 12pt;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 auto 18pt !important;
+        display: flex !important;
+        justify-content: center !important;
+        gap: 24pt !important;
+        flex-wrap: wrap !important;
         page-break-inside: avoid;
+        text-align: center;
+      }
+
+      .recipe-meta-item {
+        align-items: center !important;
       }
 
       .recipe-meta-item dt {
-        color: #555 !important;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 8pt;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #888 !important;
+        font-weight: 400;
+      }
+
+      .recipe-meta-item dd {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 11pt;
+        font-weight: 700;
+        color: #000 !important;
       }
 
       .recipe-section + .recipe-section {
-        margin-top: 14pt !important;
+        margin-top: 18pt !important;
       }
 
       .recipe-section h2 {
+        font-family: Georgia, "Times New Roman", serif;
         font-size: 13pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #000 !important;
+        text-align: center;
+        margin: 0 0 14pt;
+        padding-bottom: 6pt;
+        position: relative;
+      }
+
+      .recipe-section h2::after {
+        content: "";
+        display: block;
+        width: 32pt;
+        height: 1pt;
+        background: #000;
+        margin: 6pt auto 0;
       }
 
       .recipe-component {
+        font-family: Georgia, "Times New Roman", serif;
         color: #000 !important;
-        border-bottom: 1px solid #aaa;
+        font-size: 10pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        border-bottom: 0.5pt solid #bbb;
         padding-bottom: 2pt;
-        margin-top: 10pt;
+        margin-top: 14pt;
+        margin-bottom: 8pt;
       }
 
-      .recipe-ingredients,
-      .recipe-steps {
-        page-break-inside: auto;
+      .recipe-ingredients {
+        column-gap: 24pt;
+        row-gap: 5pt !important;
       }
 
       .recipe-ingredients > * {
         page-break-inside: avoid;
       }
 
-      .recipe-steps li {
-        page-break-inside: avoid;
-        margin-bottom: 4pt;
+      .recipe-ingredient-qty {
+        font-family: Georgia, "Times New Roman", serif !important;
+        color: #000 !important;
+        font-weight: 700;
+        font-variant-numeric: oldstyle-nums tabular-nums;
+        font-size: 10.5pt;
       }
 
-      .recipe-tag {
-        background: transparent !important;
-        border: 1px solid #888;
+      .recipe-ingredient-item {
+        font-family: Georgia, "Times New Roman", serif !important;
         color: #000 !important;
+        font-size: 10.5pt;
+      }
+
+      .recipe-ingredient-note {
+        font-family: Georgia, "Times New Roman", serif !important;
+        font-style: italic;
+        color: #666 !important;
+        font-size: 9.5pt;
+      }
+
+      .recipe-steps {
+        padding-left: 0 !important;
+        list-style: none !important;
+        counter-reset: stepcounter;
+      }
+
+      .recipe-steps li {
+        font-family: Georgia, "Times New Roman", serif !important;
+        font-size: 10.5pt !important;
+        color: #000 !important;
+        line-height: 1.5 !important;
+        position: relative;
+        padding-left: 28pt;
+        margin-bottom: 9pt !important;
+        page-break-inside: avoid;
+        counter-increment: stepcounter;
+      }
+
+      .recipe-steps li::marker {
+        content: '';
+      }
+
+      .recipe-steps li::before {
+        content: counter(stepcounter);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20pt;
+        font-size: 14pt;
+        font-weight: 700;
+        font-family: Georgia, "Times New Roman", serif;
+        color: #000;
+        text-align: right;
+        padding-right: 4pt;
+        line-height: 1.1;
       }
 
       .recipe-step-qty {
         color: #000 !important;
+        font-style: italic;
+        font-weight: 600;
       }
 
       /* Don't carry tap-to-check strikethroughs into the printed copy */
@@ -3991,7 +4143,7 @@
       .recipe-ingredient-item.checked,
       .recipe-steps li.checked {
         text-decoration: none !important;
-        color: inherit !important;
+        color: #000 !important;
         opacity: 1 !important;
       }
     }
