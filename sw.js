@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hub-v54';
+const CACHE_NAME = 'hub-v55';
 const ASSETS = [
   './',
   './index.html',

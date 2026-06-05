@@ -3869,14 +3869,7 @@
 
     @media print {
       @page {
-        margin: 0.6in 0.7in 0.8in;
-        @bottom-center {
-          content: "Family Hub  ·  " counter(page);
-          font-family: Georgia, "Times New Roman", serif;
-          font-size: 8.5pt;
-          font-style: italic;
-          color: #888;
-        }
+        margin: 0.6in 0.7in;
       }
 
       html, body, .app {
@@ -4097,39 +4090,46 @@
 
       .recipe-steps {
         padding-left: 0 !important;
+        margin-left: 0 !important;
         list-style: none !important;
+        list-style-type: none !important;
         counter-reset: stepcounter;
       }
 
       .recipe-steps li {
+        display: block !important;
         font-family: Georgia, "Times New Roman", serif !important;
         font-size: 10.5pt !important;
         color: #000 !important;
-        line-height: 1.5 !important;
-        position: relative;
-        padding-left: 28pt;
-        margin-bottom: 9pt !important;
+        line-height: 1.55 !important;
+        position: relative !important;
+        padding-left: 38pt !important;
+        margin-left: 0 !important;
+        margin-bottom: 11pt !important;
         page-break-inside: avoid;
         counter-increment: stepcounter;
+        list-style: none !important;
+        list-style-type: none !important;
       }
 
       .recipe-steps li::marker {
-        content: '';
+        content: none !important;
+        display: none !important;
       }
 
       .recipe-steps li::before {
-        content: counter(stepcounter);
+        content: counter(stepcounter) ".";
         position: absolute;
         left: 0;
         top: 0;
-        width: 20pt;
-        font-size: 14pt;
-        font-weight: 700;
+        width: 30pt;
         font-family: Georgia, "Times New Roman", serif;
+        font-size: 12pt;
+        font-weight: 700;
         color: #000;
         text-align: right;
-        padding-right: 4pt;
-        line-height: 1.1;
+        padding-right: 6pt;
+        line-height: 1.55;
       }
 
       .recipe-step-qty {
