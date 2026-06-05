@@ -3774,6 +3774,13 @@
       gap: 16px;
     }
 
+    .recipe-detail-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
     .recipe-detail-back {
       display: inline-flex;
       align-items: center;
@@ -3785,11 +3792,42 @@
       font-weight: 600;
       padding: 6px 8px 6px 0;
       cursor: pointer;
-      align-self: flex-start;
+      font-family: inherit;
     }
 
     .recipe-detail-back:hover {
       text-decoration: underline;
+    }
+
+    .recipe-detail-share {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--alex);
+      color: white;
+      border: none;
+      border-radius: var(--radius-pill);
+      padding: 8px 16px;
+      font-size: var(--font-sm);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      transition: filter 0.12s ease, transform 0.08s ease;
+    }
+
+    .recipe-detail-share:hover {
+      filter: brightness(1.06);
+    }
+
+    .recipe-detail-share:active {
+      transform: scale(0.97);
+    }
+
+    .recipe-detail-share svg {
+      display: block;
     }
 
     .recipe-card {
@@ -10195,6 +10233,117 @@
         return html;
       }
 
+      // --- Share recipe ---
+
+      function formatIngredientLine(ing) {
+        var qty = (ing.qty === '' || ing.qty == null || ing.qty === 0) ? '' : ing.qty;
+        var unit = ing.unit || '';
+        var prefix = '';
+        if (qty !== '') {
+          if (unit === 'ea') prefix = qty + ' ';
+          else if (unit) prefix = qty + ' ' + unit + ' ';
+          else prefix = qty + ' ';
+        }
+        var line = prefix + ing.item;
+        if (ing.note) line += ' (' + ing.note + ')';
+        return line;
+      }
+
+      function formatRecipeAsText(r) {
+        var lines = [];
+        lines.push(r.title);
+        lines.push('');
+        if (r.description) {
+          lines.push(r.description);
+          lines.push('');
+        }
+        var meta = [];
+        if (r.servings)  meta.push('Servings: ' + r.servings);
+        if (r.prepTime)  meta.push('Prep: ' + r.prepTime);
+        if (r.cookTime)  meta.push('Cook: ' + r.cookTime);
+        if (r.totalTime) meta.push('Total: ' + r.totalTime);
+        if (meta.length) {
+          lines.push(meta.join('  ·  '));
+          lines.push('');
+        }
+
+        lines.push('INGREDIENTS');
+        lines.push('');
+        var hasComponents = r.ingredients.some(function (ing) { return ing.component; });
+        if (!hasComponents) {
+          r.ingredients.forEach(function (ing) {
+            lines.push('• ' + formatIngredientLine(ing));
+          });
+        } else {
+          var currentComp = null;
+          r.ingredients.forEach(function (ing) {
+            var comp = ing.component || '';
+            if (comp !== currentComp) {
+              if (currentComp !== null) lines.push('');
+              if (comp) lines.push('— ' + titleCaseLabel(comp) + ' —');
+              currentComp = comp;
+            }
+            lines.push('• ' + formatIngredientLine(ing));
+          });
+        }
+        lines.push('');
+        lines.push('STEPS');
+        lines.push('');
+        r.steps.forEach(function (step, i) {
+          lines.push((i + 1) + '. ' + step);
+        });
+        lines.push('');
+        lines.push('— shared from Family Hub');
+        return lines.join('\n');
+      }
+
+      function shareRecipe(r) {
+        var text = formatRecipeAsText(r);
+        var phase = runtime();
+        var toast = phase && typeof phase.showToast === 'function' ? phase.showToast : function () {};
+
+        var shareData = { title: r.title, text: text };
+        if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
+          navigator.share(shareData).then(function () {
+            // success — share sheet handled it
+          }).catch(function (err) {
+            if (err && err.name === 'AbortError') return; // user cancelled, no message
+            // Fall back to clipboard
+            copyRecipeToClipboard(text, toast);
+          });
+          return;
+        }
+        copyRecipeToClipboard(text, toast);
+      }
+
+      function copyRecipeToClipboard(text, toast) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            toast('Recipe copied to clipboard');
+          }).catch(function () {
+            legacyCopy(text, toast);
+          });
+        } else {
+          legacyCopy(text, toast);
+        }
+      }
+
+      function legacyCopy(text, toast) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          toast('Recipe copied to clipboard');
+        } catch (e) {
+          toast('Could not copy recipe', { type: 'error' });
+        }
+      }
+
       // --- Check-off persistence ---
 
       function checkKey(recipeId) { return 'recipes-checks-v1:' + recipeId; }
@@ -10402,7 +10551,13 @@
         var sourceHtml = addedLabel ? '<p class="recipe-source">' + escapeHtml(addedLabel) + '</p>' : '';
 
         var html = '';
-        html += '<button type="button" class="recipe-detail-back" id="recipeDetailBack">← All recipes</button>';
+        html += '<div class="recipe-detail-actions">';
+        html +=   '<button type="button" class="recipe-detail-back" id="recipeDetailBack">← All recipes</button>';
+        html +=   '<button type="button" class="recipe-detail-share" id="recipeDetailShare" aria-label="Share recipe">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>' +
+                    'Share' +
+                  '</button>';
+        html += '</div>';
         html += '<article class="recipe-card">';
         html +=   '<h1>' + escapeHtml(r.title) + '</h1>';
         if (r.description) html += '<p class="recipe-description">' + escapeHtml(r.description) + '</p>';
@@ -10431,6 +10586,14 @@
             flushPendingNotes();
             recipesState.currentRecipeId = null;
             renderRecipesImpl();
+          });
+        }
+
+        var shareBtn = container.querySelector('#recipeDetailShare');
+        if (shareBtn) {
+          shareBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            shareRecipe(r);
           });
         }
 
