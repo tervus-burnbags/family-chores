@@ -10301,6 +10301,51 @@
         getCurrentListContext: function () {
           var current = listState.currentListId ? listState.listsById[listState.currentListId] : null;
           return current ? { id: current.id, name: current.name, type: current.type } : null;
+        },
+        // Used by the Recipes module (separate IIFE) to add a single ingredient to
+        // the family grocery list. Lives here so it can reach the list helpers.
+        groceryHasItem: function (text) {
+          if (!text) return false;
+          var list = findExistingListByType('grocery');
+          if (!list) return false;
+          var target = normalizeListName(text);
+          return (list.items || []).some(function (it) {
+            return !it.done && normalizeListName(it.text) === target;
+          });
+        },
+        groceryAddItem: async function (text) {
+          var phase = runtime();
+          var ref = listsRef(phase);
+          if (!ref || !text) return null;
+          var list = findExistingListByType('grocery');
+          var listId;
+          var items;
+          if (list) {
+            listId = list.id;
+            items = list.items || [];
+          } else {
+            var created = await createListRecord(listTypeMeta('grocery').label || 'Grocery', 'grocery', []);
+            if (!created) return null;
+            listId = created.id;
+            items = [];
+          }
+          var target = normalizeListName(text);
+          var dup = items.find(function (it) {
+            return !it.done && normalizeListName(it.text) === target;
+          });
+          if (dup) return { listId: listId, itemId: dup.id, duplicate: true };
+          var category = autoCategory(text);
+          var order = nextItemOrder(list, category);
+          var payload = buildItemPayload(text, 'grocery', category, order);
+          if (!payload) return null;
+          var itemRef = ref.child(listId + '/items').push();
+          await itemRef.set(payload);
+          return { listId: listId, itemId: itemRef.key, duplicate: false };
+        },
+        groceryRemoveItem: function (listId, itemId) {
+          var phase = runtime();
+          var ref = listsRef(phase);
+          if (ref && listId && itemId) ref.child(listId + '/items/' + itemId).remove();
         }
       };
 
@@ -10859,44 +10904,18 @@
         return text.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
       }
 
+      // The grocery list lives in a separate IIFE; reach it through the
+      // window.familyLists bridge rather than calling its internals directly.
       function isOnGroceryList(text) {
-        if (!text) return false;
-        var list = findExistingListByType('grocery');
-        if (!list) return false;
-        var target = normalizeListName(text);
-        return (list.items || []).some(function (it) {
-          return !it.done && normalizeListName(it.text) === target;
-        });
+        return !!(window.familyLists && typeof window.familyLists.groceryHasItem === 'function'
+          && window.familyLists.groceryHasItem(text));
       }
 
-      async function addIngredientToGrocery(text) {
-        var phase = runtime();
-        var ref = listsRef(phase);
-        if (!ref || !text) return null;
-        var list = findExistingListByType('grocery');
-        var listId;
-        var items;
-        if (list) {
-          listId = list.id;
-          items = list.items || [];
-        } else {
-          var created = await createListRecord(listTypeMeta('grocery').label || 'Grocery', 'grocery', []);
-          if (!created) return null;
-          listId = created.id;
-          items = [];
+      function addIngredientToGrocery(text) {
+        if (window.familyLists && typeof window.familyLists.groceryAddItem === 'function') {
+          return window.familyLists.groceryAddItem(text);
         }
-        var target = normalizeListName(text);
-        var dup = items.find(function (it) {
-          return !it.done && normalizeListName(it.text) === target;
-        });
-        if (dup) return { listId: listId, itemId: dup.id, duplicate: true };
-        var category = autoCategory(text);
-        var order = nextItemOrder(list, category);
-        var payload = buildItemPayload(text, 'grocery', category, order);
-        if (!payload) return null;
-        var itemRef = ref.child(listId + '/items').push();
-        await itemRef.set(payload);
-        return { listId: listId, itemId: itemRef.key, duplicate: false };
+        return Promise.resolve(null);
       }
 
       var RECIPE_ADD_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
@@ -11123,9 +11142,9 @@
                 }
                 groceryToast('Added ' + gText + ' to Grocery', {
                   onUndo: function () {
-                    var phase = runtime();
-                    var ref = listsRef(phase);
-                    if (ref) ref.child(res.listId + '/items/' + res.itemId).remove();
+                    if (window.familyLists && typeof window.familyLists.groceryRemoveItem === 'function') {
+                      window.familyLists.groceryRemoveItem(res.listId, res.itemId);
+                    }
                     setAddBtnState(addBtn, false);
                   }
                 });
