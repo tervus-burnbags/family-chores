@@ -9560,6 +9560,7 @@
           if (location.hash.replace('#', '') === 'lists' && typeof window.renderListsHome === 'function') {
             window.renderListsHome();
           }
+          if (typeof window.onFamilyListsUpdated === 'function') window.onFamilyListsUpdated();
         };
         ref.on('value', handler);
         var templateRef = listTemplatesRef(phase);
@@ -10334,6 +10335,9 @@
         // a family list. Lives here so it can reach the list helpers. Pass a
         // targetListId to add to a specific list; omit it to use (or create) the
         // grocery list.
+        // Ensure list data is subscribed even if the Lists tab was never opened
+        // (the Recipes picker needs it). Idempotent.
+        ensureSubscribed: function () { subscribeLists(); },
         getLists: function () {
           // Mirror the Lists tab's "active" definition (lists with items);
           // empty/cleared lists are treated as inactive and hidden.
@@ -10966,6 +10970,24 @@
         return Promise.resolve(null);
       }
 
+      // Called when list data changes (e.g. it finished loading after the recipe
+      // detail was already rendered). Refresh the picker options and add-button
+      // states for the open recipe.
+      function refreshRecipeListUI() {
+        if (!recipesState.currentRecipeId) return;
+        var container = document.getElementById('recipesContent');
+        if (!container) return;
+        var picker = container.querySelector('#recipeListPicker');
+        if (picker) picker.innerHTML = recipeListOptionsHtml();
+        var r = recipesState.recipesById[recipesState.currentRecipeId];
+        if (!r) return;
+        container.querySelectorAll('.recipe-ing-add').forEach(function (btn) {
+          var i = Number(btn.getAttribute('data-ing-add'));
+          if (r.ingredients[i]) setAddBtnState(btn, isOnGroceryList(groceryTextForIngredient(r.ingredients[i])));
+        });
+      }
+      window.onFamilyListsUpdated = refreshRecipeListUI;
+
       function recipeListName(listId) {
         var lists = (window.familyLists && typeof window.familyLists.getLists === 'function')
           ? window.familyLists.getLists() : [];
@@ -11336,6 +11358,11 @@
         var container = document.getElementById('recipesContent');
         if (!container) return;
         subscribeRecipes();
+        // Load list data even if the Lists tab hasn't been opened, so the recipe
+        // "Add to" picker is populated. Refresh happens via onFamilyListsUpdated.
+        if (window.familyLists && typeof window.familyLists.ensureSubscribed === 'function') {
+          window.familyLists.ensureSubscribed();
+        }
         var phase = runtime();
         if (!phase || !phase.familyId) {
           container.innerHTML = '<div class="recipes-empty"><strong>Join a family first</strong>Recipes sync across the family. Create or join a family from Settings to see and add recipes.</div>';
