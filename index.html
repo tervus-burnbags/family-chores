@@ -10335,7 +10335,9 @@
         // targetListId to add to a specific list; omit it to use (or create) the
         // grocery list.
         getLists: function () {
-          return listArray().map(function (l) {
+          // Mirror the Lists tab's "active" definition (lists with items);
+          // empty/cleared lists are treated as inactive and hidden.
+          return visibleLists().map(function (l) {
             return { id: l.id, name: l.name, type: l.type };
           });
         },
