@@ -3895,6 +3895,7 @@
       .recipe-detail-actions,
       .recipe-notes,
       .recipe-reset-btn,
+      .recipe-ing-add,
       .recipes-toolbar,
       .recipes-list,
       .recipes-category,
@@ -4275,10 +4276,38 @@
 
     .recipe-ingredients {
       display: grid;
-      grid-template-columns: max-content 1fr;
+      grid-template-columns: max-content 1fr max-content;
       column-gap: 14px;
       row-gap: 6px;
       align-items: baseline;
+    }
+
+    .recipe-ing-add {
+      align-self: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      margin: -6px 0;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+    }
+
+    .recipe-ing-add:active {
+      transform: scale(0.88);
+    }
+
+    .recipe-ing-add.added {
+      background: rgba(34, 197, 94, 0.16);
+      border-color: rgba(34, 197, 94, 0.5);
+      color: #16a34a;
     }
 
     .recipe-ingredients + .recipe-component {
@@ -10789,6 +10818,104 @@
         renderListBody(container);
       }
 
+      // --- Grocery list integration (Phase 42) ---------------------------------
+      // Pantry staples go to the grocery list as item-only ("flour"); everything
+      // else (meats, produce, canned goods) carries its amount ("500 g ground beef").
+      // The driving question is "will I use the whole purchase in this recipe?".
+      // This keyword list is meant to be tuned over time.
+      var GROCERY_STAPLES = [
+        'flour', 'sugar', 'salt', 'pepper', 'baking soda', 'baking powder', 'yeast',
+        'butter', 'oil', 'egg', 'milk', 'honey', 'maple syrup', 'vanilla', 'water',
+        'starter', 'discard', 'vinegar', 'soy sauce', 'cornstarch', 'cocoa',
+        'cinnamon', 'nutmeg', 'ginger', 'cumin', 'paprika', 'cardamom', 'clove',
+        'oregano', 'basil', 'thyme', 'chili powder', 'garlic powder', 'onion powder'
+      ];
+
+      function isStapleItem(item) {
+        var n = String(item || '').toLowerCase();
+        for (var i = 0; i < GROCERY_STAPLES.length; i += 1) {
+          if (n.indexOf(GROCERY_STAPLES[i]) !== -1) return true;
+        }
+        return false;
+      }
+
+      function groceryTextForIngredient(ing) {
+        if (!ing) return '';
+        var item = String(ing.item || '').trim();
+        if (!item) return '';
+        var text;
+        if (isStapleItem(item)) {
+          text = item;
+        } else {
+          var qty = (ing.qty === '' || ing.qty == null || ing.qty === 0) ? '' : ing.qty;
+          if (qty === '') {
+            text = item;
+          } else if (ing.unit && ing.unit !== 'ea') {
+            text = qty + ' ' + ing.unit + ' ' + item;
+          } else {
+            text = qty + ' ' + item;
+          }
+        }
+        return text.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      function isOnGroceryList(text) {
+        if (!text) return false;
+        var list = findExistingListByType('grocery');
+        if (!list) return false;
+        var target = normalizeListName(text);
+        return (list.items || []).some(function (it) {
+          return !it.done && normalizeListName(it.text) === target;
+        });
+      }
+
+      async function addIngredientToGrocery(text) {
+        var phase = runtime();
+        var ref = listsRef(phase);
+        if (!ref || !text) return null;
+        var list = findExistingListByType('grocery');
+        var listId;
+        var items;
+        if (list) {
+          listId = list.id;
+          items = list.items || [];
+        } else {
+          var created = await createListRecord(listTypeMeta('grocery').label || 'Grocery', 'grocery', []);
+          if (!created) return null;
+          listId = created.id;
+          items = [];
+        }
+        var target = normalizeListName(text);
+        var dup = items.find(function (it) {
+          return !it.done && normalizeListName(it.text) === target;
+        });
+        if (dup) return { listId: listId, itemId: dup.id, duplicate: true };
+        var category = autoCategory(text);
+        var order = nextItemOrder(list, category);
+        var payload = buildItemPayload(text, 'grocery', category, order);
+        if (!payload) return null;
+        var itemRef = ref.child(listId + '/items').push();
+        await itemRef.set(payload);
+        return { listId: listId, itemId: itemRef.key, duplicate: false };
+      }
+
+      var RECIPE_ADD_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+      var RECIPE_ADDED_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+      function setAddBtnState(btn, added) {
+        if (!btn) return;
+        btn.classList.toggle('added', !!added);
+        btn.innerHTML = added ? RECIPE_ADDED_SVG : RECIPE_ADD_SVG;
+        var label = added ? 'On grocery list' : 'Add to grocery list';
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('title', label);
+      }
+
+      function groceryToast(text, options) {
+        var phase = runtime();
+        if (phase && typeof phase.showToast === 'function') phase.showToast(text, options);
+      }
+
       function renderDetailImpl(container, recipeId) {
         var r = recipesState.recipesById[recipeId];
         if (!r) {
@@ -10820,8 +10947,12 @@
           if (unit && unit !== 'ea') qtyLabel = (qtyLabel ? qtyLabel + ' ' : '') + unit;
           var itemHtml = escapeHtml(ing.item);
           if (ing.note) itemHtml += ' <span class="recipe-ingredient-note">(' + escapeHtml(ing.note) + ')</span>';
+          var added = isOnGroceryList(groceryTextForIngredient(ing));
+          var addLabel = added ? 'On grocery list' : 'Add to grocery list';
+          var addBtn = '<button type="button" class="recipe-ing-add' + (added ? ' added' : '') + '" data-ing-add="' + idx + '" aria-label="' + addLabel + '" title="' + addLabel + '">' + (added ? RECIPE_ADDED_SVG : RECIPE_ADD_SVG) + '</button>';
           return '<span class="recipe-ingredient-qty" data-ing-row="' + idx + '">' + escapeHtml(qtyLabel) + '</span>' +
-                 '<span class="recipe-ingredient-item" data-ing-row="' + idx + '">' + itemHtml + '</span>';
+                 '<span class="recipe-ingredient-item" data-ing-row="' + idx + '">' + itemHtml + '</span>' +
+                 addBtn;
         }
 
         var ingredientsHtml = '';
@@ -10974,6 +11105,37 @@
         var card = container.querySelector('.recipe-card');
         if (card) {
           card.addEventListener('click', function (e) {
+            var addBtn = e.target.closest('[data-ing-add]');
+            if (addBtn) {
+              e.stopPropagation();
+              if (addBtn.disabled || addBtn.classList.contains('added')) return;
+              var aidx = Number(addBtn.getAttribute('data-ing-add'));
+              var gText = groceryTextForIngredient(r.ingredients[aidx]);
+              if (!gText) return;
+              addBtn.disabled = true;
+              addIngredientToGrocery(gText).then(function (res) {
+                addBtn.disabled = false;
+                if (!res) { groceryToast('Could not add to Grocery', { type: 'error' }); return; }
+                setAddBtnState(addBtn, true);
+                if (res.duplicate) {
+                  groceryToast(gText + ' is already on Grocery');
+                  return;
+                }
+                groceryToast('Added ' + gText + ' to Grocery', {
+                  onUndo: function () {
+                    var phase = runtime();
+                    var ref = listsRef(phase);
+                    if (ref) ref.child(res.listId + '/items/' + res.itemId).remove();
+                    setAddBtnState(addBtn, false);
+                  }
+                });
+              }).catch(function (err) {
+                console.error(err);
+                addBtn.disabled = false;
+                groceryToast('Could not add to Grocery', { type: 'error' });
+              });
+              return;
+            }
             var row = e.target.closest('[data-ing-row]');
             if (row) {
               var idx = row.getAttribute('data-ing-row');

@@ -1,15 +1,25 @@
 # Task State - Family Hub
 
-**Task:** Phase 41 — Recipes
+**Task:** Phase 42 — Add Recipe Ingredient to Grocery List
 **Current Phase:** built
-**Status:** Built by Claude (one-off override of feedback_workflow for this phase)
-**Next Agent:** human / Gemini
-**Next Action:** (1) one-time setup: download Firebase service-account key into `scripts/recipes/service-account.json`, write family code into `scripts/recipes/family-id.txt`, `npm install` inside `scripts/recipes/`. (2) Smoke test in browser: switch to Recipes tab, verify empty state. (3) Try importing a recipe from `recipes-inbox/`. (4) Hand to Gemini for review.
-**Last Updated:** 2026-06-03
+**Status:** Built by Claude (user override of feedback_workflow — explicitly asked Claude to program it directly)
+**Next Agent:** human (smoke test) → Gemini (review)
+**Next Action:** Smoke test in browser: open a recipe, tap the "+" on an ingredient, confirm it lands on the Grocery list in the right aisle, dedup + Undo work, and "added ✓" persists on reopen. Then hand to Gemini per Test Focus.
+**Last Updated:** 2026-06-26
+
+## Phase 42 build notes
+
+Implemented entirely in `index.html` + `sw.js` cache bump (`hub-v55` → `hub-v56`):
+- `GROCERY_STAPLES` keyword list + `isStapleItem`, `groceryTextForIngredient` (staple → item-only; else amount), `isOnGroceryList`, `addIngredientToGrocery` (find-or-create grocery list, dedupe, autoCategory, returns pushed item id for Undo).
+- `renderIngredient` now emits a third grid child: `.recipe-ing-add` button (`data-ing-add`). Grid went 2-col → 3-col.
+- Click delegation handles `[data-ing-add]` before the cooking check-off branch (`stopPropagation`), with Undo toast via `runtime().showToast`.
+- "added ✓" state derived per-render from the live grocery list (recomputed, not stored).
+- Print CSS hides `.recipe-ing-add`.
+- Known minor edge: if lists haven't loaded yet when adding, a second grocery list could be created (same theoretical window as existing `openOrCreateTypedList`). Low risk in practice.
 
 ## Completed
 
-- [x] Phases 8-40
+- [x] Phases 8-41
 
 ## Current
 
