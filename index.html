@@ -9310,6 +9310,33 @@
         return 'other';
       }
 
+      // Rule-based (no AI) auto-sort for Trip/packing lists. Order matters:
+      // kid- and pet-specific items and chores win before generic gear words.
+      // Anything unmatched lands in 'other' and can be moved by hand.
+      var PACKING_KEYWORDS = {
+        kids: ['kid', 'alex', 'louisa', 'diaper', 'luvvies', 'lovie', 'booster', 'stroller', 'pacifier', 'onesie', 'sippy', 'card game'],
+        tasks: ['print', 'cancel', 'dishwasher', 'trash', 'reservation', 'reserve', 'insurance', 'inflight', 'notify', 'schedule', 'confirm', 'credit card', ' pin', 'clean jewelry', 'water plants', 'stop mail', 'lock up', 'turn off', 'turn on', 'empty', 'call '],
+        pet: ['dog', 'jameson', 'jamie', 'leash', 'poop', 'kennel', 'puppy', 'litter'],
+        documents: ['passport', 'itinerary', 'visa', 'license', 'boarding', 'cash', '$', 'currency', 'euro', 'document'],
+        electronics: ['phone', 'charger', 'ipad', 'tablet', 'laptop', 'computer', 'headphone', 'earbud', 'airpod', 'air pod', 'air tag', 'airtag', 'adapter', 'converter', 'kindle', 'camera', 'selfie', 'cord', 'cable', 'battery', 'plug'],
+        health: ['medicine', 'medication', 'pill', 'band aid', 'bandaid', 'band-aid', 'eye drop', 'night guard', 'mouth guard', 'vitamin', 'compression', 'first aid', 'thermometer', 'allergy', 'tylenol', 'advil', 'ibuprofen', 'tampon', 'pads', 'prescription', 'inhaler', 'nose spray'],
+        shoes: ['shoe', 'sandal', 'croc', 'boot', 'sneaker', 'flip flop', 'heel', 'slipper'],
+        clothing: ['clothes', 'outfit', 'jacket', 'coat', 'shirt', 'pant', 'short', 'pajama', 'pjs', 'underwear', 'bra', 'sock', 'swimsuit', 'bathing suit', 'swim', 'scarf', 'hat', 'glove', 'dress', 'sweater', 'belt', 'jeans', 'tank', 'legging'],
+        toiletries: ['shampoo', 'conditioner', 'soap', 'toothpaste', 'toothbrush', 'tooth', 'deodorant', 'skincare', 'skin care', 'lotion', 'makeup', 'make-up', 'make up', 'mascara', 'razor', 'shaving', 'shave', 'chapstick', 'lip balm', 'perfume', 'cologne', 'comb', 'hairbrush', 'hair brush', 'floss', 'nail', 'clipper', 'tweezer', 'cotton', 'panty', 'liner', 'hair tie', 'ponytail', 'hair clip', 'sanitizer', 'lint roller', 'wipe', 'washcloth', 'sunscreen', 'sunblock', 'q-tip', 'qtip', 'contacts', 'retainer', 'brush']
+      };
+
+      function autoPackingCategory(text) {
+        var lower = String(text || '').toLowerCase().trim();
+        var categories = Object.keys(PACKING_KEYWORDS);
+        for (var i = 0; i < categories.length; i += 1) {
+          var category = categories[i];
+          for (var j = 0; j < PACKING_KEYWORDS[category].length; j += 1) {
+            if (lower.indexOf(PACKING_KEYWORDS[category][j]) !== -1) return category;
+          }
+        }
+        return 'other';
+      }
+
       function inferListType(name) {
         var lower = String(name || '').toLowerCase();
         if (lower.indexOf('grocery') !== -1 || lower.indexOf('groceries') !== -1) return 'grocery';
@@ -9706,7 +9733,7 @@
           done: false,
           order: Number(offset || 0),
           timestamp: Date.now() + Number(offset || 0),
-          category: category || (listType === 'lakehouse' ? 'pack_to' : ((listType === 'grocery' || listType === 'costco') ? autoCategory(safeText) : 'other'))
+          category: category || (listType === 'lakehouse' ? 'pack_to' : (listType === 'packing' ? autoPackingCategory(safeText) : ((listType === 'grocery' || listType === 'costco') ? autoCategory(safeText) : 'other')))
         };
       }
 
@@ -9871,6 +9898,8 @@
             category = explicitCategory;
           } else if (listType === 'lakehouse') {
             category = 'pack_to';
+          } else if (listType === 'packing') {
+            category = autoPackingCategory(parts[i]);
           } else if (listType === 'grocery' || listType === 'costco') {
             category = autoCategory(parts[i]);
           } else {
@@ -10014,7 +10043,7 @@
         var categoryOptions = '';
         if (isGrouped) {
           var categories = categoriesForType(list.type);
-          if (list.type === 'grocery' || list.type === 'costco') {
+          if (list.type === 'grocery' || list.type === 'costco' || list.type === 'packing') {
             categoryOptions = '<option value="auto">Auto</option>';
           }
           categoryOptions += categories.map(function (category) {
@@ -10502,7 +10531,7 @@
           var listType = list.type || 'custom';
           var category = (listType === 'grocery' || listType === 'costco')
             ? autoCategory(text)
-            : (listType === 'lakehouse' ? 'pack_to' : 'other');
+            : (listType === 'lakehouse' ? 'pack_to' : (listType === 'packing' ? autoPackingCategory(text) : 'other'));
           var order = nextItemOrder(list, category);
           var payload = buildItemPayload(text, listType, category, order);
           if (!payload) return null;
