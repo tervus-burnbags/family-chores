@@ -90,7 +90,7 @@ Read all of it before researching. Specifically note:
 - **What's still live and undecided** — don't re-add it.
 - **Anything expired** that's worth clearing out (see prune below).
 
-**2. Research.** Web-search Charlotte-area events per the curation rules in `EVENTS_SCHEMA.md` — note the SouthPark home-base rule, the "don't over-filter" rule, and the requirement to verify every date and price against an official source.
+**2. Research.** First check the priority artist/team watches in `EVENTS_SCHEMA.md`, then web-search Charlotte-area events per the remaining curation rules — note both the SouthPark and Camp Lake James home-base rules, the family music signal, the "don't over-filter" rule, and the requirement to verify every date and price against an official source.
 
 **3. Write the batch.** A JSON array to `events-inbox/_tmp-batch.json`.
 

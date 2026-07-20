@@ -133,6 +133,21 @@ const events = {
     addedAt: Date.now(),
     verdict: null,
     verdictAt: null
+  },
+  evt_priority1: {
+    id: 'evt_priority1',
+    title: 'Test Priority Watch Event',
+    dateText: 'Priority watch test',
+    startDate: isoDaysFromNow(35),
+    where: 'Charlotte',
+    cost: 'Ticketed',
+    blurb: 'Verifies the visible priority treatment.',
+    why: 'A named artist or team watch should stand out.',
+    url: 'https://example.com/priority',
+    tags: ['concert', 'priority-watch'],
+    addedAt: Date.now(),
+    verdict: null,
+    verdictAt: null
   }
 };
 

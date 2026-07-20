@@ -44,6 +44,12 @@ test('renders dateText verbatim rather than reformatting', async ({ page }) => {
   await expect(card.locator('.event-date')).toHaveText('Weekends only, rain or shine');
 });
 
+test('highlights a priority artist or team watch', async ({ page }) => {
+  const card = page.locator('.event-card', { hasText: 'Test Priority Watch Event' });
+  await expect(card).toHaveClass(/priority-watch/);
+  await expect(card.locator('.event-flag')).toHaveText('Priority');
+});
+
 test('expands one card at a time and shows detail', async ({ page }) => {
   const renfest = page.locator('.event-card', { hasText: 'Test Renaissance Festival' });
   await renfest.click();

@@ -863,6 +863,7 @@
 
     .event-card:active { opacity: 0.85; }
     .event-card.expanded { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+    .event-card.priority-watch { border-left-color: #7c3aed; }
     .event-card.verdict-going { border-left-color: var(--success); }
     .event-card.verdict-interested { border-left-color: var(--warning); }
 
@@ -894,6 +895,11 @@
     .event-flag.interested {
       background: rgba(245, 158, 11, 0.16);
       color: #b45309;
+    }
+
+    .event-flag.priority {
+      background: rgba(124, 58, 237, 0.14);
+      color: #6d28d9;
     }
 
     .event-date {
@@ -8555,12 +8561,15 @@
         var metaParts = [];
         if (event.where) metaParts.push(escapeBulletinHtml(event.where));
         if (event.cost) metaParts.push(escapeBulletinHtml(event.cost));
+        var isPriorityWatch = event.tags.indexOf('priority-watch') >= 0;
 
         var flag = '';
         if (event.verdict === 'going') {
           flag = '<span class="event-flag">Going</span>';
         } else if (event.verdict === 'interested') {
           flag = '<span class="event-flag interested">Interested</span>';
+        } else if (isPriorityWatch) {
+          flag = '<span class="event-flag priority">Priority</span>';
         }
 
         var detail = '';
@@ -8584,6 +8593,7 @@
         }
 
         return '<article class="event-card' + (expanded ? ' expanded' : '') +
+            (isPriorityWatch ? ' priority-watch' : '') +
             (event.verdict ? ' verdict-' + escapeBulletinHtml(event.verdict) : '') +
             '" data-event-card="' + escapeBulletinHtml(event.id) + '">' +
           '<div class="event-card-head">' +
@@ -12768,7 +12778,6 @@
   </script>
 </body>
 </html>
-
 
 
 

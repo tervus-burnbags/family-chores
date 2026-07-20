@@ -24,6 +24,8 @@ A batch is a **JSON array** of event objects matching [`../EVENTS_SCHEMA.md`](..
 
 Working files are named `_tmp-*.json` and are gitignored — they're scratch, not a record. The database is the source of truth once imported.
 
+When the family explicitly asks for research to be committed before Firebase import, name the validated file `pending-YYYY-MM-DD-*.json` and track it. Remove that pending file in a later commit only after the import is confirmed; Firebase then becomes the source of truth.
+
 ## Usage
 
 ```powershell

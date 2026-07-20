@@ -71,6 +71,7 @@ Keep tags consistent — they're how reaction history turns into better future p
 - **Shape:** `full-day`, `evening`, `weekend`, `one-night-only`, `drop-in`
 - **Fit:** `all-ages`, `older-kid`, `younger-kid`, `adults-too`, `dog-friendly`
 - **Money:** `free`, `cheap`, `splurge`
+- **Priority:** `priority-watch` — renders a visible Priority flag; reserve it for the named artist/team watches below
 
 ## Curation rules
 
@@ -81,9 +82,31 @@ Keep tags consistent — they're how reaction history turns into better future p
 - **Never re-add** an event previously marked `"no"`, and don't re-add one still live in the DB. Run `list-events.js --json` first and read the verdict history.
 - **Let verdicts steer the next batch.** Repeated `"no"` on a tag means stop suggesting that kind of thing; `"going"` on a tag means find more like it.
 
+### Family music signal
+
+Use the family's listening history when choosing concerts. Exact artists should outrank loose genre similarity, and children's novelty/dance tracks should not be treated as an adult concert signal.
+
+- Strongest adult signal: Robbie Williams and the Take That-adjacent British pop-rock lane.
+- Strong local-match signal: Tom Petty/heartland rock; 1990s-2000s alternative and pop-rock; modern indie/folk-pop; and a secondary country lane.
+- Representative artists in the history include Muse, The Killers, Foo Fighters, Green Day, Weezer, Radiohead, Red Hot Chili Peppers, blink-182, Counting Crows, Third Eye Blind, Guster, Band of Horses, Young the Giant, Noah Kahan, AURORA, John Fogerty, Steve Winwood, and Tim McGraw.
+
+### Priority watches
+
+- **Robbie Williams and Taylor Swift concerts are explicit exceptions to both the Charlotte radius and the 10-week lookahead.** On every research pass, check their official tour pages for newly announced dates anywhere in the world. Surface an announcement promptly, especially a US or Canadian leg, rather than waiting for the next ordinary Charlotte batch.
+- Prefer one card for a newly announced tour or leg rather than flooding the feed with every stop. State the geography and travel burden plainly and use an official artist or primary ticket page.
+- **Highlight the Florida Gators or Cincinnati Bearcats whenever either program is in the Charlotte area for any reason.** This includes games, tournaments, exhibitions, fan events, and other verified public appearances—not only football or basketball.
+- Tag every qualifying artist or team card with `priority-watch` so the app gives it a visible Priority flag.
+- Priority-watch cards may sit alongside the normal 8-12 local-event shortlist; they do not need to displace a good Charlotte event.
+
 ### Home base: SouthPark
 
 The family lives in **SouthPark**. Anything in SouthPark, Myers Park, Dilworth, Cotswold, or Park Road is effectively in their backyard and is worth including even when it's smaller or lower-stakes than the rest of the batch — a low-effort neighborhood thing clears a much lower bar than something 45 minutes away. Measure `where` drive times from SouthPark, not from Uptown.
+
+### Secondary base: Camp Lake James
+
+The family regularly stays at **Camp Lake James**, so **Morganton, Nebo, Old Fort, Black Mountain, and Marion** are also in scope when an event can anchor a camp weekend. Apply a higher bar than the SouthPark rule: favor substantial festivals, ticketed or headlining shows, unusual outdoor programs, and other destination-worthy events. Skip farmers markets, routine weekly music, small pop-ups, and ordinary recurring activities unless something makes that edition genuinely special.
+
+For these cards, state the rough drive from Camp Lake James in `where` so the app does not imply the time is from SouthPark.
 
 ### Don't over-filter
 

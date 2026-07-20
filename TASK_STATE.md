@@ -1,10 +1,10 @@
 # Task State - Family Hub
 
 **Task:** Phase 43 — Around Charlotte (curated local events)
-**Current Phase:** built + tested
-**Status:** Built by Claude (user override of feedback_workflow — explicitly asked Claude to program it directly)
-**Next Agent:** human (smoke test on phones) → Gemini (review)
-**Next Action:** Open Home on both phones and confirm the six real events render, a verdict set on one phone appears on the other, and dismiss/undo works. Then hand to Gemini per Test Focus.
+**Current Phase:** built + tested; preference/event refresh staged
+**Status:** Blocked only on this Codex sandbox's read-only `.git` access and blocked outbound Google OAuth; local changes and event data are validated
+**Next Agent:** human (commit + Firebase import + smoke test) → Gemini (review)
+**Next Action:** Commit the scoped preference/highlight changes, dry-run and import `events-inbox/pending-2026-07-20-codex.json` from a normal networked shell, then confirm the cards and verdict flow on both phones.
 **Last Updated:** 2026-07-20
 
 ## Phase 43 build notes
@@ -19,6 +19,10 @@ Home tab gains a third section below "Coming Up". Events are LLM-researched and 
 - `prune-events.js` is dry-run by default and preserves `"no"` verdicts unless `--include-dismissed`.
 - Tests: `tests/events.spec.js` (12 tests) + `tests/seed-test-events.js`, run against the isolated test Firebase project. 12/12 chromium, 24/24 across both mobile viewports.
 - First real batch imported: 6 Charlotte events (Sept–Nov 2026), verified against official sources.
+- 2026-07-20 preference refresh: music history is now durable curation input; Robbie Williams and Taylor Swift are worldwide priority watches; Florida Gators and Cincinnati Bearcats are Charlotte-area priority watches. `priority-watch` cards receive a visible Priority flag (`sw.js` → `hub-v63`).
+- A validated 13-card follow-up batch is staged in `events-inbox/pending-2026-07-20-codex.json`: 12 regional events plus the worldwide Robbie Williams priority watch. It includes the Aug 10 Muse show and Aug 29 WNC Bigfoot Festival near Camp Lake James. The schema validator reports 13 valid records and zero duplicate keys. Live duplicate checking/import could not run because the sandbox cannot fetch a Google OAuth token (`EACCES`).
+- Camp Lake James is now a secondary base: substantial events in Morganton, Nebo, Old Fort, Black Mountain, and Marion qualify, while farmers markets and other routine recurring listings do not.
+- Added one priority-watch UI test (13 event tests total). Static JavaScript parsing passed; the new Firebase-backed browser test was not run in this network-restricted sandbox.
 - **DB rules checked:** `families/$familyId` is `.read`/`.write` on `auth != null`, so the app's anonymous auth can write verdicts. No rules change needed.
 - **Pre-existing, unrelated:** `app.spec.js` "logging a chore shows Got it toast" is not idempotent — it fails on any second run the same day because the app correctly says "Alex already logged Make bed today." Left alone deliberately; loosening the assertion would mask real regressions.
 
