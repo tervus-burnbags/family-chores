@@ -75,8 +75,24 @@ Keep tags consistent — they're how reaction history turns into better future p
 ## Curation rules
 
 - **Ticketed or unique only.** Skip things available any weekend — routine pro sports, standing museum admission, chain-venue events.
-- **6-10 events per batch.** This is a shortlist to research, not a comprehensive calendar.
+- **8-12 events per batch.** A browsable shortlist, not a comprehensive calendar. The family expects to decline most of them.
 - **Charlotte metro**, roughly within an hour's drive.
-- **Look 3-10 weeks out.** Far enough that tickets are still available, near enough to be real.
+- **Look 3-10 weeks out.** Far enough that tickets are still available, near enough to be real. Stretch past 10 weeks when tickets genuinely need booking that far ahead.
 - **Never re-add** an event previously marked `"no"`, and don't re-add one still live in the DB. Run `list-events.js --json` first and read the verdict history.
 - **Let verdicts steer the next batch.** Repeated `"no"` on a tag means stop suggesting that kind of thing; `"going"` on a tag means find more like it.
+
+### Home base: SouthPark
+
+The family lives in **SouthPark**. Anything in SouthPark, Myers Park, Dilworth, Cotswold, or Park Road is effectively in their backyard and is worth including even when it's smaller or lower-stakes than the rest of the batch — a low-effort neighborhood thing clears a much lower bar than something 45 minutes away. Measure `where` drive times from SouthPark, not from Uptown.
+
+### Don't over-filter
+
+Overlapping, competing, or same-weekend events are **fine** — include them all and let the family choose. Two Renaissance-festival-ish things on the same Saturday is not a problem to solve; deciding is their job, not yours. Err toward including a plausible candidate rather than dropping it for being redundant, marginal, or similar to something already listed.
+
+The one thing that *does* justify dropping a candidate is **unverifiable facts**. Never publish a date, price, or venue you couldn't confirm. If the event looks worthwhile but a detail won't confirm:
+
+- Prefer a **fuzzy `dateText`** ("mid-October, exact date TBA") with a conservative `startDate`, over a precise date you're guessing at.
+- Say so plainly in `ticketNote` — e.g. "2026 date not yet announced; last year it ran the second Saturday of October."
+- Only drop it outright if you can't establish that the event is happening at all.
+
+Watch for **stale prior-year listings** — a common trap. If a source says "Saturday, October 11" but October 11 isn't a Saturday in the target year, you're reading last year's page. Re-verify against the official site before using anything from it.

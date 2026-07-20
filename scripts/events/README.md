@@ -75,14 +75,40 @@ Dry run by default — requires `--confirm` to actually delete. Events with verd
 
 ## The Research Workflow
 
-Run by whichever assistant the family asks ("go find some Charlotte events"). Follow these steps in order.
+Run by whichever assistant the family asks ("go find some Charlotte events"). This is a **review-then-add** loop, not an append-only one — always read the existing state before writing. Follow these steps in order.
 
-1. **Read the history.** `node list-events.js --json` — current events, verdicts, and the per-tag summary.
-2. **Research.** Web-search Charlotte-area events, following the curation rules in `EVENTS_SCHEMA.md`, steered by the verdict history: avoid tags repeatedly marked `no`, favor tags marked `going`. Never re-add something already dismissed.
-3. **Write the batch.** A JSON array to `events-inbox/_tmp-batch.json`.
-4. **Dry run.** `node import-events.js ..\..\events-inbox\_tmp-batch.json --dry-run` to confirm what's new vs. already present.
-5. **Import.** Same command without `--dry-run`.
-6. New cards appear on Home within seconds (live listener). The family reacts; those verdicts feed step 1 next time.
+**1. Review what's already there.**
+
+```powershell
+node list-events.js --json
+```
+
+Read all of it before researching. Specifically note:
+- **Dismissed (`"no"`) events** — never re-suggest these, or close variants of them.
+- **`going` / `interested` events** — the family liked these; find more in the same vein.
+- **The `tagSummary`** — per-tag verdict counts. A tag with several `no`s and no `going` is a category to stop pitching. A tag with a `going` is one to lean into.
+- **What's still live and undecided** — don't re-add it.
+- **Anything expired** that's worth clearing out (see prune below).
+
+**2. Research.** Web-search Charlotte-area events per the curation rules in `EVENTS_SCHEMA.md` — note the SouthPark home-base rule, the "don't over-filter" rule, and the requirement to verify every date and price against an official source.
+
+**3. Write the batch.** A JSON array to `events-inbox/_tmp-batch.json`.
+
+**4. Dry run.**
+
+```powershell
+node import-events.js ..\..\events-inbox\_tmp-batch.json --dry-run
+```
+
+Confirms what's genuinely new vs. already present. If something you expected to be new comes back "skipped," it's already in the database — that's the dedupe working, not an error.
+
+**5. Import.** Same command without `--dry-run`.
+
+**6. Report back to the family** — list what was added and what was skipped and why. Mention anything you deliberately left out (unconfirmed date, already dismissed) so they can overrule you.
+
+New cards appear on Home within seconds via the live listener. The family reacts; those verdicts feed step 1 next time.
+
+**Housekeeping:** every few passes, clear out old events with `prune-events.js --before <a few months ago> --confirm`. Dismissed events survive this by design — that history is what prevents re-suggesting things already turned down.
 
 Occasionally: `node prune-events.js --before <a few months ago> --confirm` to clear out stale past events.
 
