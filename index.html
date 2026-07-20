@@ -821,6 +821,210 @@
       color: var(--muted);
     }
 
+    /* Around Charlotte — curated local events */
+    .events-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .events-dismissed-toggle {
+      flex: 0 0 auto;
+      padding: 4px 2px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: var(--font-sm);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .events-dismissed-toggle:active { opacity: 0.6; }
+
+    .events-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .event-card {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--panel);
+      cursor: pointer;
+      transition: box-shadow 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .event-card:active { opacity: 0.85; }
+    .event-card.expanded { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+    .event-card.verdict-going { border-left-color: var(--success); }
+    .event-card.verdict-interested { border-left-color: var(--warning); }
+
+    .event-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .event-title {
+      font-size: var(--font-md);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+    }
+
+    .event-flag {
+      flex: 0 0 auto;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: rgba(34, 197, 94, 0.14);
+      color: #15803d;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .event-flag.interested {
+      background: rgba(245, 158, 11, 0.16);
+      color: #b45309;
+    }
+
+    .event-date {
+      margin-top: 3px;
+      font-size: var(--font-base);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .event-meta {
+      margin-top: 2px;
+      font-size: var(--font-sm);
+      color: var(--muted);
+    }
+
+    .event-blurb {
+      margin-top: 6px;
+      font-size: var(--font-sm);
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .event-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .event-why {
+      font-size: var(--font-sm);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .event-ticket {
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(245, 158, 11, 0.12);
+      color: #92400e;
+      font-size: var(--font-sm);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .event-link {
+      align-self: flex-start;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      color: var(--text);
+      font-size: var(--font-sm);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .event-verdicts {
+      display: flex;
+      gap: 8px;
+    }
+
+    .event-verdict-btn {
+      flex: 1 1 0;
+      min-height: 40px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      color: var(--muted);
+      font: inherit;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .event-verdict-btn:active { opacity: 0.7; }
+
+    .event-verdict-btn.active {
+      border-color: var(--text);
+      background: var(--text);
+      color: var(--panel);
+    }
+
+    .events-dismissed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .event-dismissed-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(15, 23, 42, 0.04);
+    }
+
+    .event-dismissed-name {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: var(--font-sm);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .event-restore-btn {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .event-restore-btn:active { opacity: 0.7; }
+
     /* Shared btn used by bulletin + calendar */
     .bulletin-btn {
       min-height: 42px;
@@ -4816,7 +5020,7 @@
       syncedPathState.teardown = [];
       syncedPathState.familyId = nextFamilyId;
 
-      ['config', 'balances', 'bulletin/notes'].forEach(function (path) {
+      ['config', 'balances', 'bulletin/notes', 'events'].forEach(function (path) {
         var ref = database.ref('families/' + nextFamilyId + '/' + path);
 
         // Realtime Database web does not consistently expose keepSynced, so
@@ -7178,6 +7382,8 @@
         composeOpen: false,
         draftText: '',
         draftColor: 'neutral',
+        expandedEventId: null,
+        showDismissedEvents: false,
         funLoadedFor: null,
         funView: 'home',
         jokeIndex: 0,
@@ -7222,6 +7428,11 @@
         events: null,
         pending: null,
         error: ''
+      };
+      var eventsState = {
+        familyId: null,
+        teardown: null,
+        eventsById: {}
       };
 
       function ensureKidFunStyles() {
@@ -8233,6 +8444,198 @@
         }).join('') + '</div>' + (calendarState.stale ? '<p class="settings-note">Showing saved events while the latest refresh is unavailable.</p>' : '');
       }
 
+      // === Around Charlotte — curated local events ===
+      // Events are researched by an LLM and pushed in via scripts/events/.
+      // The app only ever writes `verdict` / `verdictAt`; the body is read-only.
+
+      var EVENT_VERDICTS = ['interested', 'going', 'no'];
+      var EVENT_VERDICT_LABELS = { interested: 'Interested', going: 'Going', no: 'Not for us' };
+
+      function eventsRef(phase) {
+        if (!phase || !phase.database || !phase.familyId) return null;
+        return phase.dbRef('events');
+      }
+
+      // Only http(s) links are rendered — the data comes from an external script,
+      // so never let a javascript: or data: URL through into an href.
+      function safeEventUrl(value) {
+        var url = String(value || '').trim();
+        return /^https?:\/\//i.test(url) ? url : '';
+      }
+
+      function normalizeEvents(snapshotValue) {
+        var data = snapshotValue && typeof snapshotValue === 'object' ? snapshotValue : {};
+        var result = {};
+        Object.keys(data).forEach(function (id) {
+          var value = data[id];
+          if (!value || typeof value !== 'object') return;
+          var title = String(value.title || '').trim();
+          if (!title) return;
+          var verdict = String(value.verdict || '');
+          result[id] = {
+            id: id,
+            title: title,
+            dateText: String(value.dateText || '').trim(),
+            startDate: String(value.startDate || '').trim(),
+            endDate: String(value.endDate || '').trim(),
+            where: String(value.where || '').trim(),
+            cost: String(value.cost || '').trim(),
+            ticketNote: String(value.ticketNote || '').trim(),
+            blurb: String(value.blurb || '').trim(),
+            why: String(value.why || '').trim(),
+            url: safeEventUrl(value.url),
+            tags: Array.isArray(value.tags) ? value.tags.filter(Boolean).map(String) : [],
+            verdict: EVENT_VERDICTS.indexOf(verdict) >= 0 ? verdict : null
+          };
+        });
+        return result;
+      }
+
+      // Parsed as local-time Y/M/D, not Date.parse — "2026-08-15" would otherwise be
+      // read as UTC midnight and read back as the previous day west of Greenwich.
+      function parseEventDate(value) {
+        var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
+        if (!match) return null;
+        var date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      function isEventExpired(event) {
+        var end = parseEventDate(event.endDate) || parseEventDate(event.startDate);
+        if (!end) return false; // undated or malformed: show it rather than silently hide it
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return end.getTime() < today.getTime();
+      }
+
+      function sortEvents(list) {
+        return list.slice().sort(function (a, b) {
+          var aGoing = a.verdict === 'going' ? 0 : 1;
+          var bGoing = b.verdict === 'going' ? 0 : 1;
+          if (aGoing !== bGoing) return aGoing - bGoing;
+          var aStart = a.startDate || '9999-12-31';
+          var bStart = b.startDate || '9999-12-31';
+          if (aStart !== bStart) return aStart < bStart ? -1 : 1;
+          return a.title.localeCompare(b.title);
+        });
+      }
+
+      function subscribeEvents() {
+        var phase = runtime();
+        var ref = eventsRef(phase);
+        if (!ref) return;
+        if (eventsState.familyId === phase.familyId) return;
+        if (typeof eventsState.teardown === 'function') {
+          eventsState.teardown();
+        }
+        eventsState.familyId = phase.familyId;
+        var handler = function (snapshot) {
+          eventsState.eventsById = normalizeEvents(snapshot.exists() ? snapshot.val() : {});
+          var view = location.hash.replace('#', '');
+          if (!view || view === 'bulletin') {
+            renderBulletin().catch(function (error) { console.error(error); });
+          }
+        };
+        ref.on('value', handler);
+        eventsState.teardown = function () { ref.off('value', handler); };
+      }
+
+      // Writes only the two verdict fields so an in-flight import can't be clobbered.
+      async function setEventVerdict(eventId, verdict) {
+        var phase = runtime();
+        var ref = eventsRef(phase);
+        if (!ref) throw new Error('Events are not ready.');
+        await ref.child(eventId).update({
+          verdict: verdict || null,
+          verdictAt: verdict ? Date.now() : null
+        });
+      }
+
+      function renderEventCard(event, expanded) {
+        var metaParts = [];
+        if (event.where) metaParts.push(escapeBulletinHtml(event.where));
+        if (event.cost) metaParts.push(escapeBulletinHtml(event.cost));
+
+        var flag = '';
+        if (event.verdict === 'going') {
+          flag = '<span class="event-flag">Going</span>';
+        } else if (event.verdict === 'interested') {
+          flag = '<span class="event-flag interested">Interested</span>';
+        }
+
+        var detail = '';
+        if (expanded) {
+          detail = '<div class="event-detail">' +
+            (event.why ? '<p class="event-why">' + escapeBulletinHtml(event.why) + '</p>' : '') +
+            (event.ticketNote ? '<p class="event-ticket">' + escapeBulletinHtml(event.ticketNote) + '</p>' : '') +
+            (event.url
+              ? '<a class="event-link" data-event-link="1" href="' + escapeBulletinHtml(event.url) + '" target="_blank" rel="noopener noreferrer">More info</a>'
+              : '') +
+            '<div class="event-verdicts">' +
+              EVENT_VERDICTS.map(function (verdict) {
+                return '<button type="button" class="event-verdict-btn' + (event.verdict === verdict ? ' active' : '') + '"' +
+                  ' data-event-verdict="' + escapeBulletinHtml(verdict) + '"' +
+                  ' data-event-id="' + escapeBulletinHtml(event.id) + '">' +
+                  escapeBulletinHtml(EVENT_VERDICT_LABELS[verdict]) +
+                '</button>';
+              }).join('') +
+            '</div>' +
+          '</div>';
+        }
+
+        return '<article class="event-card' + (expanded ? ' expanded' : '') +
+            (event.verdict ? ' verdict-' + escapeBulletinHtml(event.verdict) : '') +
+            '" data-event-card="' + escapeBulletinHtml(event.id) + '">' +
+          '<div class="event-card-head">' +
+            '<div class="event-title">' + escapeBulletinHtml(event.title) + '</div>' +
+            flag +
+          '</div>' +
+          // dateText is rendered verbatim — it carries fuzzy ranges ("weekends only")
+          // that startDate/endDate can't express.
+          (event.dateText ? '<div class="event-date">' + escapeBulletinHtml(event.dateText) + '</div>' : '') +
+          (metaParts.length ? '<div class="event-meta">' + metaParts.join(' &middot; ') + '</div>' : '') +
+          (event.blurb ? '<p class="event-blurb">' + escapeBulletinHtml(event.blurb) + '</p>' : '') +
+          detail +
+        '</article>';
+      }
+
+      function renderEventsSection() {
+        var all = Object.keys(eventsState.eventsById).map(function (id) {
+          return eventsState.eventsById[id];
+        });
+        var dismissed = all.filter(function (event) { return event.verdict === 'no'; });
+        var active = sortEvents(all.filter(function (event) {
+          return event.verdict !== 'no' && !isEventExpired(event);
+        }));
+
+        var head = '<div class="events-head">' +
+          '<h3 class="hub-section-head">Around Charlotte</h3>' +
+          (dismissed.length
+            ? '<button type="button" class="events-dismissed-toggle" data-events-toggle-dismissed="1">' +
+                dismissed.length + ' dismissed ' + (state.showDismissedEvents ? '&#9652;' : '&#9662;') +
+              '</button>'
+            : '') +
+        '</div>';
+
+        var body = active.length
+          ? '<div class="events-list">' + active.map(function (event) {
+              return renderEventCard(event, state.expandedEventId === event.id);
+            }).join('') + '</div>'
+          : '<div class="calendar-empty"><strong>No events right now.</strong><p>Ask Claude or Codex to research what\'s happening around Charlotte.</p></div>';
+
+        var dismissedMarkup = '';
+        if (state.showDismissedEvents && dismissed.length) {
+          dismissedMarkup = '<div class="events-dismissed-list">' + dismissed.map(function (event) {
+            return '<div class="event-dismissed-row">' +
+              '<span class="event-dismissed-name">' + escapeBulletinHtml(event.title) + '</span>' +
+              '<button type="button" class="event-restore-btn" data-event-restore="' + escapeBulletinHtml(event.id) + '">Restore</button>' +
+            '</div>';
+          }).join('') + '</div>';
+        }
+
+        return head + body + dismissedMarkup;
+      }
+
       async function addNote(text, color) {
         var phase = runtime();
         var ref = bulletinNotesRef(phase);
@@ -8643,6 +9046,8 @@
           return;
         }
 
+        subscribeEvents();
+
         var notes = await getNotes();
         var calendarState = await fetchCalendarEvents(phase);
         var visibleNotes = notes.slice(0, 10);
@@ -8685,6 +9090,8 @@
             '<div class="bulletin-divider"></div>' +
             '<div class="bulletin-calendar-head"><h3 class="hub-section-head">Coming Up</h3></div>' +
             renderCalendarSection(calendarState) +
+            '<div class="bulletin-divider"></div>' +
+            renderEventsSection() +
           '</div>';
 
         var noteInput = document.getElementById('bulletinNoteInput');
@@ -8740,6 +9147,71 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
+        }
+
+        // --- Around Charlotte events ---
+        // Ordered innermost-first: the link and the verdict buttons live inside the
+        // card, which is itself the expand/collapse tap target.
+        if (event.target.closest('[data-event-link]')) {
+          return; // let the anchor navigate; don't also collapse the card
+        }
+
+        var verdictBtn = event.target.closest('[data-event-verdict]');
+        if (verdictBtn) {
+          var verdictEventId = verdictBtn.dataset.eventId;
+          var tappedVerdict = verdictBtn.dataset.eventVerdict;
+          var currentEvent = eventsState.eventsById[verdictEventId];
+          var previousVerdict = currentEvent ? currentEvent.verdict : null;
+          var nextVerdict = previousVerdict === tappedVerdict ? null : tappedVerdict;
+          if (nextVerdict === 'no') {
+            state.expandedEventId = null;
+          }
+          setEventVerdict(verdictEventId, nextVerdict).then(function () {
+            var phase = runtime();
+            if (nextVerdict === 'no' && phase && phase.showToast) {
+              phase.showToast('Dismissed ' + (currentEvent ? currentEvent.title : 'event'), {
+                onUndo: function () {
+                  setEventVerdict(verdictEventId, previousVerdict).catch(function (error) {
+                    console.error(error);
+                  });
+                }
+              });
+            }
+          }).catch(function (error) {
+            console.error(error);
+            var phase = runtime();
+            if (phase && phase.showToast) {
+              phase.showToast('Could not save that.', { type: 'error' });
+            }
+          });
+          return;
+        }
+
+        var restoreBtn = event.target.closest('[data-event-restore]');
+        if (restoreBtn) {
+          setEventVerdict(restoreBtn.dataset.eventRestore, null).catch(function (error) {
+            console.error(error);
+            var phase = runtime();
+            if (phase && phase.showToast) {
+              phase.showToast('Could not restore that event.', { type: 'error' });
+            }
+          });
+          return;
+        }
+
+        var dismissedToggle = event.target.closest('[data-events-toggle-dismissed]');
+        if (dismissedToggle) {
+          state.showDismissedEvents = !state.showDismissedEvents;
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var eventCard = event.target.closest('[data-event-card]');
+        if (eventCard) {
+          var cardId = eventCard.dataset.eventCard;
+          state.expandedEventId = state.expandedEventId === cardId ? null : cardId;
+          renderBulletin().catch(function (error) { console.error(error); });
+          return;
         }
 
         var funOpen = event.target.closest('[data-fun-open]');

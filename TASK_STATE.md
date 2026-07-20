@@ -1,11 +1,26 @@
 # Task State - Family Hub
 
-**Task:** Phase 42 — Add Recipe Ingredient to Grocery List
-**Current Phase:** built
+**Task:** Phase 43 — Around Charlotte (curated local events)
+**Current Phase:** built + tested
 **Status:** Built by Claude (user override of feedback_workflow — explicitly asked Claude to program it directly)
-**Next Agent:** human (smoke test) → Gemini (review)
-**Next Action:** Smoke test in browser: open a recipe, tap the "+" on an ingredient, confirm it lands on the Grocery list in the right aisle, dedup + Undo work, and "added ✓" persists on reopen. Then hand to Gemini per Test Focus.
-**Last Updated:** 2026-06-26
+**Next Agent:** human (smoke test on phones) → Gemini (review)
+**Next Action:** Open Home on both phones and confirm the six real events render, a verdict set on one phone appears on the other, and dismiss/undo works. Then hand to Gemini per Test Focus.
+**Last Updated:** 2026-07-20
+
+## Phase 43 build notes
+
+Home tab gains a third section below "Coming Up". Events are LLM-researched and pushed via `scripts/events/`; the app only ever writes `verdict`/`verdictAt`.
+
+- `index.html`: `eventsState` + `subscribeEvents` (live listener, mirrors `subscribeRecipes`), `normalizeEvents`, `parseEventDate`/`isEventExpired` (local-time date-only), `sortEvents` (going-first, then startDate), `renderEventsSection`/`renderEventCard`, `setEventVerdict`. Delegated click branches ordered innermost-first (link → verdict → restore → dismissed-toggle → card). `'events'` added to `keepPathsSynced`. `sw.js` → `hub-v62`.
+- Accordion expand is local view state (`state.expandedEventId`), never persisted.
+- `safeEventUrl` allows only http(s) — data comes from an external script, so `javascript:` URLs are dropped before reaching an href.
+- Admin tooling: `EVENTS_SCHEMA.md`, `scripts/events/{_lib,import-events,list-events,prune-events}.js`, `events-inbox/`. Service-account key and family-id fall back to `scripts/recipes/` so there's one setup, not two.
+- `import-events.js` skips any event matching an existing one (url, or title+startDate) — verdicts can never be clobbered by a re-run. Child-keyed writes, never a wholesale node replace.
+- `prune-events.js` is dry-run by default and preserves `"no"` verdicts unless `--include-dismissed`.
+- Tests: `tests/events.spec.js` (12 tests) + `tests/seed-test-events.js`, run against the isolated test Firebase project. 12/12 chromium, 24/24 across both mobile viewports.
+- First real batch imported: 6 Charlotte events (Sept–Nov 2026), verified against official sources.
+- **DB rules checked:** `families/$familyId` is `.read`/`.write` on `auth != null`, so the app's anonymous auth can write verdicts. No rules change needed.
+- **Pre-existing, unrelated:** `app.spec.js` "logging a chore shows Got it toast" is not idempotent — it fails on any second run the same day because the app correctly says "Alex already logged Make bed today." Left alone deliberately; loosening the assertion would mask real regressions.
 
 ## Phase 42 build notes
 

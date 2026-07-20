@@ -27,3 +27,7 @@ recipes-inbox/*
 !recipes-inbox/.gitkeep
 !recipes-inbox/README.md
 scripts/recipes/service-account.json
+
+# Events admin tooling
+events-inbox/_tmp-*.json
+scripts/events/service-account.json
