@@ -99,6 +99,8 @@ Alex and Louisa attend the same school, so most school-wide items (no-school day
 - **15-minute cache.** A new event will not show in the app immediately.
 - **Settings day-window.** `config/calendarDays` (default 10) further limits what the Home tab shows, and its dropdown maxes out below the script's own cap.
 - **Plain "No School" entries.** Some events titled just "No School" (Teams invites from Christina's work account) come back tagged `louisa` despite having no name in the title. There is a rule in the Apps Script beyond plain name matching that is not visible from outside. Do not assume the table above is exhaustive when debugging an unexpected tag.
+- **You cannot reschedule an event someone else organizes.** Several recurring family events are Teams invites organized from Christina's work account, with the family as guests. Google accepts a title change on the local copy but **silently drops a time change and still returns HTTP 200 with the old time** — it does not error. Always re-read the event or the feed after changing a time; never assume the write landed. The only real fix is for the organizer to edit the series, or to replace it with an event this account owns.
+- **Declining does not remove an event from the feed.** The Apps Script returns events regardless of RSVP status, so a declined invite still shows in the app. To take something off the calendar you must **delete** your copy, not decline it. Declining and then adding a replacement produces two rows, not one.
 - **The Apps Script is not in this repo.** It lives in the Google Apps Script editor. It cannot be read or edited from a coding session — any change to matching rules has to be made by hand in Google's editor.
 
 ---
