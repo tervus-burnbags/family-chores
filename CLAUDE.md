@@ -60,6 +60,7 @@ chores/
 - **No build tools**: No npm, no bundler, no transpiler. Firebase SDK via CDN only.
 - **Parser-first**: The intent parser is the core UX. Changes to parsing logic need careful testing against all 9 intent types (see PLAN.md "Intent Parser — Full Specification").
 - **Firebase data model**: The canonical data model is in PLAN.md. Schema changes need to account for existing live data.
+- **Home tab calendar**: Not in Firebase — read from Google Calendar via an Apps Script bridge. `CALENDAR_SCHEMA.md` is the complete contract for adding family events (source calendar, title conventions, what belongs on it). Read it before adding calendar entries; no code change or deploy is involved.
 - **Recently restructured**: The app was restructured as "Family Hub" with a tab bar and view router (see recent commits). The kid-card dashboard is now the primary view.
 
 ## Current Status
