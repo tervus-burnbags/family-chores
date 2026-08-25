@@ -106,6 +106,19 @@ Alex and Louisa attend the same school, so most school-wide items (no-school day
 
 ---
 
+## Inviting the work account
+
+Family events are often shared with both parents. Two addresses come up:
+
+| Address | Notes |
+|---|---|
+| `christina.browning@bofa.com` | Christina's work account, external domain — she only receives the invite by email, so send the notification |
+| `tbrowning@hanover.com` | Travis's work account — **always set `visibility: private`** |
+
+**Anything invited to the Hanover work address must be marked private.** Colleagues have visibility into that calendar, and these events carry kids' names, schools, field locations, and the times the family is reliably at a known place. Set `visibility` in the same call that adds the attendee so the event is never briefly public with details showing. Private still shows a busy block; it hides the title, location, and description.
+
+---
+
 ## Gotchas
 
 - **~30-day horizon.** The Apps Script caps its window regardless of the `days` parameter — `days=60` returns the same set as `days=30`. Events further out are created fine but will not appear until they come into range. Do not treat a missing far-future event as a failure.
