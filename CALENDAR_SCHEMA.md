@@ -115,6 +115,8 @@ Family events are often shared with both parents. Two addresses come up:
 | `christina.browning@bofa.com` | Christina's work account, external domain — she only receives the invite by email, so send the notification |
 | `tbrowning@hanover.com` | Travis's work account — **always set `visibility: private`** |
 
+**Pre-accept every attendee.** Set `responseStatus: "accepted"` inside each `addedAttendees` entry. These are family logistics both parents already know about, not meeting requests, so a pending RSVP is noise — and on the work calendar it produces reminder prompts colleagues can notice. Google has no "do not request RSVP" flag; pre-accepting is the equivalent. Re-sending `addedAttendees` for an address that is already an attendee updates it in place rather than duplicating, so a pending invite can be corrected afterward with `notificationLevel: NONE` to avoid a second email.
+
 **Anything invited to the Hanover work address must be marked private.** Colleagues have visibility into that calendar, and these events carry kids' names, schools, field locations, and the times the family is reliably at a known place. Set `visibility` in the same call that adds the attendee so the event is never briefly public with details showing. Private still shows a busy block; it hides the title, location, and description.
 
 ---
