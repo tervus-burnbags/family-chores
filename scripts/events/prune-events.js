@@ -5,11 +5,26 @@
 //   node prune-events.js --before 2026-06-01 --confirm    (actually deletes)
 //   node prune-events.js --before 2026-06-01 --confirm --include-dismissed
 //
-// Dry run by default. Events with verdict "no" are KEPT regardless of age unless
+// Dry run by default. Events marked interest "no" are KEPT regardless of age unless
 // --include-dismissed is passed: that dismissal history is what stops the next
 // research pass from re-suggesting things the family already turned down.
 
 const lib = require('./_lib');
+
+// Reads records written either side of the interest/plan split.
+function isNotForUs(event) {
+  if (event.interest === 'no') return true;
+  if (event.interest === 'yes') return false;
+  return event.verdict === 'no';
+}
+
+function describeChoice(event) {
+  const parts = [];
+  if (event.interest) parts.push(event.interest === 'no' ? 'not for us' : 'interested');
+  if (event.plan) parts.push(event.plan === 'going' ? 'going' : 'not this time');
+  if (!parts.length && event.verdict) parts.push(event.verdict);
+  return parts.length ? parts.join('/') : '—';
+}
 
 function main() {
   const { flags } = lib.parseCliArgs(process.argv.slice(2));
@@ -45,11 +60,13 @@ function main() {
         if (!end) return;                              // undated: never auto-prune
         if (end.getTime() >= cutoff.getTime()) return; // still current
 
-        if (event.verdict === 'no' && !includeDismissed) {
+        // Only a standing "not for us" is protected. A past "not this time" is
+        // about one occasion and carries nothing worth keeping.
+        if (isNotForUs(event) && !includeDismissed) {
           keptDismissed.push({ id, title: event.title });
           return;
         }
-        doomed.push({ id, title: event.title, when: event.dateText || event.startDate, verdict: event.verdict || '—' });
+        doomed.push({ id, title: event.title, when: event.dateText || event.startDate, verdict: describeChoice(event) });
       });
 
       if (!doomed.length) {

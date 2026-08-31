@@ -902,6 +902,13 @@
       color: #6d28d9;
     }
 
+    /* Deliberately grey, not red — declining one occasion isn't a negative
+       judgement on the event, and shouldn't read as one. */
+    .event-flag.set-aside {
+      background: rgba(100, 116, 139, 0.14);
+      color: #475569;
+    }
+
     .event-date {
       margin-top: 3px;
       font-size: var(--font-base);
@@ -959,9 +966,27 @@
       text-decoration: none;
     }
 
+    .event-choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .event-choice + .event-choice { margin-top: 8px; }
+
+    /* Fixed width so the two button groups line up as a grid rather than
+       stepping in and out with the label length. */
+    .event-choice-label {
+      flex: 0 0 84px;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      color: var(--muted);
+    }
+
     .event-verdicts {
       display: flex;
       gap: 8px;
+      flex: 1 1 auto;
     }
 
     .event-verdict-btn {
@@ -1012,6 +1037,15 @@
       font-size: var(--font-sm);
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .event-dismissed-reason {
+      margin-left: 8px;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 23, 42, 0.06);
+      font-size: var(--font-sm);
+      font-weight: 700;
     }
 
     .event-restore-btn {
@@ -8454,8 +8488,27 @@
       // Events are researched by an LLM and pushed in via scripts/events/.
       // The app only ever writes `verdict` / `verdictAt`; the body is read-only.
 
-      var EVENT_VERDICTS = ['interested', 'going', 'no'];
-      var EVENT_VERDICT_LABELS = { interested: 'Interested', going: 'Going', no: 'Not for us' };
+      // Two independent axes, deliberately not one field. `interest` is taste —
+      // it's the only thing that steers what gets researched next. `plan` is this
+      // occasion only. Keeping them apart is what lets "we like this sort of thing
+      // but we're not going this time" exist without killing the whole category.
+      var EVENT_INTEREST = ['yes', 'no'];
+      var EVENT_INTEREST_LABELS = { yes: 'Interested', no: 'Not for us' };
+      var EVENT_PLAN = ['going', 'not-going'];
+      var EVENT_PLAN_LABELS = { going: 'Going', 'not-going': 'Not this time' };
+
+      // Records written before the split carry a single `verdict`. Nothing rewrites
+      // them on read; the migration script backfills, and this keeps a missed one
+      // rendering sensibly in the meantime.
+      function legacyInterest(verdict) {
+        if (verdict === 'interested' || verdict === 'going') return 'yes';
+        if (verdict === 'no') return 'no';
+        return null;
+      }
+
+      function legacyPlan(verdict) {
+        return verdict === 'going' ? 'going' : null;
+      }
 
       function eventsRef(phase) {
         if (!phase || !phase.database || !phase.familyId) return null;
@@ -8478,6 +8531,8 @@
           var title = String(value.title || '').trim();
           if (!title) return;
           var verdict = String(value.verdict || '');
+          var interest = String(value.interest || '');
+          var plan = String(value.plan || '');
           result[id] = {
             id: id,
             title: title,
@@ -8491,7 +8546,8 @@
             why: String(value.why || '').trim(),
             url: safeEventUrl(value.url),
             tags: Array.isArray(value.tags) ? value.tags.filter(Boolean).map(String) : [],
-            verdict: EVENT_VERDICTS.indexOf(verdict) >= 0 ? verdict : null
+            interest: EVENT_INTEREST.indexOf(interest) >= 0 ? interest : legacyInterest(verdict),
+            plan: EVENT_PLAN.indexOf(plan) >= 0 ? plan : legacyPlan(verdict)
           };
         });
         return result;
@@ -8516,8 +8572,8 @@
 
       function sortEvents(list) {
         return list.slice().sort(function (a, b) {
-          var aGoing = a.verdict === 'going' ? 0 : 1;
-          var bGoing = b.verdict === 'going' ? 0 : 1;
+          var aGoing = a.plan === 'going' ? 0 : 1;
+          var bGoing = b.plan === 'going' ? 0 : 1;
           if (aGoing !== bGoing) return aGoing - bGoing;
           var aStart = a.startDate || '9999-12-31';
           var bStart = b.startDate || '9999-12-31';
@@ -8546,15 +8602,42 @@
         eventsState.teardown = function () { ref.off('value', handler); };
       }
 
-      // Writes only the two verdict fields so an in-flight import can't be clobbered.
-      async function setEventVerdict(eventId, verdict) {
+      // Writes one axis at a time so an in-flight import can't be clobbered, and so
+      // setting a plan never disturbs the interest recorded alongside it.
+      async function setEventChoice(eventId, axis, value) {
         var phase = runtime();
         var ref = eventsRef(phase);
         if (!ref) throw new Error('Events are not ready.');
-        await ref.child(eventId).update({
-          verdict: verdict || null,
-          verdictAt: verdict ? Date.now() : null
-        });
+        var updates = {};
+        updates[axis] = value || null;
+        updates[axis + 'At'] = value ? Date.now() : null;
+        await ref.child(eventId).update(updates);
+      }
+
+      // Restore only lifts whatever pushed the card out of the list. An event set
+      // aside as "not this time" keeps its Interested mark on the way back.
+      async function restoreEvent(eventId) {
+        var event = eventsState.eventsById[eventId];
+        if (!event) return;
+        if (event.interest === 'no') await setEventChoice(eventId, 'interest', null);
+        if (event.plan === 'not-going') await setEventChoice(eventId, 'plan', null);
+      }
+
+      function renderEventChoiceRow(event, axis, label, values, labels) {
+        return '<div class="event-choice">' +
+          '<span class="event-choice-label">' + escapeBulletinHtml(label) + '</span>' +
+          '<div class="event-verdicts">' +
+            values.map(function (value) {
+              return '<button type="button" class="event-verdict-btn' +
+                (event[axis] === value ? ' active' : '') + '"' +
+                ' data-event-axis="' + escapeBulletinHtml(axis) + '"' +
+                ' data-event-value="' + escapeBulletinHtml(value) + '"' +
+                ' data-event-id="' + escapeBulletinHtml(event.id) + '">' +
+                escapeBulletinHtml(labels[value]) +
+              '</button>';
+            }).join('') +
+          '</div>' +
+        '</div>';
       }
 
       function renderEventCard(event, expanded) {
@@ -8564,9 +8647,11 @@
         var isPriorityWatch = event.tags.indexOf('priority-watch') >= 0;
 
         var flag = '';
-        if (event.verdict === 'going') {
+        if (event.plan === 'going') {
           flag = '<span class="event-flag">Going</span>';
-        } else if (event.verdict === 'interested') {
+        } else if (event.plan === 'not-going') {
+          flag = '<span class="event-flag set-aside">Not this time</span>';
+        } else if (event.interest === 'yes') {
           flag = '<span class="event-flag interested">Interested</span>';
         } else if (isPriorityWatch) {
           flag = '<span class="event-flag priority">Priority</span>';
@@ -8580,21 +8665,14 @@
             (event.url
               ? '<a class="event-link" data-event-link="1" href="' + escapeBulletinHtml(event.url) + '" target="_blank" rel="noopener noreferrer">More info</a>'
               : '') +
-            '<div class="event-verdicts">' +
-              EVENT_VERDICTS.map(function (verdict) {
-                return '<button type="button" class="event-verdict-btn' + (event.verdict === verdict ? ' active' : '') + '"' +
-                  ' data-event-verdict="' + escapeBulletinHtml(verdict) + '"' +
-                  ' data-event-id="' + escapeBulletinHtml(event.id) + '">' +
-                  escapeBulletinHtml(EVENT_VERDICT_LABELS[verdict]) +
-                '</button>';
-              }).join('') +
-            '</div>' +
+            renderEventChoiceRow(event, 'interest', 'Worth doing?', EVENT_INTEREST, EVENT_INTEREST_LABELS) +
+            renderEventChoiceRow(event, 'plan', 'This time?', EVENT_PLAN, EVENT_PLAN_LABELS) +
           '</div>';
         }
 
         return '<article class="event-card' + (expanded ? ' expanded' : '') +
             (isPriorityWatch ? ' priority-watch' : '') +
-            (event.verdict ? ' verdict-' + escapeBulletinHtml(event.verdict) : '') +
+            (event.plan === 'going' ? ' verdict-going' : event.interest === 'yes' ? ' verdict-interested' : '') +
             '" data-event-card="' + escapeBulletinHtml(event.id) + '">' +
           '<div class="event-card-head">' +
             '<div class="event-title">' + escapeBulletinHtml(event.title) + '</div>' +
@@ -8613,16 +8691,20 @@
         var all = Object.keys(eventsState.eventsById).map(function (id) {
           return eventsState.eventsById[id];
         });
-        var dismissed = all.filter(function (event) { return event.verdict === 'no'; });
+        // Both "not for us" and "not this time" leave the active list, but only the
+        // first is a standing judgement — the second says nothing about next time.
+        var dismissed = all.filter(function (event) {
+          return event.interest === 'no' || event.plan === 'not-going';
+        });
         var active = sortEvents(all.filter(function (event) {
-          return event.verdict !== 'no' && !isEventExpired(event);
+          return event.interest !== 'no' && event.plan !== 'not-going' && !isEventExpired(event);
         }));
 
         var head = '<div class="events-head">' +
           '<h3 class="hub-section-head">Around Charlotte</h3>' +
           (dismissed.length
             ? '<button type="button" class="events-dismissed-toggle" data-events-toggle-dismissed="1">' +
-                dismissed.length + ' dismissed ' + (state.showDismissedEvents ? '&#9652;' : '&#9662;') +
+                dismissed.length + ' set aside ' + (state.showDismissedEvents ? '&#9652;' : '&#9662;') +
               '</button>'
             : '') +
         '</div>';
@@ -8636,8 +8718,11 @@
         var dismissedMarkup = '';
         if (state.showDismissedEvents && dismissed.length) {
           dismissedMarkup = '<div class="events-dismissed-list">' + dismissed.map(function (event) {
+            var reason = event.interest === 'no' ? 'Not for us' : 'Not this time';
             return '<div class="event-dismissed-row">' +
-              '<span class="event-dismissed-name">' + escapeBulletinHtml(event.title) + '</span>' +
+              '<span class="event-dismissed-name">' + escapeBulletinHtml(event.title) +
+                '<span class="event-dismissed-reason">' + escapeBulletinHtml(reason) + '</span>' +
+              '</span>' +
               '<button type="button" class="event-restore-btn" data-event-restore="' + escapeBulletinHtml(event.id) + '">Restore</button>' +
             '</div>';
           }).join('') + '</div>';
@@ -9166,22 +9251,27 @@
           return; // let the anchor navigate; don't also collapse the card
         }
 
-        var verdictBtn = event.target.closest('[data-event-verdict]');
+        var verdictBtn = event.target.closest('[data-event-axis]');
         if (verdictBtn) {
           var verdictEventId = verdictBtn.dataset.eventId;
-          var tappedVerdict = verdictBtn.dataset.eventVerdict;
+          var tappedAxis = verdictBtn.dataset.eventAxis;
+          var tappedValue = verdictBtn.dataset.eventValue;
           var currentEvent = eventsState.eventsById[verdictEventId];
-          var previousVerdict = currentEvent ? currentEvent.verdict : null;
-          var nextVerdict = previousVerdict === tappedVerdict ? null : tappedVerdict;
-          if (nextVerdict === 'no') {
+          var previousValue = currentEvent ? currentEvent[tappedAxis] : null;
+          var nextValue = previousValue === tappedValue ? null : tappedValue;
+          // Both of these drop the card out of the active list, so collapse it and
+          // offer an undo rather than leaving an expanded card pointing at nothing.
+          var hides = nextValue === 'no' || nextValue === 'not-going';
+          if (hides) {
             state.expandedEventId = null;
           }
-          setEventVerdict(verdictEventId, nextVerdict).then(function () {
+          setEventChoice(verdictEventId, tappedAxis, nextValue).then(function () {
             var phase = runtime();
-            if (nextVerdict === 'no' && phase && phase.showToast) {
-              phase.showToast('Dismissed ' + (currentEvent ? currentEvent.title : 'event'), {
+            if (hides && phase && phase.showToast) {
+              var word = nextValue === 'no' ? 'Dismissed ' : 'Set aside ';
+              phase.showToast(word + (currentEvent ? currentEvent.title : 'event'), {
                 onUndo: function () {
-                  setEventVerdict(verdictEventId, previousVerdict).catch(function (error) {
+                  setEventChoice(verdictEventId, tappedAxis, previousValue).catch(function (error) {
                     console.error(error);
                   });
                 }
@@ -9199,7 +9289,7 @@
 
         var restoreBtn = event.target.closest('[data-event-restore]');
         if (restoreBtn) {
-          setEventVerdict(restoreBtn.dataset.eventRestore, null).catch(function (error) {
+          restoreEvent(restoreBtn.dataset.eventRestore).catch(function (error) {
             console.error(error);
             var phase = runtime();
             if (phase && phase.showToast) {

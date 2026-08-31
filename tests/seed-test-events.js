@@ -5,7 +5,7 @@
 //   node tests/seed-test-events.js
 //
 // Covers the cases the UI has to survive: a normal event, a going/dismissed
-// verdict, an already-expired event, one with only a startDate, one missing
+// reaction, an already-expired event, one with only a startDate, one missing
 // every optional field, and one with HTML in its title.
 
 const { initializeApp } = require('firebase/app');
@@ -45,8 +45,10 @@ const events = {
     url: 'https://example.com/renfest',
     tags: ['outdoor', 'festival'],
     addedAt: Date.now(),
-    verdict: null,
-    verdictAt: null
+    interest: null,
+    interestAt: null,
+    plan: null,
+    planAt: null
   },
   evt_going001: {
     id: 'evt_going001',
@@ -61,8 +63,10 @@ const events = {
     url: 'https://example.com/going',
     tags: ['indoor'],
     addedAt: Date.now(),
-    verdict: 'going',
-    verdictAt: Date.now()
+    interest: 'yes',
+    interestAt: Date.now(),
+    plan: 'going',
+    planAt: Date.now()
   },
   evt_dismiss1: {
     id: 'evt_dismiss1',
@@ -76,6 +80,8 @@ const events = {
     url: 'https://example.com/dismissed',
     tags: ['indoor'],
     addedAt: Date.now(),
+    // Deliberately left on the pre-split `verdict` key: this record is what
+    // proves the legacy read path still renders after the interest/plan split.
     verdict: 'no',
     verdictAt: Date.now()
   },
@@ -92,8 +98,10 @@ const events = {
     url: 'https://example.com/expired',
     tags: ['outdoor'],
     addedAt: Date.now(),
-    verdict: null,
-    verdictAt: null
+    interest: null,
+    interestAt: null,
+    plan: null,
+    planAt: null
   },
   evt_endstoday: {
     id: 'evt_endstoday',
@@ -108,8 +116,10 @@ const events = {
     url: 'https://example.com/today',
     tags: ['outdoor'],
     addedAt: Date.now(),
-    verdict: null,
-    verdictAt: null
+    interest: null,
+    interestAt: null,
+    plan: null,
+    planAt: null
   },
   evt_minimal1: {
     id: 'evt_minimal1',
@@ -131,8 +141,10 @@ const events = {
     url: 'https://example.com/escape',
     tags: ['indoor'],
     addedAt: Date.now(),
-    verdict: null,
-    verdictAt: null
+    interest: null,
+    interestAt: null,
+    plan: null,
+    planAt: null
   },
   evt_priority1: {
     id: 'evt_priority1',
@@ -146,8 +158,10 @@ const events = {
     url: 'https://example.com/priority',
     tags: ['concert', 'priority-watch'],
     addedAt: Date.now(),
-    verdict: null,
-    verdictAt: null
+    interest: null,
+    interestAt: null,
+    plan: null,
+    planAt: null
   }
 };
 

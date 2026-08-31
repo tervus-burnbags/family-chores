@@ -27,7 +27,10 @@ const FAMILY_ID_CANDIDATES = [
   path.join(RECIPES_DIR, 'family-id.txt')
 ];
 
-const VALID_VERDICTS = ['interested', 'going', 'no'];
+// Two axes, not one. `interest` is the standing taste signal that steers what
+// gets researched next; `plan` is one occasion only and must never feed it.
+const VALID_INTEREST = ['yes', 'no'];
+const VALID_PLAN = ['going', 'not-going'];
 
 function die(msg) {
   console.error('Error: ' + msg);
@@ -247,5 +250,6 @@ module.exports = {
   dedupeKeys,
   parseISODate,
   effectiveEndDate,
-  VALID_VERDICTS
+  VALID_INTEREST,
+  VALID_PLAN
 };

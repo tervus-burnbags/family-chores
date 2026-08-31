@@ -15,6 +15,16 @@ const fs = require('fs');
 const path = require('path');
 const lib = require('./_lib');
 
+// Existing records may still carry a pre-split `verdict`; show whichever is set.
+function describeChoice(record) {
+  if (!record) return 'no reaction yet';
+  const parts = [];
+  if (record.interest) parts.push('interest: ' + record.interest);
+  if (record.plan) parts.push('plan: ' + record.plan);
+  if (!parts.length && record.verdict) parts.push('verdict: ' + record.verdict);
+  return parts.length ? parts.join(', ') : 'no reaction yet';
+}
+
 function main() {
   const { positional, flags } = lib.parseCliArgs(process.argv.slice(2));
   const inputPath = positional[0];
@@ -83,7 +93,7 @@ function main() {
           skipped.push({
             title: event.title,
             id: hit.id,
-            verdict: hit.record.verdict || 'no verdict yet'
+            verdict: describeChoice(hit.record)
           });
           return;
         }
@@ -101,8 +111,10 @@ function main() {
           url: String(event.url).trim(),
           tags: event.tags.map((t) => String(t).trim().toLowerCase()),
           addedAt: Date.now(),
-          verdict: null,
-          verdictAt: null
+          interest: null,
+          interestAt: null,
+          plan: null,
+          planAt: null
         };
         if (event.endDate) record.endDate = String(event.endDate).trim();
         if (event.ticketNote) record.ticketNote = String(event.ticketNote).trim();

@@ -1,16 +1,18 @@
 #!/usr/bin/env node
-// List events in families/{id}/events, with the family's verdicts.
+// List events in families/{id}/events, with the family's reactions.
 //
 //   node list-events.js
 //   node list-events.js --json
 //   node list-events.js --json --active-only
 //
 // This is the feedback-loop reader: run it BEFORE researching a new batch so
-// past verdicts steer what gets suggested next. Expired events are included by
+// past reactions steer what gets suggested next. Expired events are included by
 // default — the reaction history is the whole point.
 //
-// --json also prints a tagSummary: per-tag verdict counts, which is the quickest
-// read on "what does this family actually say yes to".
+// --json also prints a tagSummary: per-tag INTEREST counts, which is the quickest
+// read on "what does this family actually say yes to". Interest is the only
+// tailoring signal — `plan` records one occasion and is reported separately so it
+// can't be mistaken for a judgement on the category.
 
 const lib = require('./_lib');
 
@@ -64,16 +66,37 @@ function main() {
     });
 }
 
-// Verdict counts per tag — the signal for tailoring the next batch.
+// Reads a record written either side of the interest/plan split.
+function readInterest(e) {
+  if (e.interest === 'yes' || e.interest === 'no') return e.interest;
+  if (e.verdict === 'interested' || e.verdict === 'going') return 'yes';
+  if (e.verdict === 'no') return 'no';
+  return null;
+}
+
+function readPlan(e) {
+  if (e.plan === 'going' || e.plan === 'not-going') return e.plan;
+  return e.verdict === 'going' ? 'going' : null;
+}
+
+// Interest counts per tag — the ONLY signal for tailoring the next batch.
+// `notThisTime` is carried alongside purely so it is visible; it says nothing
+// about the category and must not be read as a negative on the tag.
 function buildTagSummary(events) {
   const summary = {};
   events.forEach((e) => {
     const tags = Array.isArray(e.tags) ? e.tags : [];
-    const verdict = e.verdict || 'undecided';
+    const interest = readInterest(e);
+    const plan = readPlan(e);
     tags.forEach((tag) => {
-      if (!summary[tag]) summary[tag] = { interested: 0, going: 0, no: 0, undecided: 0 };
-      if (summary[tag][verdict] === undefined) summary[tag][verdict] = 0;
-      summary[tag][verdict]++;
+      if (!summary[tag]) {
+        summary[tag] = { interested: 0, notForUs: 0, undecided: 0, going: 0, notThisTime: 0 };
+      }
+      if (interest === 'yes') summary[tag].interested++;
+      else if (interest === 'no') summary[tag].notForUs++;
+      else summary[tag].undecided++;
+      if (plan === 'going') summary[tag].going++;
+      else if (plan === 'not-going') summary[tag].notThisTime++;
     });
   });
   return summary;
@@ -91,15 +114,20 @@ function printTable(events) {
   }
 
   console.log(
-    pad('VERDICT', 12) + pad('TITLE', 38) + pad('WHEN', 30) + 'TAGS'
+    pad('INTEREST', 10) + pad('PLAN', 14) + pad('TITLE', 36) + pad('WHEN', 26) + 'TAGS'
   );
   console.log('-'.repeat(100));
 
   events.forEach((e) => {
-    const verdict = (e.verdict || '—') + (e.expired ? '*' : '');
+    const interest = readInterest(e);
+    const plan = readPlan(e);
+    const interestCell = (interest === 'yes' ? 'yes' : interest === 'no' ? 'not for us' : '—') +
+      (e.expired ? '*' : '');
+    const planCell = plan === 'going' ? 'going' : plan === 'not-going' ? 'not this time' : '—';
     const tags = Array.isArray(e.tags) ? e.tags.join(', ') : '';
     console.log(
-      pad(verdict, 12) + pad(e.title, 38) + pad(e.dateText || e.startDate || '', 30) + tags
+      pad(interestCell, 10) + pad(planCell, 14) + pad(e.title, 36) +
+      pad(e.dateText || e.startDate || '', 26) + tags
     );
   });
 

@@ -2,7 +2,7 @@
 
 Canonical JSON shape for curated local events shown in the **Around Charlotte** section on the Home tab.
 
-Events are researched and authored by an AI assistant (Claude, Codex, or any other) on request, pushed to Firebase via `scripts/events/`, and reacted to in-app. The app never creates events — it only sets `verdict`.
+Events are researched and authored by an AI assistant (Claude, Codex, or any other) on request, pushed to Firebase via `scripts/events/`, and reacted to in-app. The app never creates events — it only sets `interest` and `plan`.
 
 If you are an assistant picking this up: read this whole file plus `scripts/events/README.md` before researching. Those two files are the complete contract — there is no assistant-specific setup.
 
@@ -27,8 +27,10 @@ Firebase path: `families/{familyId}/events/{eventId}`
   "url": "https://example.com/event",
   "tags": ["outdoor", "festival", "full-day", "all-ages"],
   "addedAt": 1760000000000,
-  "verdict": null,
-  "verdictAt": null
+  "interest": null,
+  "interestAt": null,
+  "plan": null,
+  "planAt": null
 }
 ```
 
@@ -49,8 +51,27 @@ Firebase path: `families/{familyId}/events/{eventId}`
 | `url` | string | yes | Official event or ticket page. Not a listicle or aggregator. |
 | `tags` | string[] | yes | 2-5 lowercase tags. Drive the tailoring signal — see below. |
 | `addedAt` | number | yes | Epoch ms. Set by the import script. |
-| `verdict` | string \| null | no | `"interested"` \| `"going"` \| `"no"` \| `null`. **Written by the app only.** Import must never overwrite an existing verdict. |
-| `verdictAt` | number \| null | no | Epoch ms of the last verdict change. App-written. |
+| `interest` | string \| null | no | `"yes"` \| `"no"` \| `null`. Standing taste. **Written by the app only**; import must never overwrite it. |
+| `interestAt` | number \| null | no | Epoch ms of the last interest change. App-written. |
+| `plan` | string \| null | no | `"going"` \| `"not-going"` \| `null`. This occasion only. App-written. |
+| `planAt` | number \| null | no | Epoch ms of the last plan change. App-written. |
+
+---
+
+## Two axes, not one
+
+Reactions are **two independent fields**, and conflating them is the mistake this design exists to prevent.
+
+| Field | Question | Feeds research? |
+|---|---|---|
+| `interest` | Is this the sort of thing we like? | **Yes — this is the only tailoring signal** |
+| `plan` | Are we going to this one? | No |
+
+The combination that matters is `interest: "yes"` with `plan: "not-going"` — *we like this kind of thing, we are not going this time.* That must **not** count against the tags. A family declining one Saturday is a scheduling fact, not a statement that the category is unwelcome.
+
+Only `interest: "no"` means stop suggesting this kind of thing.
+
+Records created before this split carry a single `verdict` (`"interested"` / `"going"` / `"no"`). The app and scripts still read it as a fallback, and `migrate-verdicts.js` backfills it. Do not write `verdict` on new records.
 
 ---
 
@@ -80,8 +101,8 @@ Keep tags consistent — they're how reaction history turns into better future p
 - **8-12 events per batch.** A browsable shortlist, not a comprehensive calendar. The family expects to decline most of them.
 - **Charlotte metro**, roughly within an hour's drive.
 - **Look 3-10 weeks out.** Far enough that tickets are still available, near enough to be real. Stretch past 10 weeks when tickets genuinely need booking that far ahead.
-- **Never re-add** an event previously marked `"no"`, and don't re-add one still live in the DB. Run `list-events.js --json` first and read the verdict history.
-- **Let verdicts steer the next batch.** Repeated `"no"` on a tag means stop suggesting that kind of thing; `"going"` on a tag means find more like it.
+- **Never re-add** an event whose `interest` is `"no"`, and don't re-add one still live in the DB. Run `list-events.js --json` first and read the reaction history. An event marked `plan: "not-going"` is *not* off-limits next season — that was about one date.
+- **Let interest steer the next batch — never plan.** Repeated `notForUs` on a tag means stop suggesting that kind of thing; `interested` or `going` on a tag means find more like it. A high `notThisTime` count means the family likes that category but keeps being busy: keep suggesting it, and favour longer date ranges and repeat occurrences that are easier to fit in.
 
 ### Family music signal
 

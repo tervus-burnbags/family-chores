@@ -4,7 +4,7 @@ Node scripts that read and write the curated local events shown in the **Around 
 
 Nothing here is assistant-specific: the scripts are plain Node CLIs, and the workflow below is the whole contract. Any assistant that can run a shell command and do web research can drive it.
 
-The in-app side is read-only for the event body — the app only ever writes `verdict` and `verdictAt`. All event authoring happens here.
+The in-app side is read-only for the event body — the app only ever writes the two reaction fields, `interest` and `plan`. All event authoring happens here.
 
 Canonical data shape: [`../../EVENTS_SCHEMA.md`](../../EVENTS_SCHEMA.md).
 
@@ -35,7 +35,7 @@ Same fallback chain: `scripts/events/family-id.txt`, then `scripts/recipes/famil
 
 ### `list-events.js`
 
-Read current events **and the family's verdicts**. This is the feedback-loop reader — run it before researching anything new.
+Read current events **and the family's reactions**. This is the feedback-loop reader — run it before researching anything new.
 
 ```powershell
 node list-events.js
@@ -43,7 +43,9 @@ node list-events.js --json
 node list-events.js --json --active-only
 ```
 
-Expired events are included by default; the reaction history is exactly what makes the next batch better. `--json` adds a `tagSummary` block with per-tag verdict counts — the fastest read on what this family actually says yes to.
+Expired events are included by default; the reaction history is exactly what makes the next batch better. `--json` adds a `tagSummary` block with per-tag counts — the fastest read on what this family actually says yes to.
+
+The summary reports `interested` / `notForUs` / `undecided` from **interest**, plus `going` / `notThisTime` from **plan**. Only the interest counts are a signal about the category: see "Two axes, not one" in `EVENTS_SCHEMA.md`. A tag with a pile of `notThisTime` and no `notForUs` is one they like and keep missing — keep pitching it.
 
 ### `import-events.js`
 
@@ -57,9 +59,20 @@ node import-events.js batch.json --family ABCD1234
 
 Input is a **JSON array** of event objects. Every record is validated against `EVENTS_SCHEMA.md` before anything is written — one bad record aborts the whole batch.
 
-Generates `id` (`evt_…`) and `addedAt`, and initializes `verdict`/`verdictAt` to `null`.
+Generates `id` (`evt_…`) and `addedAt`, and initializes `interest`/`interestAt`/`plan`/`planAt` to `null`.
 
-**Verdicts are never clobbered.** An incoming event matching one already in the database (same `url`, or same normalized `title` + `startDate`) is skipped and reported, so a re-run is safe. Duplicates *within* the incoming batch are caught too. Writes are child-keyed, so the `events` node is never wholesale replaced.
+**Reactions are never clobbered.** An incoming event matching one already in the database (same `url`, or same normalized `title` + `startDate`) is skipped and reported, so a re-run is safe. Duplicates *within* the incoming batch are caught too. Writes are child-keyed, so the `events` node is never wholesale replaced.
+
+### `migrate-verdicts.js`
+
+One-shot backfill from the pre-split single `verdict` field to `interest` + `plan`. Already run against the live family; kept for reference and for any other family created before the split.
+
+```powershell
+node migrate-verdicts.js
+node migrate-verdicts.js --confirm
+```
+
+Dry run by default. Safe to re-run — records that already carry an `interest` are skipped.
 
 ### `prune-events.js`
 
@@ -71,7 +84,7 @@ node prune-events.js --before 2026-06-01 --confirm
 node prune-events.js --before 2026-06-01 --confirm --include-dismissed
 ```
 
-Dry run by default — requires `--confirm` to actually delete. Events with verdict `"no"` are **kept regardless of age** unless `--include-dismissed` is passed; that dismissal history is what stops a future research pass from re-suggesting things already turned down. Undated events are never auto-pruned.
+Dry run by default — requires `--confirm` to actually delete. Events with `interest: "no"` are **kept regardless of age** unless `--include-dismissed` is passed; that dismissal history is what stops a future research pass from re-suggesting things already turned down. Undated events are never auto-pruned.
 
 ## The Research Workflow
 
@@ -84,9 +97,10 @@ node list-events.js --json
 ```
 
 Read all of it before researching. Specifically note:
-- **Dismissed (`"no"`) events** — never re-suggest these, or close variants of them.
-- **`going` / `interested` events** — the family liked these; find more in the same vein.
-- **The `tagSummary`** — per-tag verdict counts. A tag with several `no`s and no `going` is a category to stop pitching. A tag with a `going` is one to lean into.
+- **`interest: "no"` events** — never re-suggest these, or close variants of them.
+- **`interest: "yes"` events** — the family liked these; find more in the same vein, whether or not they ended up going.
+- **`plan: "not-going"` events** — declined for that date only. Says nothing about the category; do not treat it as a negative.
+- **The `tagSummary`** — a tag with several `notForUs` and no `interested` is a category to stop pitching. A tag with `interested` or `going` is one to lean into.
 - **What's still live and undecided** — don't re-add it.
 - **Anything expired** that's worth clearing out (see prune below).
 
