@@ -76,6 +76,7 @@ Keep tags consistent — they're how reaction history turns into better future p
 ## Curation rules
 
 - **Ticketed or unique only.** Skip things available any weekend — routine pro sports, standing museum admission, chain-venue events.
+- **Carowinds is an exception to the chain-venue skip.** The family holds season passes, so anything included with admission costs them nothing and clears a very low bar — treat it like the SouthPark backyard rule. Include the kid-facing daytime programming (Great Pumpkin Fest, WinterFest and similar) and set `cost` to note it is covered by their passes. **Never suggest SCarowinds** or other after-dark horror programming; they have ruled it out.
 - **8-12 events per batch.** A browsable shortlist, not a comprehensive calendar. The family expects to decline most of them.
 - **Charlotte metro**, roughly within an hour's drive.
 - **Look 3-10 weeks out.** Far enough that tickets are still available, near enough to be real. Stretch past 10 weeks when tickets genuinely need booking that far ahead.
