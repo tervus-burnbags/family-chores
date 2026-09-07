@@ -94,6 +94,20 @@ Skip:
 
 When in doubt, skip it and say so. A missed item is one line in chat; a cluttered calendar defeats the feature.
 
+### Soccer games: colour in the subject
+
+The girls play Charlotte Soccer Academy rec at McAlpine (Alex U8G "Golden", Louisa U6G "Serafin"). **Home wears YELLOW, away wears WHITE**, and the jersey colour belongs in the event **subject**, not the description:
+
+```
+Alex - Soccer game (YELLOW)
+Louisa - Soccer game (WHITE)
+Alex - Soccer game 1 of 2 (WHITE)
+```
+
+It is the one fact needed before leaving the house, so it has to be readable without opening the event. Derive it from the home/away marker on the family's own team — `Golden (A) at Lipovac (H)` means Alex is away, so white. Never guess the colour.
+
+Two league quirks worth expecting: a team can play **twice in one day**, and each team gets a **bye week** with no fixture. Neither is an error in the schedule.
+
 ### Check before adding
 
 Read the existing calendar for the target dates first and **skip anything already there**, whatever it is titled. Parents add things independently — a no-school day may already be on as a work-calendar block from a spouse, under a title that looks nothing like what the school called it.
