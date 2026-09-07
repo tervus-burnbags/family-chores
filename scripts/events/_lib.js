@@ -223,15 +223,22 @@ function normalizeTitleKey(title) {
   return String(title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-// Two events are "the same" if they share a URL, or share a normalized title on
-// the same start date. Used to avoid re-importing something that already has a
-// verdict attached to it.
+// Two events are "the same" if they share a URL on the same start date, or share
+// a normalized title on the same start date. Used to avoid re-importing something
+// that already has a reaction attached to it.
+//
+// Both keys are scoped by startDate on purpose. A URL alone is too broad: a season
+// schedule page, a festival run, or a venue's what's-on page is one official URL
+// covering many separate dates, and matching on it collapsed every fixture in a
+// season into a single event. Re-import protection is unaffected — a re-run of the
+// same batch carries the same startDate and still dedupes.
 function dedupeKeys(event) {
   const keys = [];
+  const start = String(event.startDate || '').trim();
   const url = String(event.url || '').trim().toLowerCase().replace(/\/+$/, '');
-  if (url) keys.push('url:' + url);
+  if (url) keys.push('url:' + url + '|' + start);
   const titleKey = normalizeTitleKey(event.title);
-  if (titleKey) keys.push('title:' + titleKey + '|' + String(event.startDate || '').trim());
+  if (titleKey) keys.push('title:' + titleKey + '|' + start);
   return keys;
 }
 
