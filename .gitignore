@@ -31,3 +31,10 @@ scripts/recipes/service-account.json
 # Events admin tooling
 events-inbox/_tmp-*.json
 scripts/events/service-account.json
+
+# Private fitness exports / reviewed meal batches / server secrets
+.env*
+!.env.example
+fitness-inbox/*
+!fitness-inbox/README.md
+!fitness-inbox/.gitkeep

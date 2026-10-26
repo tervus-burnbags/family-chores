@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#183b32">
+  <meta name="description" content="Your private corner for food, movement and steady progress.">
+  <meta name="referrer" content="no-referrer">
+  <title>Steady · My fitness corner</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <style>
+    :root{color-scheme:light;--ink:#183b32;--muted:#60716a;--paper:#f4f5ef;--card:#fff;--line:#dde3d9;--green:#2d6b4f;--lime:#d2ef86;--soft:#eaf0e5;--amber:#8b4d13;--red:#a53c35;--radius:22px;--sm:.875rem}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}button,input,select,textarea{font:inherit;color:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button,a{touch-action:manipulation}button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #8ca754;outline-offset:3px}button,a.btn{min-height:48px;border-radius:14px;border:1px solid var(--line);background:white;padding:11px 17px;font-weight:650;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}a{color:var(--green)}button.primary,.btn.primary{background:var(--ink);color:white;border-color:var(--ink)}button.lime{background:var(--lime);border-color:var(--lime);color:var(--ink)}button.quiet{background:transparent}button.danger{color:var(--red)}button.small{padding:9px 12px;font-size:var(--sm)}input,select,textarea{min-height:48px;width:100%;border:1px solid #c8d1c5;border-radius:12px;background:white;padding:11px 12px}textarea{min-height:110px;resize:vertical}input[type=checkbox]{width:24px;min-height:24px;accent-color:var(--green)}label{display:grid;gap:6px;font-size:var(--sm);font-weight:600}form{display:grid;gap:16px}h1,h2,h3,p{margin:0}h1{font-size:clamp(2rem,6vw,2.8rem);line-height:1.12;letter-spacing:-.055em;font-weight:700}h2{font-size:1.25rem;letter-spacing:-.025em}h3{font-size:1.05rem}.muted{color:var(--muted)}.small{font-size:var(--sm)}.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.15em;font-weight:750}.mono{font-variant-numeric:tabular-nums}.app{max-width:1040px;margin:auto;padding:0 24px 125px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 0;border-bottom:1px solid var(--line);margin-bottom:25px}.brand{display:flex;align-items:center;gap:10px;font-size:1.5rem;letter-spacing:-.05em;font-weight:750}.brand img{width:35px;height:35px}.brand span{font-size:.75rem;letter-spacing:.03em;font-weight:500;color:var(--muted);border-left:1px solid var(--line);padding-left:12px}.status{display:flex;align-items:center;gap:6px;font-size:var(--sm);color:var(--muted)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}.offline .dot{background:#b78132}.datebar{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.datebar input{max-width:165px;background:transparent;font-size:var(--sm)}.datebar label{color:var(--muted);font-weight:500}.stack{display:grid;gap:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{padding:24px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}.card.soft{background:var(--soft)}.hero{background:var(--ink);color:white;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;border-color:var(--ink)}.hero .muted{color:#c0d1c5}.hero .big{font-size:3.75rem;line-height:1.1;font-weight:650;letter-spacing:-.06em;margin:8px 0}.ring{width:124px;height:124px;border-radius:50%;background:conic-gradient(var(--lime) var(--angle),#3c5c50 0);display:grid;place-items:center}.ring:before{content:"";grid-area:1/1;width:104px;height:104px;background:var(--ink);border-radius:50%}.ring>span{grid-area:1/1;z-index:1;display:grid;text-align:center;font-size:var(--sm)}.ring strong{font-size:1.5rem}.bar{height:7px;border-radius:8px;background:var(--line);overflow:hidden;margin-top:12px}.bar>span{display:block;height:100%;background:var(--green);border-radius:8px}.hero .bar{background:#3c5c50}.hero .bar>span{background:var(--lime)}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.row{display:flex;align-items:center;gap:12px}.row.between{justify-content:space-between}.grow{flex:1;min-width:0}.wrap{flex-wrap:wrap}.actions{display:flex;gap:9px;flex-wrap:wrap}.actions>button{flex:1}.quick{display:grid;grid-template-columns:1fr 1fr;gap:12px}.quick-card{border-radius:17px;background:var(--soft);padding:16px;display:grid;gap:12px}.quick-card .actions>button{padding:10px}.pill{display:inline-flex;align-items:center;border-radius:8px;padding:4px 8px;background:var(--soft);font-size:.75rem;font-weight:650}.pill.pending{background:#fcf0d8;color:var(--amber)}.notice{background:#fff6e6;border:1px solid #eddbb9;border-radius:15px;padding:14px 17px;color:#795024;font-size:var(--sm)}.notice a,.notice button{color:inherit}.entry{display:flex;gap:14px;align-items:center;border-bottom:1px solid var(--line);padding:15px 0}.entry:last-child{border:0;padding-bottom:0}.entry:first-child{padding-top:0}.entry p{font-size:var(--sm);color:var(--muted)}.entry strong{overflow-wrap:anywhere}.metric{font-size:2rem;line-height:1.25;letter-spacing:-.05em;font-weight:650;margin:10px 0}.metric small{font-size:1rem;letter-spacing:0;color:var(--muted);font-weight:400}.icon{width:22px;height:22px;flex-shrink:0}.nav{position:fixed;z-index:5;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,640px);display:grid;grid-template-columns:repeat(5,1fr);padding:10px 10px max(10px,env(safe-area-inset-bottom));background:#fff;border:1px solid var(--line);border-radius:23px 23px 0 0;box-shadow:0 -6px 35px #183b3208}.nav a{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);text-decoration:none;padding:9px 2px;border-radius:13px;font-size:.75rem;font-weight:600;min-height:58px}.nav a.active{background:var(--ink);color:var(--lime)}.empty{padding:22px 0;color:var(--muted);font-size:var(--sm)}.empty strong{display:block;color:var(--ink);font-size:1rem;margin-bottom:5px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}.check{display:flex;gap:10px;align-items:center;font-weight:500}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tabs button[aria-pressed=true]{background:var(--ink);color:white}.divider{border:0;border-top:1px solid var(--line);margin:5px 0}details{border:1px solid var(--line);border-radius:16px;padding:14px 17px;background:white}summary{font-weight:650;cursor:pointer;min-height:28px}details[open] summary{margin-bottom:16px}.chart{width:100%;height:170px;display:block}.chart text{font-family:inherit;font-size:12px;fill:var(--muted)}.chart circle{fill:var(--green)}.chart polyline{fill:none;stroke:var(--green);stroke-width:2.5;stroke-linejoin:round}.chart .avg{stroke:#b1974c;stroke-dasharray:5 4}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:var(--sm)}th,td{padding:12px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.gate{max-width:530px;margin:50px auto}.gate .card{padding:32px}.gate h1{margin:15px 0}.gate form{margin-top:24px}.gate .eyebrow{color:var(--green)}.gate-note{margin:20px 0}.gate .actions{margin-top:12px}dialog{color:var(--ink);border:0;border-radius:24px;padding:0;width:min(560px,calc(100% - 24px));max-height:calc(100dvh - 30px);background:var(--paper);box-shadow:0 24px 80px #122a2755}dialog::backdrop{background:#10282088;backdrop-filter:blur(3px)}.dialog-head{position:sticky;top:0;z-index:2;background:var(--paper);display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}.dialog-body{padding:22px}.dialog-head button{border:0;background:transparent;min-width:48px;font-size:1.4rem;padding:5px}.form-error{color:var(--red);font-size:var(--sm);margin-bottom:12px}.toast{position:fixed;z-index:20;bottom:105px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:14px 20px;border-radius:14px;width:max-content;max-width:calc(100% - 28px);box-shadow:0 4px 25px #183b3222;font-size:var(--sm)}.timer{font-size:3rem;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:-.04em}.timerbox{text-align:center;padding:14px;border-radius:15px;background:var(--soft)}video{width:100%;max-height:260px;border-radius:15px;background:#132c24}code{overflow-wrap:anywhere;font-size:var(--sm)}[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(min-width:760px){.hero{min-height:230px}.wide{grid-column:1/-1}.page-top{margin:8px 0 25px}.gate{margin-top:70px}}@media(max-width:600px){.app{padding:0 17px 120px}header{padding:17px 0;margin-bottom:22px}.brand span{display:none}.grid{grid-template-columns:1fr;gap:16px}.card{padding:20px}.hero .big{font-size:3.1rem}.ring{width:105px;height:105px}.ring:before{width:88px;height:88px}.quick{gap:10px}.quick-card{padding:13px}.datebar{align-items:center;gap:12px}.datebar h1{font-size:2rem}.datebar input{max-width:148px}.dialog-body{padding:18px}.gate{margin:30px auto}.gate .card{padding:24px}.entry .actions{flex-direction:column}.entry button{padding:9px 11px}.fields{gap:12px}}@media(prefers-reduced-motion:no-preference){button{transition:background .15s,transform .15s}button:active{transform:scale(.98)}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header><div class="brand"><img src="./icon.svg" alt="">steady<span>MY FITNESS CORNER</span></div><div id="connection" class="status"><span class="dot"></span><span>Just for you</span></div></header>
+  <section id="gate" class="gate">
+    <div class="card"><p class="eyebrow">A little, every day</p><h1>Your own space<br>to feel stronger.</h1><p class="muted">Simple food logging. A nudge to move. Progress at your pace.</p>
+      <div id="peoplePicker" class="stack" style="margin-top:24px"><p class="eyebrow muted">Who's using Steady?</p><div class="actions"><button class="primary" type="button" data-action="choose-person" data-person="travis">Travis</button></div><p id="loginError" class="form-error" role="alert" hidden></p></div>
+      <div id="setupInfo" class="notice" hidden></div>
+      <div class="actions"><button type="button" data-action="demo">Try a session-only demo</button></div><p class="small muted gate-note">Demo entries disappear on reload. Real records sync through your Family Hub family code.</p>
+      <div class="actions"><a class="btn small quiet" href="../">Family Hub ↗</a></div>
+    </div>
+  </section>
+  <div id="workspace" hidden><div class="datebar"><div><p class="eyebrow muted" id="pageEyebrow">YOUR DAILY CHECK-IN</p><h1 id="pageTitle">Small steps.<br>Steady progress.</h1></div><label>Logging date<input type="date" id="logDate" aria-label="Logging date"></label></div><div id="modeNotice"></div><main id="main" class="stack"></main></div>
+</div>
+<nav id="navigation" class="nav" aria-label="Fitness" hidden></nav>
+<dialog id="editor" aria-labelledby="dialogTitle"><div class="dialog-head"><h2 id="dialogTitle"></h2><button type="button" aria-label="Close dialog" data-action="close">×</button></div><div class="dialog-body"><p id="dialogError" class="form-error" role="alert" hidden></p><div id="dialogContent"></div></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="../firebase-config.js"></script>
+<script src="./nutrition.js"></script>
+<script>
+'use strict';
+(() => {
+  const F = window.Fitness;
+  const $ = selector => document.querySelector(selector);
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const fmt = (value, digits = 0) => value == null ? 'Unknown' : Number(value).toLocaleString(undefined, { maximumFractionDigits: digits });
+  const id = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+  const list = map => Object.entries(map || {}).filter(([,v]) => v && typeof v === 'object').map(([key,v]) => ({...v,id:key}));
+  const sorted = map => list(map).sort((a,b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+  // Same origin as Family Hub, so the Hub's saved family code and anonymous session are shared.
+  const FAMILY_KEY = 'familyChores.familyId', PERSON_KEY = 'steady.person', PEOPLE = {travis:'Travis'};
+  const store = {get:key => { try { return localStorage.getItem(key); } catch { return null; } }, set:(key,value) => { try { value == null ? localStorage.removeItem(key) : localStorage.setItem(key,value); } catch {} }};
+  const familyCode = () => (store.get(FAMILY_KEY) || '').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
+  let data = F.empty(), mode = '', date = F.dateKey(), view = 'today', ref = null, auth = null, authLoading = null, unsubscribe = null, connected = false, familyId = '';
+  let filter = '', foodSection = 'foods', searchResults = [], ingredients = [], workoutDraft = [], timerHandle = null, timerState = null, stream = null, scanHandle = null, scanGeneration = 0, toastHandle = null, deferredInstall = null;
+  const icons = {today:'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z',food:'M4 3v7a3 3 0 0 0 6 0V3M7 3v18M20 21V3c-5 0-6 10 0 10',move:'m3 8 5-5m8 18 5-5M5 5l14 14M2 6l4-4m12 20 4-4M7 12l5-5m0 10 5-5',progress:'M4 20h17M4 20V3m3 12 4-5 4 3 6-8',more:'M4 6h16M4 12h16M4 18h16'};
+  const icon = name => '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+icons[name]+'"/></svg>';
+  function toast(message) { $('#toast').textContent = message; $('#toast').hidden = false; clearTimeout(toastHandle); toastHandle = setTimeout(() => $('#toast').hidden = true, 4500); }
+  function error(message) { const target = $('#editor').open ? $('#dialogError') : $('#loginError'); target.textContent = message; target.hidden = false; if (mode && !$('#editor').open) toast(message); }
+  function stopCamera() { scanGeneration++; if (stream) stream.getTracks().forEach(track => track.stop()); stream = null; clearTimeout(scanHandle); }
+  function stopTimer() { clearInterval(timerHandle); timerHandle = null; timerState = null; }
+  function close() { stopCamera(); stopTimer(); $('#editor').close(); $('#dialogContent').innerHTML = ''; if (mode) render(); }
+  function modal(title, html) { stopCamera(); stopTimer(); $('#dialogTitle').textContent = title; $('#dialogContent').innerHTML = html; $('#dialogError').hidden = true; if (!$('#editor').open) $('#editor').showModal(); }
+  function field(label, name, value = '', options = '') { return '<label>'+label+'<input name="'+name+'" value="'+esc(value)+'" '+options+'></label>'; }
+  function nutrientFields(food = {}) { return '<div class="fields">'+F.nutrients.map(key => field(key === 'calories' ? 'Calories (kcal)' : key[0].toUpperCase()+key.slice(1)+' (g)', key, food[key] ?? '', 'type="number" min="0" step="any" placeholder="Unknown"')).join('')+'</div><p class="small muted">Leave missing values blank. Zero means a confirmed zero.</p>'; }
+  function formValues(form) { return Object.fromEntries(new FormData(form).entries()); }
+  function defaults() {
+    const out = F.empty();
+    out.routines.coffee = {name:'My coffee',description:'280 ml coffee + 120 g of 2% milk. Usually twice a day.',calories:null,protein:null,carbs:null,fat:null,source:'Awaiting nutrition review',favorite:true,createdAt:Date.now()};
+    out.routines.banana = {name:'Banana',description:'One banana. Size or edible gram weight still needed for nutrition review.',calories:null,protein:null,carbs:null,fat:null,source:'Awaiting nutrition review',favorite:true,createdAt:Date.now()};
+    out.workouts.simple = {name:'A little movement',exercises:[{name:'Squats',kind:'reps',sets:2,target:10},{name:'Plank',kind:'seconds',sets:2,target:30}],createdAt:Date.now()};
+    return out;
+  }
+  async function write(changes) {
+    if (!mode) throw new Error('Sign in first.');
+    if (mode === 'cloud') {
+      if (!connected || !navigator.onLine) throw new Error('Reconnect to save. Your open form is kept here.');
+      await ref.update(changes);
+    } else {
+      for (const [path,value] of Object.entries(changes)) {
+        const segments = path.split('/'); let target = data;
+        segments.slice(0,-1).forEach(key => { target[key] ||= {}; target = target[key]; });
+        if (value === null) delete target[segments.at(-1)]; else target[segments.at(-1)] = structuredClone(value);
+      }
+      if (!$('#editor').open) render();
+    }
+  }
+  function connection() {
+    $('#connection').classList.toggle('offline',mode === 'cloud' && !connected);
+    $('#connection span:last-child').textContent = mode === 'demo' ? 'Session-only demo' : mode === 'cloud' ? (connected ? PEOPLE[store.get(PERSON_KEY)]+' · synced' : 'Reconnecting…') : 'Just for you';
+  }
+  function showWorkspace() { $('#gate').hidden = true; $('#workspace').hidden = false; $('#navigation').hidden = false; $('#logDate').value = date; render(); }
+  function signOutView() { mode = ''; data = F.empty(); ref = null; connected = false; unsubscribe?.(); unsubscribe = null; close(); $('#gate').hidden = false; $('#workspace').hidden = true; $('#navigation').hidden = true; connection(); }
+  function loadScript(src) { return new Promise((resolve,reject) => { const script = document.createElement('script'); script.src = src; script.onload = resolve; script.onerror = () => { script.remove(); reject(new Error('Could not load Firebase. Check your connection.')); }; document.head.append(script); }); }
+  async function initAuth() {
+    if (auth) return auth;
+    if (authLoading) return authLoading;
+    authLoading = (async () => {
+      if (typeof firebaseConfig === 'undefined') throw new Error('The existing firebase-config.js is missing. See fitness/README.md.');
+      if (!window.firebase) await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+      if (!firebase.auth) await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js');
+      if (!firebase.database) await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js');
+      // The default app reuses the Hub's persisted anonymous session on this origin.
+      const app = firebase.apps.find(app => app.name === '[DEFAULT]') || firebase.initializeApp(firebaseConfig);
+      const client = app.auth();
+      const user = await new Promise(resolve => { const off = client.onAuthStateChanged(found => { off(); resolve(found); }); });
+      if (!user) await client.signInAnonymously();
+      auth = client;
+      return auth;
+    })().catch(err => { authLoading = null; throw err; });
+    return authLoading;
+  }
+  function needFamily() {
+    $('#setupInfo').hidden = false;
+    $('#setupInfo').innerHTML = 'Open <a href="../">Family Hub</a> on this device and join your family first. Steady uses the same family code.';
+  }
+  async function openPerson(person) {
+    $('#loginError').hidden = true;
+    if (!PEOPLE[person]) throw new Error('Choose who is using Steady.');
+    familyId = familyCode();
+    if (!familyId) { needFamily(); return; }
+    const client = await initAuth(), database = client.app.database();
+    if (!(await database.ref('families/'+familyId+'/config').get()).exists()) { needFamily(); throw new Error('This device\'s family code was not found.'); }
+    unsubscribe?.(); unsubscribe = null;
+    store.set(PERSON_KEY,person); $('#setupInfo').hidden = true;
+    const personRef = database.ref('families/'+familyId+'/fitness/'+person);
+    unsubscribe = personRef.on('value',async snapshot => {
+      if (mode === 'demo') return;
+      try {
+        if (!snapshot.exists()) { await personRef.update(defaults()); return; }
+        data = F.validateBackup(snapshot.val()); ref = personRef; mode = 'cloud';
+        if ($('#gate').hidden === false) showWorkspace(); else if (!$('#editor').open) render();
+        connection();
+      } catch (err) { error('Could not load fitness records: '+err.message); }
+    }, () => { if(mode==='cloud')signOutView(); error('Firebase denied access to this family. Rejoin it in Family Hub, then try again.'); });
+    // .on returns the callback, so keep an actual unsubscribe closure.
+    const callback = unsubscribe;
+    unsubscribe = () => { personRef.off('value',callback); database.ref('.info/connected').off('value',onConnected); };
+    function onConnected(snapshot) { connected = snapshot.val() === true; connection(); }
+    database.ref('.info/connected').on('value',onConnected);
+  }
+  function navigate(next) { if (!['today','food','move','progress','more'].includes(next)) next='today'; view=next; filter=''; location.hash=next; render(); window.scrollTo({top:0,behavior:'instant'}); }
+  function render() {
+    if (!mode) return;
+    connection();
+    const titles = {today:['YOUR DAILY CHECK-IN','Small steps.<br>Steady progress.'],food:['KEEP IT SIMPLE','Food, your way.'],move:['MAKE A LITTLE SPACE','Time to move.'],progress:['THE BIGGER PICTURE','Look how far.'],more:['YOUR PRIVATE CORNER','Make it yours.']};
+    $('#pageEyebrow').textContent = titles[view][0]; $('#pageTitle').innerHTML=titles[view][1];
+    if($('#navigation').dataset.view!==view){$('#navigation').innerHTML=Object.entries({today:'Today',food:'Food',move:'Move',progress:'Progress',more:'More'}).map(([key,label])=>'<a href="#'+key+'" data-view="'+key+'" class="'+(view===key?'active':'')+'" '+(view===key?'aria-current="page"':'')+'>'+icon(key)+label+'</a>').join('');$('#navigation').dataset.view=view;}
+    $('#modeNotice').innerHTML = mode==='demo' ? '<div class="notice" style="margin-bottom:20px">Session-only demo · entries disappear on reload. <button class="small quiet" data-action="exit-demo">Go to sign-in</button></div>' : '';
+    $('#main').innerHTML = (view==='today'?'<div class="actions"><button class="primary" data-action="quick-calories">Log calories</button><button data-action="describe">Describe a meal</button></div>':'')+({today:renderToday,food:renderFood,move:renderMove,progress:renderProgress,more:renderMore})[view]();
+  }
+  function dayLogs() { return sorted(data.foodLogs).filter(log => log.date===date); }
+  function pendingNotes() { return sorted(data.mealNotes).filter(note => note.status==='pending'); }
+  function logSummary(log) { return (log.grams ? fmt(log.grams,1)+' g' : fmt(log.quantity || 1,1)+' serving'+((log.quantity || 1)>1?'s':''))+' · '+(log.nutrition?.calories==null?'Calories need review':fmt(log.nutrition.calories)+' kcal')+(log.nutrition?.protein==null?'':' · '+fmt(log.nutrition.protein,1)+' g protein'); }
+  function foodEntries(logs, actions=true) {
+    return logs.length?logs.map(log=>'<div class="entry"><div class="grow"><strong>'+esc(log.name)+'</strong><p>'+esc(logSummary(log))+'</p>'+(log.description?'<p>'+esc(log.description)+'</p>':'')+'</div>'+(actions?'<div class="actions"><button class="small" data-action="repeat-log" data-id="'+esc(log.id)+'">Again</button><button class="small quiet" data-action="edit-log" data-id="'+esc(log.id)+'">Edit</button><button class="small quiet" aria-label="Remove '+esc(log.name)+'" data-action="delete-log" data-id="'+esc(log.id)+'">×</button></div>':'')+'</div>').join(''):'<div class="empty"><strong>A fresh start.</strong>Tap a regular or describe what you ate.</div>';
+  }
+  function renderToday() {
+    const logs=dayLogs(), total=F.totals(logs), settings=data.settings, calories=total.complete.calories;
+    const remaining=calories==null?null:settings.calories-calories;
+    const protein=total.complete.protein, ratio=Math.min(1,total.known.calories/settings.calories);
+    const readings=sorted(data.measurements).filter(r=>r.date<=date), weight=readings.find(r=>r.weight!=null)?.weight, waist=readings.find(r=>r.waist!=null)?.waist;
+    const exercise=sorted(data.exerciseLogs).filter(log=>log.date===date), reminder=data.reminders.daily, due=reminder?.enabled && reminder.days.includes(new Date(date+'T12:00:00').getDay());
+    return '<div class="grid"><section class="card hero"><div><p class="eyebrow">'+(remaining==null?'CALORIES NEED REVIEW':remaining<0?'ABOVE DAILY BUDGET':'CALORIES REMAINING')+'</p><div class="big mono" data-testid="remaining">'+(remaining==null?'—':fmt(Math.abs(remaining)))+'</div><p class="small muted">'+fmt(total.known.calories)+(total.missing.calories?' known':'')+' of '+fmt(settings.calories)+' kcal</p></div><div class="ring" style="--angle:'+Math.round(ratio*360)+'deg"><span><strong>'+fmt(total.known.protein,1)+'g</strong>protein'+(total.missing.protein?' · partial':'')+'</span></div><div class="full"><div class="row between small"><span>Protein target</span><span>'+fmt(protein ?? total.known.protein,1)+(protein==null?' known':'')+' / '+fmt(settings.protein)+' g</span></div><div class="bar"><span style="width:'+Math.min(100,total.known.protein/settings.protein*100)+'%"></span></div></div></section>'+
+      '<section class="card soft stack"><div class="row between"><h2>Your next small win</h2>'+icon('move')+'</div><p>'+(exercise.length?'Movement logged. Nice work showing up.':due?'Your movement reminder is set for '+esc(reminder.time)+'.':'Make a little room for movement today.')+'</p><div class="actions"><button class="primary" data-view="move">'+(exercise.length?'See today’s movement':'Let’s move')+'</button></div><p class="small muted">Exercise never adds calories to your food budget.</p></section></div>'+
+      (total.missing.calories?'<div class="notice">'+total.missing.calories+' food '+(total.missing.calories===1?'entry needs':'entries need')+' nutrition review. Remaining calories will appear when they’re complete. <button class="small quiet" data-action="review-queue">See notes</button></div>':'')+
+      '<section class="card"><div class="sectionhead"><h2>Your regulars</h2><button class="small quiet" data-action="routine">+ New regular</button></div><div class="quick">'+list(data.routines).filter(r=>r.favorite!==false).map(r=>'<article class="quick-card"><div><h3>'+esc(r.name)+'</h3><p class="small muted">'+(r.calories==null?'Needs nutrition review':fmt(r.calories)+' kcal per serving')+'</p></div><div class="actions"><button data-action="log-routine" data-id="'+esc(r.id)+'" data-quantity="1">+ One</button><button data-action="log-routine" data-id="'+esc(r.id)+'" data-quantity="2">+ Two</button></div></article>').join('')+'</div></section>'+
+      '<section class="card"><div class="sectionhead"><h2>Food diary</h2><button class="small quiet" data-view="food">Find a food ↗</button></div>'+foodEntries(logs)+'</section>'+
+      '<div class="grid"><section class="card"><p class="small muted">Latest weight</p><p class="metric">'+fmt(weight ?? settings.startWeight,1)+' <small>lb'+(weight==null?' · starting baseline':'')+'</small></p><p class="small muted">Goal '+fmt(settings.goalWeight,1)+' lb</p><div class="bar"><span style="width:'+F.progress(settings.startWeight,weight,settings.goalWeight)*100+'%"></span></div></section><section class="card"><p class="small muted">Latest waist</p><p class="metric">'+fmt(waist ?? settings.startWaist,1)+' <small>in'+(waist==null?' · starting baseline':'')+'</small></p><p class="small muted">Goal '+fmt(settings.goalWaist,1)+' in</p><div class="bar"><span style="width:'+F.progress(settings.startWaist,waist,settings.goalWaist)*100+'%"></span></div></section></div>';
+  }
+  function renderFood() {
+    return '<div class="actions"><button class="primary" data-action="describe">Describe a meal</button><button data-action="quick-calories">Log calories</button></div><div class="card"><div class="sectionhead"><h2>Find & save</h2><button class="small quiet" data-action="food-editor">+ Manual food</button></div><div class="tabs"><button data-action="search-usda">Search USDA</button><button data-action="barcode">Scan / barcode</button></div><label class="sr-only" for="librarySearch">Search saved foods</label><input id="librarySearch" type="search" placeholder="Search your foods, meals & recipes" value="'+esc(filter)+'"><div class="tabs" style="margin-top:15px">'+['foods','routines','meals','recipes'].map(key=>'<button class="small" data-action="food-section" data-section="'+key+'" aria-pressed="'+(foodSection===key)+'">'+({foods:'Saved foods',routines:'Regulars',meals:'Meals',recipes:'Recipes'})[key]+'</button>').join('')+'</div><div id="libraryResults">'+libraryResults()+'</div></div>'+
+      '<div class="actions"><button data-action="meal-builder" data-kind="meals">+ Reusable meal</button><button data-action="meal-builder" data-kind="recipes">+ Batch recipe</button></div>'+
+      '<section class="card"><div class="sectionhead"><h2>Needs review</h2><button class="small quiet" data-action="review-queue">All notes ('+pendingNotes().length+')</button></div>'+pendingNotes().slice(0,4).map(n=>'<div class="entry"><div class="grow"><strong>'+esc(n.date)+'</strong><p>'+esc(n.text)+'</p></div><button class="small" data-action="review-note" data-id="'+esc(n.id)+'">Review</button></div>').join('')+(!pendingNotes().length?'<p class="small muted">Describe a meal now; ask me to process it whenever you’re ready.</p>':'')+'</section>'+
+      '<details><summary>Repeat a recent meal</summary>'+foodEntries(sorted(data.foodLogs).slice(0,15))+'</details>';
+  }
+  function libraryResults() {
+    const items=list(data[foodSection]).filter(item=>(item.name+' '+(item.description||'')).toLowerCase().includes(filter.toLowerCase())).sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||a.name.localeCompare(b.name));
+    return items.length?items.map(item=>'<div class="entry"><div class="grow"><strong>'+esc(item.name)+'</strong><p>'+(foodSection==='meals'?item.ingredients.length+' foods':fmt(item.calories)+' kcal / '+(foodSection==='routines'?'serving':'100 g'))+'</p><p>'+esc(item.source || item.description || '')+'</p></div><div class="actions"><button class="small" data-action="use-library" data-kind="'+foodSection+'" data-id="'+esc(item.id)+'">Log</button><button class="small quiet" data-action="edit-library" data-kind="'+foodSection+'" data-id="'+esc(item.id)+'">Edit</button><button class="small quiet" aria-label="'+(item.favorite?'Unfavorite ':'Favorite ')+esc(item.name)+'" data-action="favorite" data-kind="'+foodSection+'" data-id="'+esc(item.id)+'">'+(item.favorite?'★':'☆')+'</button></div></div>').join(''):'<div class="empty"><strong>No '+foodSection+' here yet.</strong>Save a food or create a regular to make tomorrow quicker.</div>';
+  }
+  function describe() {
+    modal('Describe a meal','<form id="describeForm"><p class="small muted">Use your own words. Leave amounts or brands you’re unsure about as questions for later.</p><label>What did you have?<textarea name="text" required maxlength="3000" placeholder="Chicken, rice and broccoli. About a fist of rice, cooked in a little olive oil…"></textarea></label><label>Optional name<input name="name" maxlength="100" placeholder="Lunch"></label><p class="notice">This stays in your review queue. No calories are guessed and no AI service is called.</p><button class="primary" type="submit">Save for '+esc(date)+'</button></form>');
+  }
+  async function addDescription(v) {
+    const key=id(), text=v.text.trim(); if (!text) throw new Error('Describe your meal first.');
+    await write({['foodLogs/'+key]:{name:v.name.trim() || 'Meal to review',date,quantity:1,nutrition:F.nutrition(),description:text,source:'Awaiting nutrition review',createdAt:Date.now()},['mealNotes/'+key]:{text,date,status:'pending',logId:key,createdAt:Date.now()}});
+    close(); toast('Saved. Ask me to process your meal notes when ready.');
+  }
+  function quickCalories(log) {
+    modal(log?'Edit nutrition':'Log calories','<form id="quickForm" data-id="'+esc(log?.id || '')+'">'+field('Food or meal','name',log?.name || '', 'required maxlength="100"')+nutrientFields(log?.nutrition || {})+'<p class="small muted">Values for the whole amount you ate, not per 100 g.</p>'+field('Source / notes (optional)','source',log?.source || 'Manual entry','maxlength="500" placeholder="GPT calculation, package label…"')+'<button class="primary" type="submit">'+(log?'Save reviewed nutrition':'Add to diary')+'</button></form>');
+  }
+  function routineEditor(item) {
+    modal(item?'Edit regular':'Your new regular','<form id="routineForm" data-id="'+esc(item?.id || '')+'">'+field('Name','name',item?.name || '', 'required maxlength="100"')+'<label>Exactly what’s in one serving<textarea name="description" required maxlength="3000" placeholder="280 ml coffee + 120 g 2% milk">'+esc(item?.description || '')+'</textarea></label>'+nutrientFields(item || {})+'<p class="small muted">Nutrition is for one complete serving. You can leave it unknown and review later.</p>'+field('Nutrition source / label details','source',item?.source || '', 'maxlength="300"')+'<button class="primary" type="submit">Save regular</button></form>');
+  }
+  async function logRoutine(key, quantity=1) {
+    const item=data.routines[key]; if (!item) throw new Error('Regular not found.'); const logId=id();
+    const changes={['foodLogs/'+logId]:{name:item.name,date,quantity,nutrition:F.servings(item,quantity),description:item.description,source:item.source || 'Manual regular',routineId:key,createdAt:Date.now()}};
+    if (item.calories==null) changes['mealNotes/'+logId]={text:item.description,date,status:'pending',logId,routineId:key,quantity,createdAt:Date.now()};
+    await write(changes); toast('Added '+quantity+' × '+item.name+'.');
+  }
+  function foodEditor(item) {
+    modal('Food nutrition','<form id="foodForm" data-id="'+esc(item?.id || '')+'">'+field('Food name','name',item?.name || '', 'required maxlength="150"')+'<div class="notice">'+(item?.requiresBasisConfirmation?'Imported basis: '+esc(item.basis)+'. Check the package. If these values are per 100 ml, weigh that volume and enter its grams below. If per 100 g, enter 100. No liquid density is assumed.':'Enter nutrition per 100 g. For a label listed per serving, enter that serving’s gram weight below.')+'</div>'+field('These nutrition values are for (g)','basis',item?.requiresBasisConfirmation?'':100,'type="number" min="0.01" step="any" required placeholder="Confirm measured grams"')+nutrientFields(item || {})+field('Usual serving weight (g)','defaultGrams',item?.defaultGrams || 100,'type="number" min="0.01" step="any" required')+field('Nutrition source','source',item?.source || 'Manual label','maxlength="300"')+'<input type="hidden" name="sourceId" value="'+esc(item?.sourceId || '')+'"><button class="primary" type="submit">Save to my foods</button></form>');
+  }
+  function logPortion(kind,key) {
+    const item=data[kind]?.[key]; if (!item) throw new Error('Food no longer exists.');
+    if (kind==='routines') return logRoutine(key);
+    if (kind==='meals') return logMeal(item);
+    modal('Log '+item.name,'<form id="portionForm" data-kind="'+kind+'" data-id="'+esc(key)+'"><p class="small muted">'+fmt(item.calories)+' kcal per 100 g'+(kind==='recipes'?' · '+fmt(item.caloriesPerGram,3)+' kcal per cooked gram':'')+'</p><div class="fields">'+field('Amount','amount',item.defaultGrams || 100,'type="number" min="0.01" step="any" required')+'<label>Unit<select name="unit"><option value="g">grams</option><option value="oz">ounces</option><option value="lb">pounds</option><option value="kg">kilograms</option></select></label></div><p class="small muted">Use a scale for volume portions. A millilitre is not assumed to weigh a gram.</p><button class="primary" type="submit">Add to '+esc(date)+'</button></form>');
+  }
+  async function addFood(item,mass) {
+    const key=id(), log={name:item.name,date,grams:mass,nutrition:F.scale(item,mass),source:item.source || 'Saved recipe',sourceId:item.sourceId || '',createdAt:Date.now()};
+    const changes={['foodLogs/'+key]:log};
+    if (log.nutrition.calories==null) changes['mealNotes/'+key]={text:item.name+' — '+fmt(mass,1)+' g; '+(item.source || 'saved food')+'. Fill missing nutrition from a reliable source.',date,status:'pending',logId:key,createdAt:Date.now()};
+    await write(changes); close(); toast('Added '+item.name+'.');
+  }
+  async function logMeal(meal) {
+    const changes={};
+    meal.ingredients.forEach(ingredient=>{
+      const key=id(); const nutrition=F.scale(ingredient.food,ingredient.grams);
+      changes['foodLogs/'+key]={name:ingredient.food.name,date,grams:ingredient.grams,nutrition,source:ingredient.food.source || 'Saved meal',meal:meal.name,createdAt:Date.now()};
+      if(nutrition.calories==null)changes['mealNotes/'+key]={text:meal.name+': '+ingredient.food.name+' — '+ingredient.grams+' g',date,status:'pending',logId:key,createdAt:Date.now()};
+    });
+    await write(changes); toast('Added '+meal.name+'.');
+  }
+  function mealBuilder(kind,key='') {
+    const existing=data[kind]?.[key]; ingredients=structuredClone(existing?.ingredients || []);
+    modal(kind==='recipes'?'Cooked batch recipe':'Reusable meal','<form id="mealForm" data-kind="'+kind+'" data-id="'+esc(key)+'">'+field('Name','name',existing?.name || '', 'required maxlength="150"')+'<div id="ingredientList"></div><hr class="divider"><p class="small muted">Add ingredients from your saved foods. Nutrition stays unknown if an ingredient has a missing value.</p><label>Saved food<select name="ingredient">'+list(data.foods).map(food=>'<option value="'+esc(food.id)+'">'+esc(food.name)+'</option>').join('')+'</select></label><div class="fields">'+field('Ingredient amount (g)','ingredientGrams',100,'type="number" min="0.01" step="any"')+'<button type="button" data-action="add-ingredient">+ Ingredient</button></div>'+(kind==='recipes'?field('Total cooked batch weight (g)','batchGrams',existing?.batchGrams || '', 'type="number" min="0.01" step="any" required')+'<p class="small muted">Weigh the finished food without the container. Water lost or added changes calories per gram.</p>':'')+'<button class="primary" type="submit">Save '+(kind==='recipes'?'recipe':'meal')+'</button></form>');
+    renderIngredients();
+  }
+  function renderIngredients() { $('#ingredientList').innerHTML=ingredients.length?ingredients.map((part,index)=>'<div class="entry"><div class="grow"><strong>'+esc(part.food.name)+'</strong><p>'+fmt(part.grams,1)+' g · '+fmt(F.scale(part.food,part.grams).calories)+' kcal</p></div><button type="button" class="small" data-action="remove-ingredient" data-index="'+index+'" aria-label="Remove ingredient">×</button></div>').join(''):'<p class="small muted">No ingredients yet. Save a food first if the list is empty.</p>'; }
+  async function search(provider,query) {
+    if (mode==='demo') throw new Error('Online search needs your family sync. Manual foods, regulars and meal notes work in this demo.');
+    const token=await auth.currentUser.getIdToken();
+    const response=await fetch('../api/fitness-foods',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({provider,query,familyId}),cache:'no-store',signal:AbortSignal.timeout(22000)});
+    let result; try { result=await response.json(); } catch { throw new Error('Food search needs the Vercel endpoint. See fitness/README.md.'); }
+    if(!response.ok) throw new Error(result.error || 'Food search failed.');
+    searchResults=result.foods || [];
+    $('#searchResults').innerHTML=searchResults.length?searchResults.map((food,index)=>'<div class="entry"><div class="grow"><strong>'+esc(food.name)+'</strong><p>'+fmt(food.calories)+' kcal / '+esc(food.basis || '100 g')+' · '+fmt(food.protein,1)+' g protein</p><p>'+esc(food.source)+'</p></div><button class="small" type="button" data-action="select-result" data-index="'+index+'">Review</button></div>').join(''):'<div class="empty"><strong>No matching food.</strong>Try another name or enter the package label manually.</div>';
+  }
+  function searchUSDA() { modal('Search USDA','<form id="searchForm" data-provider="usda"><label>Food name<input name="query" type="search" minlength="2" maxlength="120" required placeholder="Chicken breast, cooked"></label><button class="primary" type="submit">Search</button></form><div id="searchResults" style="margin-top:18px"></div><p class="small muted" style="margin-top:16px">USDA FoodData Central. Review the exact food and all values before saving.</p>'); }
+  function barcode() { modal('Scan a barcode','<div class="stack"><p class="small muted">Scan a packaged food, or type its barcode. Camera frames stay on your device.</p><button data-action="start-camera">Open camera</button><video id="scanner" autoplay muted playsinline hidden></video><p id="cameraStatus" class="small muted"></p><form id="searchForm" data-provider="barcode"><label>Barcode<input name="query" inputmode="numeric" pattern="[0-9]{8,14}" minlength="8" maxlength="14" required placeholder="8–14 digits"></label><button class="primary" type="submit">Look up food</button></form><div id="searchResults"></div><p class="small muted">Product data from <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener noreferrer">Open Food Facts</a> (ODbL). Check the package: community records can be incomplete.</p></div>'); }
+  async function startCamera() {
+    if (!('BarcodeDetector' in window) || !navigator.mediaDevices?.getUserMedia) throw new Error('Camera barcode scanning is unavailable in this browser. Type the printed barcode instead.');
+    stopCamera(); const generation=scanGeneration;
+    const supported=await BarcodeDetector.getSupportedFormats();
+    const formats=['ean_13','ean_8','upc_a','upc_e'].filter(format=>supported.includes(format));
+    if(!formats.length) throw new Error('This browser cannot read food barcodes. Type the number instead.');
+    const detector=new BarcodeDetector({formats});
+    const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    if(generation!==scanGeneration || !$('#editor').open || !$('#scanner')) {acquired.getTracks().forEach(track=>track.stop()); return;}
+    stream=acquired; const video=$('#scanner'); video.hidden=false; video.srcObject=stream;
+    try{await video.play();}catch{stopCamera();throw new Error('Camera playback could not start. Type the barcode instead.');}
+    $('#cameraStatus').textContent='Point the camera at a barcode. Close this panel to stop.';
+    const started=Date.now();
+    const scan=async()=>{
+      if(!stream || generation!==scanGeneration) return;
+      if(Date.now()-started>60000){stopCamera(); if($('#cameraStatus'))$('#cameraStatus').textContent='Camera stopped after one minute. Reopen it or type the barcode.';return;}
+      try {const results=await detector.detect(video); const code=results.find(r=>/^\d{8,14}$/.test(r.rawValue)); if(code){$('#searchForm input').value=code.rawValue; stopCamera(); $('#cameraStatus').textContent='Barcode captured. Tap Look up food.';return;}}catch{stopCamera(); if($('#cameraStatus'))$('#cameraStatus').textContent='Scanning stopped. Type the barcode instead.';return;}
+      scanHandle=setTimeout(scan,250);
+    }; scan();
+  }
+  function reviewQueue() {
+    modal('Your nutrition review queue','<div class="stack"><p class="small muted">Ask me: “Process my pending fitness meal notes.” I can review the descriptions with you, find sources, and update regulars for next time. Unknown quantities stay unknown.</p><button data-action="export-pending">Export pending notes</button>'+pendingNotes().map(note=>'<article class="card"><p class="small muted">'+esc(note.date)+' · '+(note.quantity || 1)+' serving(s)</p><p>'+esc(note.text)+'</p><button class="small" style="margin-top:12px" data-action="review-note" data-id="'+esc(note.id)+'">Enter reviewed nutrition</button></article>').join('')+(!pendingNotes().length?'<p class="empty">All caught up.</p>':'')+'</div>');
+  }
+  function reviewNote(key) {
+    const note=data.mealNotes[key], log=data.foodLogs[note?.logId]; if(!note || !log) throw new Error('The linked diary entry no longer exists.');
+    modal('Review meal nutrition','<form id="reviewForm" data-id="'+esc(key)+'"><div class="notice">'+esc(note.text)+'</div><p class="small muted">Enter totals for the entire logged entry ('+esc(logSummary(log))+'). Leave uncertain nutrients blank.</p>'+nutrientFields(log.nutrition || {})+field('Nutrition source / assumptions','source',log.source==='Awaiting nutrition review'?'':log.source || '', 'required maxlength="500" placeholder="Package label, weighed amount; USDA food ID…"')+(note.routineId?'<label class="check"><input type="checkbox" name="updateRoutine">Also update this regular (divide totals by '+fmt(log.quantity || 1)+' servings)</label>':'')+'<button class="primary" type="submit">Save reviewed values</button></form>');
+  }
+  function renderMove() {
+    const logs=sorted(data.exerciseLogs), today=logs.filter(l=>l.date===date), reminder=data.reminders.daily;
+    return '<section class="card soft"><div class="sectionhead"><h2>A reminder to show up</h2>'+icon('move')+'</div><p>'+(reminder?.enabled?'Reminder: '+esc(reminder.time)+' · '+reminder.days.map(day=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][day]).join(', '):'Choose a gentle reminder that fits your day.')+'</p><div class="actions" style="margin-top:16px"><button data-action="reminder">Set reminder</button>'+(reminder?.enabled?'<button data-action="calendar">Add to phone calendar</button>':'')+'</div><p class="small muted" style="margin-top:12px">Phone calendar reminders can work when this app is closed.</p></section><section class="card"><div class="sectionhead"><h2>Your workouts</h2><button class="small quiet" data-action="workout-editor">+ Workout</button></div>'+list(data.workouts).map(w=>'<div class="entry"><div class="grow"><strong>'+esc(w.name)+'</strong><p>'+w.exercises.map(e=>esc(e.name)).join(' · ')+'</p></div><div class="actions"><button class="small primary" data-action="start-workout" data-id="'+esc(w.id)+'">Start</button><button class="small quiet" data-action="workout-editor" data-id="'+esc(w.id)+'">Edit</button></div></div>').join('')+'</section><section class="card"><div class="sectionhead"><h2>Today’s movement</h2><button class="small quiet" data-action="exercise">+ Log movement</button></div>'+exerciseEntries(today)+'</section><details><summary>Movement history</summary>'+exerciseEntries(logs.slice(0,40))+'</details><p class="small muted">Workouts build consistency. They never increase your calorie budget.</p>';
+  }
+  function exerciseEntries(logs) { return logs.length?logs.map(log=>'<div class="entry"><div class="grow"><strong>'+esc(log.name)+'</strong><p>'+esc(log.date)+' · '+log.sets.map(set=>set.seconds?fmt(set.seconds)+' sec':fmt(set.reps)+' reps'+(set.weight?' @ '+fmt(set.weight,1)+' lb':'')).join(' / ')+'</p></div><button class="small quiet" data-action="delete-exercise" data-id="'+esc(log.id)+'" aria-label="Delete '+esc(log.name)+'">×</button></div>').join(''):'<p class="empty">A walk, a set, a plank. It all starts with showing up.</p>'; }
+  function workoutEditor(key='') {
+    const item=data.workouts[key]; workoutDraft=structuredClone(item?.exercises || []);
+    modal('Customize workout','<form id="workoutForm" data-id="'+esc(key)+'">'+field('Workout name','name',item?.name || '', 'required maxlength="100"')+'<div id="workoutExercises"></div><hr class="divider">'+field('Exercise name','exerciseName','','maxlength="100" placeholder="Plank, squats, push-ups…"')+'<div class="fields"><label>Track by<select name="kind"><option value="reps">Repetitions</option><option value="seconds">Seconds</option></select></label>'+field('Sets','sets',2,'type="number" min="1" max="20" step="1"')+field('Target reps / seconds','target',10,'type="number" min="1" max="3600" step="1"')+'</div><button type="button" data-action="add-exercise-template">+ Add exercise</button><button class="primary" type="submit">Save workout</button></form>'); renderWorkoutDraft();
+  }
+  function renderWorkoutDraft() { $('#workoutExercises').innerHTML=workoutDraft.map((ex,index)=>'<div class="entry"><div class="grow"><strong>'+esc(ex.name)+'</strong><p>'+ex.sets+' × '+ex.target+' '+esc(ex.kind)+'</p></div><button type="button" class="small" data-action="remove-exercise-template" data-index="'+index+'" aria-label="Remove exercise">×</button></div>').join(''); }
+  function startWorkout(key) {
+    const workout=data.workouts[key]; if(!workout) throw new Error('Workout no longer exists.');
+    modal(workout.name,'<div class="stack"><p class="small muted">Record completed sets for '+esc(date)+'. Targets are a starting point; edit what you actually did.</p>'+workout.exercises.map((ex,index)=>'<button data-action="exercise" data-id="'+esc(key)+'" data-index="'+index+'">'+esc(ex.name)+' · '+ex.sets+' × '+ex.target+' '+esc(ex.kind)+'</button>').join('')+'</div>');
+  }
+  function exerciseEditor(workoutKey,index) {
+    const template=data.workouts[workoutKey]?.exercises[index];
+    modal('Log movement','<form id="exerciseForm" data-workout="'+esc(workoutKey || '')+'">'+field('Exercise','name',template?.name || '', 'required maxlength="100" placeholder="Walk, plank, squats…"')+'<label>Track by<select name="kind" id="exerciseKind"><option value="reps" '+(template?.kind!=='seconds'?'selected':'')+'>Repetitions</option><option value="seconds" '+(template?.kind==='seconds'?'selected':'')+'>Seconds</option></select></label><div id="exerciseSets"></div><button type="button" data-action="add-set">+ Add set</button><div class="timerbox"><p class="small muted">Optional plank / exercise timer</p><div class="timer" id="timerValue">00:00</div><div class="actions"><button type="button" data-action="timer">Start timer</button><button type="button" data-action="use-timer">Use time for last set</button></div></div><button class="primary" type="submit">Save completed sets</button></form>');
+    for(let i=0;i<(template?.sets || 1);i++)addSet(template?.target || 10);
+  }
+  function addSet(value=10) {
+    const kind=$('#exerciseKind').value, wrap=document.createElement('div'); wrap.className='fields set-row';
+    wrap.innerHTML=field(kind==='seconds'?'Completed seconds':'Completed reps','amount',value,'type="number" min="1" step="1" required')+field('Load (lb, optional)','load','','type="number" min="0" step="any" placeholder="Body weight"')+'<button type="button" class="small quiet full" data-action="remove-set">Remove set</button>';
+    $('#exerciseSets').append(wrap);
+  }
+  function startTimer() {
+    if(timerHandle){timerState.elapsed+=performance.now()-timerState.start;clearInterval(timerHandle);timerHandle=null;document.querySelector('[data-action="timer"]').textContent='Resume timer';return;}
+    timerState ||= {elapsed:0,start:0}; timerState.start=performance.now();
+    const tick=()=>{const secs=Math.floor((timerState.elapsed+performance.now()-timerState.start)/1000);$('#timerValue').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');};
+    timerHandle=setInterval(tick,200); tick(); document.querySelector('[data-action="timer"]').textContent='Pause timer';
+  }
+  function reminderEditor() {
+    const reminder=data.reminders.daily || {time:'18:00',days:[1,2,3,4,5],enabled:true};
+    modal('Your movement reminder','<form id="reminderForm"><label class="check"><input type="checkbox" name="enabled" '+(reminder.enabled?'checked':'')+'>Enable daily nudge</label>'+field('Time on your phone','time',reminder.time,'type="time" required')+'<div class="fields">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((day,index)=>'<label class="check"><input type="checkbox" name="days" value="'+index+'" '+(reminder.days.includes(index)?'checked':'')+'>'+day+'</label>').join('')+'</div><p class="small muted">Today shows the reminder in the app. After saving, add it to your phone calendar for reminders when the app is closed. Changing it here won’t change an existing calendar event.</p><button class="primary" type="submit">Save reminder</button></form>');
+  }
+  function calendar() {
+    const r=data.reminders.daily; if(!r?.enabled || !r.days.length) throw new Error('Enable a reminder and choose days first.');
+    const start=new Date(); const [hours,minutes]=r.time.split(':').map(Number); start.setHours(hours,minutes,0,0);
+    if(start<new Date())start.setDate(start.getDate()+1);
+    while(!r.days.includes(start.getDay()))start.setDate(start.getDate()+1);
+    const stamp=d=>F.dateKey(d).replaceAll('-','')+'T'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+'00';
+    const end=new Date(start.getTime()+15*60000), utc=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+    download('steady-movement-reminder.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Family Hub//Steady//EN','BEGIN:VEVENT','UID:'+id()+'@steady-family-hub','DTSTAMP:'+utc,'DTSTART:'+stamp(start),'DTEND:'+stamp(end),'RRULE:FREQ=WEEKLY;BYDAY='+r.days.map(d=>['SU','MO','TU','WE','TH','FR','SA'][d]).join(','),'SUMMARY:A little movement','DESCRIPTION:Take a walk or open Steady for your workout.','BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:Time for a little movement','END:VALARM','END:VEVENT','END:VCALENDAR',''].join('\r\n'),'text/calendar');
+    toast('Open the calendar file on your phone to add the reminder.');
+  }
+  function chart(readings,key) {
+    const points=readings.filter(r=>r[key]!=null).sort((a,b)=>a.date.localeCompare(b.date)).slice(-60);
+    if(!points.length) return '<div class="empty">Your first measurement starts the chart.</div>';
+    const vals=points.map(p=>p[key]), low=Math.min(...vals)-1, high=Math.max(...vals)+1, first=F.dateDay(points[0].date), span=Math.max(1,F.dateDay(points.at(-1).date)-first);
+    const x=p=>35+(F.dateDay(p.date)-first)/span*360, y=value=>135-(value-low)/(high-low)*110;
+    const avg=key==='weight'?points.map(p=>({...p,value:F.movingAverage(readings,p.date)})):[];
+    return '<svg class="chart" viewBox="0 0 430 170" role="img" aria-label="'+esc(key)+' trend, '+esc(points[0].date)+' to '+esc(points.at(-1).date)+'"><line x1="35" x2="395" y1="135" y2="135" stroke="#dde3d9"/><polyline points="'+points.map(p=>x(p)+','+y(p[key])).join(' ')+'"/>'+points.map(p=>'<circle cx="'+x(p)+'" cy="'+y(p[key])+'" r="3"><title>'+esc(p.date)+': '+fmt(p[key],1)+'</title></circle>').join('')+(avg.length?'<polyline class="avg" points="'+avg.map(p=>x(p)+','+y(p.value)).join(' ')+'"/>':'')+'<text x="35" y="159">'+esc(points[0].date.slice(5))+'</text><text x="350" y="159">'+esc(points.at(-1).date.slice(5))+'</text><text x="0" y="27">'+fmt(high,1)+'</text><text x="0" y="138">'+fmt(low,1)+'</text></svg>';
+  }
+  function renderProgress() {
+    const readings=sorted(data.measurements), past=readings.filter(r=>r.date<=date), avg=F.movingAverage(past,date), settings=data.settings;
+    return '<div class="actions"><button class="primary" data-action="measurement">+ Weight / waist</button><button data-action="goals">Edit goals</button></div><div class="grid">'+[['weight','Weight','lb',settings.startWeight,settings.goalWeight],['waist','Waist','in',settings.startWaist,settings.goalWaist]].map(([key,label,unit,start,goal])=>{const current=past.find(r=>r[key]!=null)?.[key];return '<section class="card"><p class="small muted">'+label+'</p><p class="metric">'+fmt(current ?? start,1)+' <small>'+unit+(current==null?' · baseline':'')+'</small></p><p class="small muted">Starting '+start+' → goal '+goal+' '+unit+' · '+fmt(F.progress(start,current,goal)*100)+'%</p><div class="bar"><span style="width:'+F.progress(start,current,goal)*100+'%"></span></div>'+chart(past,key)+(key==='weight'?'<p class="small muted">7-day average: '+fmt(avg,1)+(avg==null?'':' lb')+'<br>Green: daily readings · gold: 7-day average.</p>':'')+'</section>';}).join('')+'</div><section class="card"><h2>Measurements</h2><p class="small muted">One reading per date; saving again updates that date.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Weight (lb)</th><th>Waist (in)</th><th></th></tr></thead><tbody>'+readings.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+fmt(r.weight,1)+'</td><td>'+fmt(r.waist,1)+'</td><td><button class="small quiet" data-action="measurement" data-id="'+esc(r.id)+'">Edit</button></td></tr>').join('')+'</tbody></table></div></section>';
+  }
+  function measurementEditor(key) {
+    const m=data.measurements[key] || data.measurements[date] || {};
+    modal('Weight & waist','<form id="measurementForm" data-id="'+esc(key || date)+'">'+field('Date','date',m.date || date,'type="date" required')+'<div class="fields">'+field('Weight','weight',m.weight ?? '','type="number" min="0.01" step="any" placeholder="Optional"')+'<label>Weight unit<select name="weightUnit"><option value="lb">lb</option><option value="kg">kg</option></select></label>'+field('Waist','waist',m.waist ?? '','type="number" min="0.01" step="any" placeholder="Optional"')+'<label>Waist unit<select name="waistUnit"><option value="in">inches</option><option value="cm">cm</option></select></label></div><p class="small muted">Leave either blank if you didn’t measure it. Starting baselines are '+data.settings.startWeight+' lb / '+data.settings.startWaist+' in.</p><button class="primary" type="submit">Save measurement</button></form>');
+  }
+  function goalEditor() { modal('Daily targets & goals','<form id="goalsForm"><div class="fields">'+Object.entries({calories:'Daily calorie budget (kcal)',protein:'Daily protein target (g)',startWeight:'Starting weight (lb)',goalWeight:'Goal weight (lb)',startWaist:'Starting waist (in)',goalWaist:'Goal waist (in)'}).map(([key,label])=>field(label,key,data.settings[key],'type="number" min="0.01" max="99999" step="any" required')).join('')+'</div><p class="small muted">These are your chosen tracking targets. Exercise doesn’t change the food budget.</p><button class="primary" type="submit">Save targets</button></form>'); }
+  function renderMore() {
+    return '<section class="card stack"><h2>Your corner, your settings</h2><p class="small muted">'+(mode==='demo'?'Session-only demo. Nothing is sent to Firebase.':'Signed in as '+esc(auth?.currentUser?.email || '')+'. Your records are separate from the family’s data.')+'</p><div class="actions"><button data-action="goals">Targets & goals</button><button data-action="reminder">Exercise reminder</button></div><div class="actions"><button data-action="install">Install on Android</button><a class="btn" href="../">Back to Family Hub ↗</a></div><button class="quiet" data-action="sign-out">'+(mode==='demo'?'End demo':'Switch user')+'</button></section><section class="card stack"><h2>Your data, to go</h2><p class="small muted">CSV files for spreadsheets, or a complete JSON backup for restoring. Downloads contain your personal records.</p><div class="actions"><button data-action="export-food">Food diary CSV</button><button data-action="export-measurements">Measurements CSV</button><button data-action="export-exercise">Exercise CSV</button></div><div class="actions"><button class="primary" data-action="backup">Full JSON backup</button><button data-action="restore">Restore backup</button></div><button data-action="export-pending">Export pending meal notes</button></section><details><summary>How nutrition review works</summary><p class="small muted">Describe a meal or tap an unreviewed regular. It appears in the diary with unknown nutrition and in the review queue. When you ask me to process it, I can read the pending descriptions, check labels or online sources, and save reviewed values with a source. Uncertain values stay blank. Updating a regular helps future logs; existing logs keep their own nutrition snapshots.</p></details><details><summary>Photo estimates, later</summary><p class="small muted">Photo estimation is disabled. No photos are uploaded. A future adapter must ask before sending an image and return an editable draft for your confirmation.</p></details>';
+  }
+  function download(name,content,type='text/csv;charset=utf-8') { const blob=new Blob([content],{type}), url=URL.createObjectURL(blob), a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000); }
+  function exportPending() { download('steady-pending-'+F.dateKey()+'.json',JSON.stringify({schemaVersion:1,exportedAt:new Date().toISOString(),notes:pendingNotes().map(note=>({...note,log:data.foodLogs[note.logId]}))},null,2),'application/json'); }
+  async function repeatLog(key) {
+    const previous=data.foodLogs[key]; if(!previous)throw new Error('Diary entry not found.'); const freshId=id(), nutrition=F.nutrition(previous.nutrition), log={...previous,date,createdAt:Date.now()};
+    delete log.id; const changes={['foodLogs/'+freshId]:log};
+    if(nutrition.calories==null)changes['mealNotes/'+freshId]={text:log.description || log.name,date,status:'pending',logId:freshId,...(log.routineId?{routineId:log.routineId,quantity:log.quantity || 1}:{}),createdAt:Date.now()};
+    await write(changes);toast('Added '+log.name+' to '+date+'.');
+  }
+  async function deleteLog(key) {
+    if(!confirm('Remove this diary entry and its review note?'))return;
+    const changes={['foodLogs/'+key]:null};list(data.mealNotes).filter(note=>note.logId===key).forEach(note=>changes['mealNotes/'+note.id]=null);await write(changes);
+  }
+  async function handleAction(button) {
+    const action=button.dataset.action,key=button.dataset.id,kind=button.dataset.kind,index=Number(button.dataset.index);
+    if(button.dataset.view){navigate(button.dataset.view);return;}
+    switch(action){
+      case 'close':close();break;
+      case 'demo':unsubscribe?.();unsubscribe=null;mode='demo';data=defaults();connected=false;view='today';showWorkspace();break;
+      case 'exit-demo':case 'sign-out':if(mode==='demo' && !confirm('End the demo? Its session-only entries will be discarded.'))return;if(mode==='cloud')store.set(PERSON_KEY,null);signOutView();break;
+      case 'choose-person':mode='';await openPerson(button.dataset.person);break;
+      case 'describe':describe();break;
+      case 'quick-calories':quickCalories();break;
+      case 'routine':routineEditor();break;
+      case 'log-routine':await logRoutine(key,Number(button.dataset.quantity));break;
+      case 'repeat-log':await repeatLog(key);break;
+      case 'edit-log':{const note=list(data.mealNotes).find(note=>note.logId===key && note.status==='pending');if(note)reviewNote(note.id);else quickCalories({...data.foodLogs[key],id:key});break;}
+      case 'delete-log':await deleteLog(key);break;
+      case 'food-editor':foodEditor();break;
+      case 'food-section':foodSection=button.dataset.section;render();break;
+      case 'favorite':await write({[kind+'/'+key+'/favorite']:!data[kind][key].favorite});break;
+      case 'use-library':await logPortion(kind,key);break;
+      case 'edit-library':if(kind==='foods')foodEditor({...data.foods[key],id:key});else if(kind==='routines')routineEditor({...data.routines[key],id:key});else mealBuilder(kind,key);break;
+      case 'meal-builder':mealBuilder(kind);break;
+      case 'add-ingredient':{const form=$('#mealForm'),food=data.foods[form.elements.ingredient.value];if(!food)throw new Error('Save a food in your library first.');ingredients.push({food:structuredClone(food),grams:F.positive(form.elements.ingredientGrams.value)});renderIngredients();break;}
+      case 'remove-ingredient':ingredients.splice(index,1);renderIngredients();break;
+      case 'search-usda':searchUSDA();break;
+      case 'barcode':barcode();break;
+      case 'start-camera':await startCamera();break;
+      case 'select-result':foodEditor(searchResults[index]);break;
+      case 'review-queue':reviewQueue();break;
+      case 'review-note':reviewNote(key);break;
+      case 'export-pending':exportPending();break;
+      case 'workout-editor':workoutEditor(key);break;
+      case 'add-exercise-template':{const v=formValues($('#workoutForm')),sets=F.positive(v.sets),target=F.positive(v.target);if(!v.exerciseName.trim())throw new Error('Name the exercise.');if(!Number.isInteger(sets)||sets>20||!Number.isInteger(target)||target>3600)throw new Error('Use up to 20 sets and whole-number reps or seconds.');workoutDraft.push({name:v.exerciseName.trim(),kind:v.kind,sets,target});$('#workoutForm').elements.exerciseName.value='';renderWorkoutDraft();break;}
+      case 'remove-exercise-template':workoutDraft.splice(index,1);renderWorkoutDraft();break;
+      case 'start-workout':startWorkout(key);break;
+      case 'exercise':exerciseEditor(key,index);break;
+      case 'add-set':addSet();break;
+      case 'remove-set':button.closest('.set-row').remove();break;
+      case 'timer':startTimer();break;
+      case 'use-timer':{if(!timerState)throw new Error('Start the timer first.');const seconds=Math.floor((timerState.elapsed+(timerHandle?performance.now()-timerState.start:0))/1000);if(!seconds)throw new Error('Let the timer run for at least a second.');$('#exerciseKind').value='seconds';const rows=document.querySelectorAll('.set-row');if(!rows.length)addSet(seconds);else rows[rows.length-1].querySelector('[name="amount"]').value=seconds;document.querySelectorAll('.set-row label:first-child').forEach(label=>label.firstChild.textContent='Completed seconds');toast('Timer copied. Save the completed set when ready.');break;}
+      case 'delete-exercise':if(confirm('Delete this exercise entry?'))await write({['exerciseLogs/'+key]:null});break;
+      case 'reminder':reminderEditor();break;
+      case 'calendar':calendar();break;
+      case 'measurement':measurementEditor(key);break;
+      case 'goals':goalEditor();break;
+      case 'install':if(deferredInstall){await deferredInstall.prompt();deferredInstall=null;}else toast('On Android Chrome, open the browser menu → Add to Home screen → Install.');break;
+      case 'backup':download('steady-backup-'+F.dateKey()+'.json',JSON.stringify(F.validateBackup(data),null,2),'application/json');break;
+      case 'export-food':download('steady-food-'+date+'.csv',F.csv([['Date','Food','Grams','Servings','Calories (kcal)','Protein (g)','Carbs (g)','Fat (g)','Source','Description'],...sorted(data.foodLogs).map(l=>[l.date,l.name,l.grams,l.quantity,...F.nutrients.map(n=>l.nutrition?.[n]),l.source,l.description])]));break;
+      case 'export-measurements':download('steady-measurements.csv',F.csv([['Date','Weight (lb)','Waist (in)','7-day average (lb)'],...sorted(data.measurements).map(m=>[m.date,m.weight,m.waist,F.movingAverage(list(data.measurements),m.date)])]));break;
+      case 'export-exercise':download('steady-exercise.csv',F.csv([['Date','Exercise','Set','Reps','Seconds','Load (lb)'],...sorted(data.exerciseLogs).flatMap(l=>l.sets.map((s,i)=>[l.date,l.name,i+1,s.reps,s.seconds,s.weight]))]));break;
+      case 'restore':modal('Restore a backup','<form id="restoreForm"><p class="notice">Restore merges records by ID. Matching records and settings will be replaced. Export a fresh backup first.</p><label>Steady JSON backup<input type="file" name="file" accept="application/json,.json" required></label><label class="check"><input type="checkbox" name="confirm" required>I have a backup and want to merge this file.</label><button class="primary" type="submit">Validate & restore</button></form>');break;
+    }
+  }
+  document.addEventListener('click',async event=>{
+    const button=event.target.closest('[data-action],[data-view]');if(!button)return;event.preventDefault();if(button.disabled)return;button.disabled=true;
+    try{await handleAction(button);}catch(err){error(err.message || 'Something went wrong. Try again.');}finally{button.disabled=false;}
+  });
+  document.addEventListener('submit',async event=>{
+    event.preventDefault();const form=event.target,submit=form.querySelector('[type="submit"]');if(submit?.disabled)return;if(submit)submit.disabled=true;$('#dialogError').hidden=true;
+    try{
+      const v=formValues(form);
+      switch(form.id){
+        case 'describeForm':await addDescription(v);break;
+        case 'quickForm':{const nutrition=F.nutrition(v);if(F.nutrients.every(n=>nutrition[n]==null))throw new Error('Enter at least one known value, or describe the meal for later.');const key=form.dataset.id || id(),existing=data.foodLogs[key],source=v.source.trim() || 'Manual entry',changes={['foodLogs/'+key]:{...(existing || {}),name:v.name.trim(),date:existing?.date || date,quantity:existing?.quantity || 1,nutrition,source,createdAt:existing?.createdAt || Date.now()}};const note=list(data.mealNotes).find(n=>n.logId===key);if(note){changes['mealNotes/'+note.id+'/status']=nutrition.calories==null?'pending':'reviewed';changes['mealNotes/'+note.id+'/source']=source;}else if(nutrition.calories==null)changes['mealNotes/'+key]={text:v.name.trim(),date:existing?.date || date,status:'pending',logId:key,createdAt:Date.now()};await write(changes);close();toast(existing?'Diary entry updated.':'Added to diary.');break;}
+        case 'routineForm':{const key=form.dataset.id || id(),nutrition=F.nutrition(v);await write({['routines/'+key]:{...nutrition,name:v.name.trim(),description:v.description.trim(),source:v.source.trim() || (nutrition.calories==null?'Awaiting nutrition review':'Manual entry'),favorite:data.routines[key]?.favorite ?? true,createdAt:data.routines[key]?.createdAt || Date.now()}});close();toast('Regular saved.');break;}
+        case 'foodForm':{const key=form.dataset.id || id(),basis=F.positive(v.basis),nutrition=F.servings(F.nutrition(v),100/basis);await write({['foods/'+key]:{...nutrition,name:v.name.trim(),defaultGrams:F.positive(v.defaultGrams),source:v.source.trim(),sourceId:v.sourceId,favorite:data.foods[key]?.favorite || false,createdAt:data.foods[key]?.createdAt || Date.now()}});close();toast('Food saved.');break;}
+        case 'portionForm':await addFood(data[form.dataset.kind][form.dataset.id],F.grams(v.amount,v.unit));break;
+        case 'mealForm':{if(!ingredients.length)throw new Error('Add at least one ingredient.');const kind=form.dataset.kind,key=form.dataset.id || id(),values=kind==='recipes'?F.recipe(ingredients,F.positive(v.batchGrams)):{};await write({[kind+'/'+key]:{...values,name:v.name.trim(),ingredients:structuredClone(ingredients),favorite:data[kind][key]?.favorite || false,source:kind==='recipes'?'Calculated recipe':'Saved meal',createdAt:Date.now()}});close();toast('Saved.');break;}
+        case 'searchForm':await search(form.dataset.provider,v.query);break;
+        case 'reviewForm':{const key=form.dataset.id,note=data.mealNotes[key],log=data.foodLogs[note.logId],nutrition=F.nutrition(v),changes={['foodLogs/'+note.logId+'/nutrition']:nutrition,['foodLogs/'+note.logId+'/source']:v.source.trim(),['mealNotes/'+key+'/status']:nutrition.calories==null?'pending':'reviewed',['mealNotes/'+key+'/reviewedAt']:Date.now(),['mealNotes/'+key+'/source']:v.source.trim()};if(v.updateRoutine && note.routineId){const perServing=F.servings(nutrition,1/(log.quantity || 1));Object.entries(perServing).forEach(([n,value])=>changes['routines/'+note.routineId+'/'+n]=value);changes['routines/'+note.routineId+'/source']=v.source.trim();}await write(changes);close();toast('Reviewed values saved.');break;}
+        case 'workoutForm':if(!workoutDraft.length)throw new Error('Add at least one exercise.');await write({['workouts/'+(form.dataset.id || id())]:{name:v.name.trim(),exercises:structuredClone(workoutDraft),createdAt:Date.now()}});close();toast('Workout saved.');break;
+        case 'exerciseForm':{const rows=[...form.querySelectorAll('.set-row')];if(!rows.length)throw new Error('Add a completed set.');const sets=rows.map(row=>{const amount=F.positive(row.querySelector('[name="amount"]').value);if(!Number.isInteger(amount))throw new Error('Use whole-number reps or seconds.');return{[v.kind==='seconds'?'seconds':'reps']:amount,weight:F.number(row.querySelector('[name="load"]').value)};});await write({['exerciseLogs/'+id()]:{name:v.name.trim(),date,sets,workoutId:form.dataset.workout || '',createdAt:Date.now()}});close();toast('Movement logged.');break;}
+        case 'reminderForm':{const days=new FormData(form).getAll('days').map(Number);if(v.enabled&&!days.length)throw new Error('Choose at least one day.');await write({'reminders/daily':{time:v.time,days,enabled:!!v.enabled}});close();toast('Reminder saved. Add it to your phone calendar from Move.');break;}
+        case 'measurementForm':{F.dateDay(v.date);const weight=F.number(v.weight)==null?null:F.pounds(v.weight,v.weightUnit),waist=F.number(v.waist)==null?null:F.inches(v.waist,v.waistUnit);if(weight==null&&waist==null)throw new Error('Enter weight or waist.');const changes={['measurements/'+v.date]:{date:v.date,weight,waist,createdAt:Date.now()}};if(form.dataset.id!==v.date)changes['measurements/'+form.dataset.id]=null;await write(changes);close();toast('Measurement saved.');break;}
+        case 'goalsForm':{const values=Object.fromEntries(Object.keys(F.defaults).map(n=>[n,F.positive(v[n])]));await write({settings:values});close();toast('Targets updated.');break;}
+        case 'restoreForm':{const file=form.elements.file.files[0];if(!file || file.size>5*1024*1024)throw new Error('Choose a JSON backup under 5 MB.');const restored=F.validateBackup(JSON.parse(await file.text())),changes={settings:restored.settings};for(const [key,map] of Object.entries(restored)){if(['settings','schemaVersion'].includes(key))continue;for(const [recordId,record] of Object.entries(map))changes[key+'/'+recordId]=record;}await write(changes);close();toast('Backup merged.');break;}
+      }
+    }catch(err){error(err.message || 'Could not save. Your form is still open.');}finally{if(submit)submit.disabled=false;}
+  });
+  function updateDate(event){try{F.dateDay(event.target.value);if(date!==event.target.value){date=event.target.value;render();}}catch(err){if(event.type==='change'){event.target.value=date;toast(err.message);}}}
+  $('#logDate').addEventListener('input',updateDate);
+  $('#logDate').addEventListener('change',updateDate);
+  document.addEventListener('input',event=>{if(event.target.id==='librarySearch'){filter=event.target.value;$('#libraryResults').innerHTML=libraryResults();}});
+  document.addEventListener('change',event=>{if(event.target.id==='exerciseKind'){document.querySelectorAll('.set-row label:first-child').forEach(label=>label.firstChild.textContent=event.target.value==='seconds'?'Completed seconds':'Completed reps');}});
+  $('#editor').addEventListener('cancel',event=>{event.preventDefault();close();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCamera();});
+  window.addEventListener('pagehide',()=>{stopCamera();stopTimer();});
+  window.addEventListener('online',connection);window.addEventListener('offline',connection);
+  window.addEventListener('hashchange',()=>{const next=location.hash.slice(1);if(['today','food','move','progress','more'].includes(next)){view=next;if(mode)render();}});
+  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstall=event;});
+  view=['today','food','move','progress','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';
+  if('serviceWorker' in navigator && location.protocol!=='file:')navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
+  // Reopen the remembered person; a demo never depends on network access.
+  if (!familyCode()) needFamily();
+  else if (PEOPLE[store.get(PERSON_KEY)]) openPerson(store.get(PERSON_KEY)).catch(err=>error(err.message));
+})();
+</script>
+</body>
+</html>

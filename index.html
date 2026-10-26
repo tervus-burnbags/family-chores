@@ -4747,6 +4747,7 @@
           </div>
         </div>
         <div class="header-actions">
+          <a class="icon-btn" id="fitnessCornerLink" href="./fitness/" aria-label="Open my fitness corner" title="My fitness corner" style="display:inline-flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></a>
           <button type="button" class="icon-btn" id="headerSettingsButton" aria-label="Open settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
         </div>
       </div>
@@ -5224,6 +5225,11 @@
     }
 
     function buildFamilySettingsMarkup() {
+      const fitnessCornerMarkup = '<div class="family-panel-row" style="margin-top:16px">' +
+        '<div class="family-panel-copy"><strong>My fitness corner</strong>' +
+          '<p class="family-panel-note">Food, movement, and your personal progress.</p></div>' +
+        '<div class="family-panel-actions"><a class="settings-btn" href="./fitness/" style="display:inline-flex;align-items:center;min-height:48px;text-decoration:none">Open Steady &rarr;</a></div>' +
+      '</div>';
       const runtime = window.phaseRuntime;
       const familyName = runtime && runtime.currentConfig ? String(runtime.currentConfig.familyName || '') : '';
       const calendarUrl = runtime && runtime.currentConfig ? String(runtime.currentConfig.calendarUrl || '') : '';
@@ -5235,7 +5241,7 @@
           '<div class="family-panel-actions">' +
             '<button type="button" class="settings-btn" data-family-action="manage">Choose family</button>' +
           '</div>' +
-        '</div>';
+        '</div>' + fitnessCornerMarkup;
       }
       return '<div class="family-panel-row">' +
           '<div class="family-panel-copy">' +
@@ -5268,7 +5274,7 @@
           '<div class="family-panel-actions">' +
             '<button type="submit" class="settings-btn">Save calendar settings</button>' +
           '</div>' +
-        '</form>';
+        '</form>' + fitnessCornerMarkup;
     }
 
     function renderHeaderSettingsPanel() {
