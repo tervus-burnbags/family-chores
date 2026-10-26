@@ -3,11 +3,11 @@ const fs=require('node:fs');
 const F=require('../nutrition.js');
 
 const FAMILY='FAM12345',PERSON_PATH='families/'+FAMILY+'/fitness/travis';
-async function mockFirebase(page,{denied=false,family=FAMILY,familyExists=true,person=null,signedIn=true}={}){
-  await page.addInitScript(({denied,family,familyExists,person,signedIn})=>{
+async function mockFirebase(page,{denied=false,family=FAMILY,familyExists=true,person=null,signedIn=true,root=null}={}){
+  await page.addInitScript(({denied,family,familyExists,person,signedIn,root})=>{
     // Seed storage only once so reloads keep whatever the app changed.
     if(!sessionStorage.getItem('seeded')){sessionStorage.setItem('seeded','1');if(family)localStorage.setItem('familyChores.familyId',family);if(person)localStorage.setItem('steady.person',person);}
-    const mock=window.fitnessMock={paths:[],root:null,callbacks:[],apps:[],offCalls:0,anonSignIns:0};
+    const mock=window.fitnessMock={paths:[],root,callbacks:[],apps:[],offCalls:0,anonSignIns:0};
     const snap=()=>({exists:()=>!!mock.root,val:()=>JSON.parse(JSON.stringify(mock.root))});
     function stripNull(value){if(Array.isArray(value))return value.map(stripNull);if(value && typeof value==='object'){const out={};for(const [k,v]of Object.entries(value)){if(v!=null)out[k]=stripNull(v);}return out;}return value;}
     const user={uid:'anon-device',isAnonymous:true,getIdToken:async()=>'test.token'};
@@ -21,8 +21,13 @@ async function mockFirebase(page,{denied=false,family=FAMILY,familyExists=true,p
     mock.publish=(changes)=>{mock.root={...mock.root,...changes};for(const fn of mock.callbacks)fn(snap());};
     const app={name:'[DEFAULT]',auth:()=>auth,database:()=>database};auth.app=app;
     window.firebase={apps:[],auth(){},database(){},initializeApp(config,name){mock.apps.push(name || '[DEFAULT]');window.firebase.apps.push(app);return app;}};
-  },{denied,family,familyExists,person,signedIn});
+  },{denied,family,familyExists,person,signedIn,root});
 }
+test('existing records get the daily moves once and lose only the untouched old sample workout',async({page})=>{
+  const root=F.empty();root.workouts.simple={name:'A little movement',exercises:[{name:'Squats',kind:'reps',sets:2,target:10},{name:'Plank',kind:'seconds',sets:2,target:30}]};root.workouts.mine={name:'My own',exercises:[{name:'Walk',kind:'seconds',sets:1,target:600}]};
+  await mockFirebase(page,{person:'travis',root});await page.goto('/fitness/');await expect(page.getByTestId('daily-moves')).toContainText('0 of 3');
+  const workouts=await page.evaluate(()=>window.fitnessMock.root.workouts);expect(Object.keys(workouts).sort()).toEqual(['daily','mine']);expect(workouts.daily.exercises.map(e=>e.target)).toEqual([25,30,10]);
+});
 async function chooseTravis(page){await page.getByRole('button',{name:'Travis',exact:true}).click();}
 test('picking Travis syncs only his family path, live updates, and switching user returns to the picker',async({page})=>{
   await mockFirebase(page);await page.goto('/fitness/');await chooseTravis(page);await expect(page.getByTestId('remaining')).toHaveText('1,600');
@@ -97,7 +102,19 @@ test('backup restores reusable meals, favorites and targets, with a working repe
   await page.getByRole('button',{name:'Edit',exact:true}).click();await page.getByLabel('Calories (kcal)',{exact:true}).fill('300');await page.getByRole('button',{name:'Save reviewed nutrition'}).click();await expect(page.getByTestId('remaining')).toHaveText('1,400');
 });
 test('timed plank records elapsed seconds rather than planned seconds',async({page})=>{
-  await demo(page);await page.clock.install();await page.getByRole('link',{name:'Move',exact:true}).click();await page.getByRole('button',{name:'Start',exact:true}).click();await page.getByRole('button',{name:'Plank · 2 × 30 seconds'}).click();await page.getByRole('button',{name:'Start timer'}).click();await page.clock.fastForward(5500);await page.getByRole('button',{name:'Use time for last set'}).click();await expect(page.getByLabel('Completed seconds').last()).toHaveValue('5');await page.getByRole('button',{name:'Save completed sets'}).click();await expect(page.getByText(/30 sec \/ 5 sec/).first()).toBeVisible();
+  await demo(page);await page.clock.install();await page.getByRole('link',{name:'Move',exact:true}).click();await page.getByText('Log something else').click();await page.getByRole('button',{name:'+ Log movement'}).click();await page.getByLabel('Exercise',{exact:true}).fill('Long plank');await page.getByLabel('Track by').selectOption('seconds');await page.clock.pauseAt(new Date(Date.now()+2000));await page.getByRole('button',{name:'Start timer'}).click();await page.clock.fastForward(5500);await page.getByRole('button',{name:'Use time for last set'}).click();await expect(page.getByLabel('Completed seconds').last()).toHaveValue('5');await page.getByRole('button',{name:'Save completed sets'}).click();await expect(page.locator('#extraMovement').getByText(/· 5 sec$/).first()).toBeVisible();
+});
+test('daily moves are a one-tap checklist that can be undone and edited',async({page})=>{
+  await demo(page);const moves=page.getByTestId('daily-moves');
+  await expect(moves.getByRole('button')).toHaveText([/Push-ups\s*25/,/Plank\s*30 sec/,/Squats\s*10/]);await expect(moves).toContainText('0 of 3');
+  await moves.getByRole('button',{name:/Push-ups/}).click();await expect(moves.getByRole('button',{name:/Push-ups/})).toHaveAttribute('aria-pressed','true');await expect(moves).toContainText('1 of 3');
+  await moves.getByRole('button',{name:/Plank/}).click();await moves.getByRole('button',{name:/Squats/}).click();await expect(moves).toContainText('All done');
+  await moves.getByRole('button',{name:/Plank/}).click();await expect(moves).toContainText('2 of 3');
+  await page.getByRole('link',{name:'Move',exact:true}).click();await expect(page.getByTestId('daily-moves')).toContainText('2 of 3');
+  await page.getByRole('button',{name:'Edit daily moves'}).click();await page.getByLabel('Exercise name').fill('Lunges');await page.getByRole('button',{name:'+ Add exercise'}).click();await page.getByRole('button',{name:'Save workout'}).click();
+  await expect(page.getByTestId('daily-moves').getByRole('button')).toHaveCount(4);await expect(page.getByTestId('daily-moves')).toContainText('2 of 4');
+  const data=await (async()=>{await page.getByRole('link',{name:'More',exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Full JSON backup'}).click();return JSON.parse(fs.readFileSync(await(await pending).path(),'utf8'));})();
+  const logs=Object.values(data.exerciseLogs);expect(logs.map(l=>l.name).sort()).toEqual(['Push-ups','Squats']);expect(logs.every(l=>l.workoutId==='daily')).toBe(true);expect(logs.find(l=>l.name==='Push-ups').sets).toEqual([{reps:25}]);
 });
 test.describe('PWA public shell',()=>{
   test.use({serviceWorkers:'allow'});

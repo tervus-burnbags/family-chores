@@ -22,7 +22,14 @@ that; it is family-private, not private from family members.
 - **Describe a meal:** write what you ate and leave the calculation for later.
   Ask Codex **“Process my pending fitness meal notes.”** The review queue and
   exported notes preserve your words. The app does not send them to an AI API.
-- **Move:** log movement, customize workouts, use a plank timer, and set a nudge.
+- **Today's moves:** a daily reminder checklist, not a tracker: Push-ups 25,
+  Plank 30 sec, Squats 10. One tap marks a move done for the logging date (tap
+  again to undo); it records a plain exercise log with `workoutId: 'daily'`.
+  Edit the list via Move → Edit daily moves (stored as `workouts/daily`). Records
+  created before this existed get `workouts/daily` once on load, and the untouched
+  old "A little movement" sample is removed.
+- **Move:** the checklist, a reminder, and "Log something else" (collapsed) for
+  free-form movement, custom workouts and the plank timer.
   Download the recurring calendar event and open it in your phone's calendar for
   closed-app reminders. Calendar app import/notification settings govern alerts.
 - **Food:** save per-100-g foods; search USDA; look up or scan packaged barcodes;

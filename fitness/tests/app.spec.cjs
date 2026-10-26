@@ -17,7 +17,7 @@ async function backup(page){
 test('direct calories need no food library or protein; exercise does not change the budget',async({page})=>{
   await demo(page);await expect(page.getByTestId('remaining')).toHaveText('1,600');
   await manual(page);await expect(page.getByTestId('remaining')).toHaveText('1,150');
-  await page.getByRole('link',{name:'Move',exact:true}).click();await page.getByRole('button',{name:'+ Log movement'}).click();
+  await page.getByRole('link',{name:'Move',exact:true}).click();await page.getByText('Log something else').click();await page.getByRole('button',{name:'+ Log movement'}).click();
   await page.getByLabel('Exercise',{exact:true}).fill('Squats');await page.getByRole('button',{name:'Save completed sets'}).click();
   await page.getByRole('link',{name:'Today',exact:true}).click();await expect(page.getByTestId('remaining')).toHaveText('1,150');
   const data=await backup(page);expect(Object.values(data.exerciseLogs)).toHaveLength(1);expect(Object.values(data.foodLogs)[0].nutrition.protein).toBeNull();
