@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hub-v66';
+const CACHE_NAME = 'hub-v67';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,10 @@ const ASSETS = [
   './favicon-32.png',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/teams/gators.png',
+  './icons/teams/bearcats.png',
+  './icons/teams/bengals.png'
 ];
 const PUBLIC_ASSETS = new Set(ASSETS.map((asset) => new URL(asset, self.location.href).href));
 

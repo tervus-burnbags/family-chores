@@ -735,6 +735,18 @@
     .calendar-item-dot.louisa { background: var(--louisa); }
     .calendar-item-dot.jameson { background: #3a8a52; }
     .calendar-item-dot.games { background: #e8710a; }
+
+    .calendar-item-logo {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      object-fit: contain;
+      margin-top: 0;
+      padding: 2px;
+      border-radius: 6px;
+      background: #fff;
+      box-sizing: border-box;
+    }
     .calendar-item-dot.both { background: linear-gradient(135deg, var(--alex), var(--louisa)); }
 
     .calendar-item-body {
@@ -8442,6 +8454,31 @@
         return startText + ' - ' + end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       }
 
+      // Team games (tagged "games" by the Apps Script via the 🏀/🏈 in the title)
+      // show the real team logo in place of the dot. The mascot emoji in the
+      // Google Calendar title is dropped here since the logo replaces it.
+      var CALENDAR_TEAMS = [
+        { match: /gators/i, name: 'Florida Gators', logo: 'icons/teams/gators.png' },
+        { match: /bearcats/i, name: 'Cincinnati Bearcats', logo: 'icons/teams/bearcats.png' },
+        { match: /bengals/i, name: 'Cincinnati Bengals', logo: 'icons/teams/bengals.png' }
+      ];
+
+      function calendarTeamFor(event) {
+        if (!event || !Array.isArray(event.kids) || event.kids.indexOf('games') === -1) return null;
+        for (var i = 0; i < CALENDAR_TEAMS.length; i++) {
+          if (CALENDAR_TEAMS[i].match.test(event.title)) return CALENDAR_TEAMS[i];
+        }
+        return null;
+      }
+
+      function stripMascotEmoji(title) {
+        // 🐊 🐾 🐯 → removed; keep the 🏀/🏈 and leave one space after it.
+        return String(title)
+          .replace(/🐊|🐾|🐯/g, '')
+          .replace(/^(🏀|🏈)\s*/, '$1 ')
+          .trim();
+      }
+
       function renderCalendarBadges(members) {
         var MEMBER_LABELS = { alex: 'Alex', louisa: 'Louisa', jameson: 'Jameson', games: 'Game' };
         var normalized = Array.isArray(members) ? members.filter(Boolean) : [];
@@ -8483,10 +8520,15 @@
             '<div class="calendar-day-label">' + escapeBulletinHtml(formatCalendarDayLabel(date)) + '</div>' +
             groups[key].map(function (event) {
               var dotClass = event.kids && event.kids.length === 1 ? event.kids[0] : 'both';
+              var team = calendarTeamFor(event);
+              var marker = team
+                ? '<img class="calendar-item-logo" src="' + team.logo + '" alt="' + escapeBulletinHtml(team.name) + '" width="22" height="22" loading="lazy">'
+                : '<span class="calendar-item-dot ' + escapeBulletinHtml(dotClass) + '"></span>';
+              var title = team ? stripMascotEmoji(event.title) : event.title;
               return '<article class="calendar-item">' +
-                '<span class="calendar-item-dot ' + escapeBulletinHtml(dotClass) + '"></span>' +
+                marker +
                 '<div class="calendar-item-body">' +
-                  '<div class="calendar-item-title">' + escapeBulletinHtml(event.title) + '</div>' +
+                  '<div class="calendar-item-title">' + escapeBulletinHtml(title) + '</div>' +
                   '<div class="calendar-item-time">' + escapeBulletinHtml(formatCalendarTime(event)) + '</div>' +
                 '</div>' +
                 '<div class="calendar-badges">' + renderCalendarBadges(event.kids) + '</div>' +
