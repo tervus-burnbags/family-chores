@@ -4,7 +4,8 @@ const MAX_DAYS = 30;
 const MEMBER_RULES = {
   alex: ['alex'],
   louisa: ['louisa', 'lou'],
-  jameson: ['jameson', 'jamie']
+  jameson: ['jameson', 'jamie'],
+  games: ['🏀', '🏈']   // team games (Bengals, Gators, Bearcats) — see CALENDAR_SCHEMA.md
 };
 
 function doGet(e) {

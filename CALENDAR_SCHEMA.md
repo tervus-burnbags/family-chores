@@ -43,6 +43,7 @@ The Apps Script derives the `members` array from names anywhere in the event —
 | `Louisa` | `["louisa"]` | Louisa's color |
 | `Jamie` *or* `Jameson` | `["jameson"]` | green |
 | `Alex` and `Louisa` | `["alex","louisa"]` | blended both-kids |
+| `🏀` or `🏈` | `["games"]` | orange, "Game" badge |
 | no recognized name | — | **event does not appear** |
 
 Both dog spellings already work. No script change is needed to support "Jamie".
@@ -117,6 +118,20 @@ A duplicate row is worse than an imperfect one. If an existing entry is tagged t
 ### Both kids, one school
 
 Alex and Louisa attend the same school, so most school-wide items (no-school days, picture day, dress down, flag ceremonies, back-to-school night) belong to **both**. Title those `Alex and Louisa - ...` rather than creating two events.
+
+---
+
+## Team games (standing sync)
+
+**Standing request (2026-11-17): on every run, add new and update changed games for the Cincinnati Bengals and the Florida Gators (men's basketball and football).** Cincinnati Bearcats men's basketball and football were added in the same pass; keep them updated too unless told otherwise.
+
+- **Calendar:** `travis.browning@gmail.com` only. No guests, ever.
+- **Only add a game once its time is known.** Skip `TBA`, blank, and "X or Y PM" listings; add them on a later run once the time is set. That covers NFL flex weeks, bowl games and conference tournaments.
+- **Title:** `<sport emoji><mascot emoji> <Team> vs. <Opponent>` for home or neutral games, `at` for away games. Sport: 🏀 / 🏈. Mascot: 🐊 Gators, 🐾 Bearcats, 🐯 Bengals. Example: `🏀🐊 Gators at LSU`.
+- **Fields:** location = venue/city. Description = program · Home/Away/neutral · event name, then "Time is Eastern, from <source>." Set the timezone to `America/New_York`. Duration: 2h basketball, 3.5h college football, 3h15m NFL. `availability: FREE`, and a single popup reminder 15 minutes before.
+- **Sources:** basketball and football schedules at `floridagators.com/sports/<sport>/schedule/text` (an HTML table) and `gobearcats.com/sports/<sport>/schedule` (the `/text` version 404s). For the Bengals, use `site.api.espn.com/apis/site/v2/sports/football/nfl/teams/cin/schedule?season=YYYY&seasontype=2`, where `timeValid: false` means the time is not set yet.
+- **Updating:** list existing events (`fullText: Gators` / `Bearcats` / `Bengals`). If a time moved, `update_event` the existing row rather than adding a new one. Delete a game only if it is cancelled. A game a parent already added under another title (for example `Bengals vs. Panthers` on 2026-12-20, from Christina's invite) counts as already there.
+- **On the Hub:** the Apps Script tags any event containing 🏀 or 🏈 as member `games`, which shows an orange dot and a "Game" badge. **The leading sport emoji is what makes a game appear at all**, so never drop it from the title.
 
 ---
 
