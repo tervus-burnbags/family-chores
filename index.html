@@ -8496,8 +8496,11 @@
       var CALENDAR_TEAMS = [
         { match: /gators/i, name: 'Florida Gators', logo: 'icons/teams/gators.png' },
         { match: /bearcats/i, name: 'Cincinnati Bearcats', logo: 'icons/teams/bearcats.png' },
-        { match: /bengals/i, name: 'Cincinnati Bengals', logo: 'icons/teams/bengals.png' }
+        { match: /bengals/i, name: 'Cincinnati Bengals', logo: 'icons/teams/bengals.png' },
+        { match: /charlotte fc/i, name: 'Charlotte FC', logo: 'icons/teams/charlotte-fc.png' }
       ];
+      // 🏀 🏈 ⚽ (⚽ may carry a U+FE0F variation selector).
+      var SPORT_EMOJI_PREFIX = /^(🏀|🏈|⚽️?)\s*/;
 
       function calendarTeamFor(event) {
         if (!event || !Array.isArray(event.kids) || event.kids.indexOf('games') === -1) return null;
@@ -8508,10 +8511,10 @@
       }
 
       function stripMascotEmoji(title) {
-        // 🐊 🐾 🐯 → removed; keep the 🏀/🏈 and leave one space after it.
+        // 🐊 🐾 🐯 👑 → removed; keep the sport emoji and leave one space after it.
         return String(title)
-          .replace(/🐊|🐾|🐯/g, '')
-          .replace(/^(🏀|🏈)\s*/, '$1 ')
+          .replace(/🐊|🐾|🐯|👑/g, '')
+          .replace(SPORT_EMOJI_PREFIX, '$1 ')
           .trim();
       }
 
@@ -8600,7 +8603,7 @@
         var start = new Date(next.start);
         var when = start.toLocaleDateString([], { weekday: 'short' }) + ' ' +
           start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        var title = stripMascotEmoji(next.title).replace(/^(🏀|🏈)\s*/, '');
+        var title = stripMascotEmoji(next.title).replace(SPORT_EMOJI_PREFIX, '');
         return 'Next: ' + title + ' · ' + when;
       }
 
@@ -8901,7 +8904,7 @@
         }
 
         if (options.bare) {
-          return { count: active.length, html: (dismissed.length ? head : '') + body + dismissedMarkup };
+          return { count: active.length, html: head + body + dismissedMarkup };
         }
         return head + body + dismissedMarkup;
       }

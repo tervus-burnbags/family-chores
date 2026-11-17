@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('renders the Around Charlotte section', async ({ page }) => {
-  await expect(page.locator('.events-head .hub-section-head')).toHaveText('Around Charlotte');
+  await expect(page.locator('details[data-home-section="charlotte"] summary .hub-section-head')).toHaveText('Around Charlotte');
 });
 
 test('hides expired events but keeps one ending today', async ({ page }) => {
