@@ -771,6 +771,7 @@
     .calendar-item-dot.louisa { background: var(--louisa); }
     .calendar-item-dot.jameson { background: #3a8a52; }
     .calendar-item-dot.games { background: #e8710a; }
+    .calendar-item-dot.garden { background: #6b8e23; }
 
     .calendar-item-logo {
       width: 22px;
@@ -848,6 +849,11 @@
     .calendar-badge.games {
       background: rgba(232, 113, 10, 0.12);
       color: #c25e08;
+    }
+
+    .calendar-badge.garden {
+      background: rgba(107, 142, 35, 0.14);
+      color: #55721b;
     }
 
     .calendar-badge.both {
@@ -9632,7 +9638,7 @@
       }
 
       function renderCalendarBadges(members) {
-        var MEMBER_LABELS = { alex: 'Alex', louisa: 'Louisa', jameson: 'Jameson', games: 'Game' };
+        var MEMBER_LABELS = { alex: 'Alex', louisa: 'Louisa', jameson: 'Jameson', games: 'Game', garden: 'Garden' };
         var normalized = Array.isArray(members) ? members.filter(Boolean) : [];
         if (!normalized.length) {
           return '<span class="calendar-badge both">Family</span>';

@@ -44,6 +44,7 @@ The Apps Script derives the `members` array from names anywhere in the event —
 | `Jamie` *or* `Jameson` | `["jameson"]` | green |
 | `Alex` and `Louisa` | `["alex","louisa"]` | blended both-kids |
 | `🏀`, `🏈` or `⚽` | `["games"]` | team logo, "Game" badge |
+| `🌱` | `["garden"]` | olive dot, "Garden" badge |
 | no recognized name | — | **event does not appear** |
 
 Both dog spellings already work. No script change is needed to support "Jamie".
@@ -132,6 +133,17 @@ Alex and Louisa attend the same school, so most school-wide items (no-school day
 - **Sources:** basketball and football schedules at `floridagators.com/sports/<sport>/schedule/text` (an HTML table) and `gobearcats.com/sports/<sport>/schedule` (the `/text` version 404s). For the Bengals, use `site.api.espn.com/apis/site/v2/sports/football/nfl/teams/cin/schedule?season=YYYY&seasontype=2`, where `timeValid: false` means the time is not set yet. For Charlotte FC, use `charlottefootballclub.com/schedule/` as the authority, with ESPN `.../soccer/usa.1/teams/21300/schedule?fixture=true` for the fixture list. Duration: 2h.
 - **Updating:** list existing events (`fullText: Gators` / `Bearcats` / `Bengals` / `Charlotte FC`). If a time moved, `update_event` the existing row rather than adding a new one. Delete a game only if it is cancelled. A game a parent already added under another title (for example `Bengals vs. Panthers` on 2026-12-20, from Christina's invite) counts as already there.
 - **On the Hub:** the Apps Script tags any event containing 🏀, 🏈 or ⚽ as member `games`, which shows a "Game" badge in the Hub's Games section (one-week window, below Family). **The leading sport emoji is what makes a game appear at all**, so never drop it from the title. The Hub swaps the dot for the real team logo (`icons/teams/`) when the title contains `Gators`, `Bearcats`, `Bengals` or `Charlotte FC`, and hides the mascot emoji. A new team needs a logo file and an entry in `CALENDAR_TEAMS` in `index.html`; otherwise it falls back to an orange dot.
+
+---
+
+## Garden planting days (standing sync)
+
+**Standing request (2026-11-17):** another assistant maintains the planting calendar at **`ME/Garden/Garden calendar.md`** (outside this repo, one folder up from it: `../Garden/Garden calendar.md`). On every run, read that file and make the calendar match it.
+
+- **Source of truth:** the file's events table (Date, Time, Title, Description) plus its "Bed layout line". Follow the file's own instructions for calendar, time zone, reminder and description, with one addition: **prefix every title with `🌱 `**. `Sow: chard` becomes `🌱 Sow: chard`. The file asks for titles "word for word"; the 🌱 is the Hub's tag on top of that and is expected.
+- **Fields:** primary calendar, no guests, `America/New_York`, not recurring. Description = the row's Description, a newline, then the bed layout line. A single popup reminder at 10080 minutes (1 week).
+- **Syncing:** list existing garden events (`fullText: Bed 1 from the sunny end`, or search `🌱`) and match each table row by date. Update the title, time or description in place when the row changed (`notificationLevel: NONE`). Create rows that are new. Delete an event only when its row is gone from the file. Never duplicate.
+- **On the Hub:** the Apps Script tags any event containing 🌱 as member `garden`. These show in the **Family** section (the normal calendar window, `config/calendarDays`, currently 14 days) with an olive dot and a "Garden" badge. They are not split into their own section. Never put 🌱 in a non-garden title.
 
 ---
 
