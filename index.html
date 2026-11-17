@@ -684,6 +684,42 @@
       color: var(--muted);
     }
 
+    /* Collapsible Home sections (Family / Games / Around Charlotte) */
+    .home-section > summary {
+      list-style: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .home-section > summary::-webkit-details-marker { display: none; }
+
+    .home-section > summary h3 { margin: 0; }
+
+    .home-section-aside {
+      flex: 1;
+      min-width: 0;
+      margin-left: 10px;
+      font-size: var(--font-xs);
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+
+    .home-section-chevron {
+      flex: 0 0 auto;
+      margin-left: 8px;
+      font-size: var(--font-xs);
+      color: var(--muted);
+      transition: transform 0.15s ease;
+    }
+
+    .home-section:not([open]) .home-section-chevron { transform: rotate(-90deg); }
+
+    .home-section-body { padding-bottom: 4px; }
+
     .calendar-groups {
       display: grid;
       gap: 0;
@@ -8491,21 +8527,100 @@
         }).join('');
       }
 
-      function renderCalendarSection(calendarState) {
+      // === Home sections: Family / Games / Around Charlotte ===
+      // Each is a <details> so it can be collapsed. All start open; a section a
+      // viewer closes stays closed on that device only (per-viewer convenience).
+      var HOME_SECTIONS_KEY = 'familyHub.homeSections';
+      var GAMES_WINDOW_DAYS = 7;
+
+      function readHomeSectionState() {
+        try {
+          var parsed = JSON.parse(localStorage.getItem(HOME_SECTIONS_KEY) || '{}');
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function saveHomeSectionOpen(id, isOpen) {
+        try {
+          var current = readHomeSectionState();
+          current[id] = Boolean(isOpen);
+          localStorage.setItem(HOME_SECTIONS_KEY, JSON.stringify(current));
+        } catch (error) { /* storage unavailable: section just resets to open */ }
+      }
+
+      function renderHomeSection(id, title, aside, body) {
+        var saved = readHomeSectionState()[id];
+        var isOpen = saved === undefined ? true : Boolean(saved);
+        return '<details class="home-section" data-home-section="' + escapeBulletinHtml(id) + '"' + (isOpen ? ' open' : '') + '>' +
+          '<summary class="bulletin-calendar-head">' +
+            '<h3 class="hub-section-head">' + escapeBulletinHtml(title) + '</h3>' +
+            (aside ? '<span class="home-section-aside">' + escapeBulletinHtml(aside) + '</span>' : '') +
+            '<span class="home-section-chevron" aria-hidden="true">&#9662;</span>' +
+          '</summary>' +
+          '<div class="home-section-body">' + body + '</div>' +
+        '</details>';
+      }
+
+      function bindHomeSectionToggles(container) {
+        if (!container) return;
+        Array.prototype.forEach.call(container.querySelectorAll('details[data-home-section]'), function (el) {
+          el.addEventListener('toggle', function () {
+            saveHomeSectionOpen(el.getAttribute('data-home-section'), el.open);
+          });
+        });
+      }
+
+      function isGameEvent(event) {
+        return Boolean(event && Array.isArray(event.kids) && event.kids.indexOf('games') !== -1);
+      }
+
+      function splitCalendarEvents(events) {
+        var cutoff = Date.now() + GAMES_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+        var family = [];
+        var games = [];
+        (events || []).forEach(function (event) {
+          if (!isGameEvent(event)) {
+            family.push(event);
+          } else if (new Date(event.start).getTime() < cutoff) {
+            games.push(event);
+          }
+        });
+        return { family: family, games: games };
+      }
+
+      function nextGameSummary(games) {
+        var now = Date.now();
+        var next = games.filter(function (event) {
+          var end = new Date(event.end || event.start).getTime();
+          return !Number.isNaN(end) && end > now;
+        })[0];
+        if (!next) return '';
+        var start = new Date(next.start);
+        var when = start.toLocaleDateString([], { weekday: 'short' }) + ' ' +
+          start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        var title = stripMascotEmoji(next.title).replace(/^(🏀|🏈)\s*/, '');
+        return 'Next: ' + title + ' · ' + when;
+      }
+
+      function renderCalendarSection(calendarState, options) {
+        options = options || {};
         if (calendarState.status === 'missing-url') {
           return '<div class="calendar-empty"><strong>Set up calendar in settings.</strong><p>Tap the gear icon in the header to add your Google Calendar URL.</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="open-settings">Open settings</button></div></div>';
         }
         if (calendarState.status === 'error') {
           return '<div class="calendar-empty"><strong>Calendar unavailable.</strong><p>' + escapeBulletinHtml(calendarState.error || 'We could not load events right now.') + '</p><div class="family-panel-actions"><button type="button" class="bulletin-btn secondary" data-calendar-action="retry">Retry</button></div></div>';
         }
-        if (!calendarState.events.length) {
+        var events = Array.isArray(options.events) ? options.events : calendarState.events;
+        if (!events.length) {
           var rt = runtime();
-          var daysAhead = Number(rt && rt.currentConfig && rt.currentConfig.calendarDays) || 10;
-          return '<div class="calendar-empty"><strong>No upcoming events.</strong><p>Nothing in the next ' + daysAhead + ' days.</p></div>';
+          var daysAhead = options.days || Number(rt && rt.currentConfig && rt.currentConfig.calendarDays) || 10;
+          return '<div class="calendar-empty"><strong>' + escapeBulletinHtml(options.emptyTitle || 'No upcoming events.') + '</strong><p>Nothing in the next ' + daysAhead + ' days.</p></div>';
         }
 
         var groups = {};
-        calendarState.events.forEach(function (event) {
+        events.forEach(function (event) {
           var startDate = new Date(event.start);
           if (Number.isNaN(startDate.getTime())) return;
           var key = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
@@ -8535,7 +8650,7 @@
               '</article>';
             }).join('') +
           '</section>';
-        }).join('') + '</div>' + (calendarState.stale ? '<p class="settings-note">Showing saved events while the latest refresh is unavailable.</p>' : '');
+        }).join('') + '</div>' + (calendarState.stale && !options.hideStaleNote ? '<p class="settings-note">Showing saved events while the latest refresh is unavailable.</p>' : '');
       }
 
       // === Around Charlotte — curated local events ===
@@ -8741,7 +8856,8 @@
         '</article>';
       }
 
-      function renderEventsSection() {
+      function renderEventsSection(options) {
+        options = options || {};
         var all = Object.keys(eventsState.eventsById).map(function (id) {
           return eventsState.eventsById[id];
         });
@@ -8754,8 +8870,10 @@
           return event.interest !== 'no' && event.plan !== 'not-going' && !isEventExpired(event);
         }));
 
+        // Inside a collapsible Home section the title lives in <summary>, so only
+        // the "set aside" toggle stays here (a button can't sit inside <summary>).
         var head = '<div class="events-head">' +
-          '<h3 class="hub-section-head">Around Charlotte</h3>' +
+          (options.bare ? '<span></span>' : '<h3 class="hub-section-head">Around Charlotte</h3>') +
           (dismissed.length
             ? '<button type="button" class="events-dismissed-toggle" data-events-toggle-dismissed="1">' +
                 dismissed.length + ' set aside ' + (state.showDismissedEvents ? '&#9652;' : '&#9662;') +
@@ -8782,6 +8900,9 @@
           }).join('') + '</div>';
         }
 
+        if (options.bare) {
+          return { count: active.length, html: (dismissed.length ? head : '') + body + dismissedMarkup };
+        }
         return head + body + dismissedMarkup;
       }
 
@@ -9201,6 +9322,27 @@
         var calendarState = await fetchCalendarEvents(phase);
         var visibleNotes = notes.slice(0, 10);
 
+        // Family first so kid events are never buried under games; games get a
+        // shorter one-week window; Around Charlotte last.
+        var homeSectionsMarkup;
+        if (calendarState.status === 'ready') {
+          var split = splitCalendarEvents(calendarState.events);
+          var familyCount = split.family.length;
+          homeSectionsMarkup =
+            renderHomeSection('family', 'Family', familyCount ? familyCount + ' coming up' : '',
+              renderCalendarSection(calendarState, { events: split.family, emptyTitle: 'Nothing coming up for the family.' })) +
+            '<div class="bulletin-divider"></div>' +
+            renderHomeSection('games', 'Games', nextGameSummary(split.games),
+              renderCalendarSection(calendarState, { events: split.games, days: GAMES_WINDOW_DAYS, emptyTitle: 'No games this week.', hideStaleNote: true }));
+        } else {
+          // Missing URL or fetch error: one message, under Family.
+          homeSectionsMarkup = renderHomeSection('family', 'Family', '', renderCalendarSection(calendarState));
+        }
+        var charlotte = renderEventsSection({ bare: true });
+        homeSectionsMarkup +=
+          '<div class="bulletin-divider"></div>' +
+          renderHomeSection('charlotte', 'Around Charlotte', charlotte.count ? charlotte.count + (charlotte.count === 1 ? ' idea' : ' ideas') : '', charlotte.html);
+
         var notesMarkup = visibleNotes.length
           ? '<div class="bulletin-notes-grid">' + visibleNotes.map(function (note, index) {
               return '<article class="bulletin-note-card ' + escapeBulletinHtml(note.color || 'neutral') + '" style="transform:rotate(' + getNoteRotation(note, index) + 'deg)">' +
@@ -9237,11 +9379,9 @@
             composeMarkup +
             notesMarkup +
             '<div class="bulletin-divider"></div>' +
-            '<div class="bulletin-calendar-head"><h3 class="hub-section-head">Coming Up</h3></div>' +
-            renderCalendarSection(calendarState) +
-            '<div class="bulletin-divider"></div>' +
-            renderEventsSection() +
+            homeSectionsMarkup +
           '</div>';
+        bindHomeSectionToggles(container);
 
         var noteInput = document.getElementById('bulletinNoteInput');
         if (noteInput && state.composeOpen) {

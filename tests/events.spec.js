@@ -159,5 +159,6 @@ test('interest survives declining one occasion', async ({ page }) => {
 
 test('does not break the rest of the Home tab', async ({ page }) => {
   await expect(page.locator('#bulletinNewNoteBtn')).toBeVisible();
-  await expect(page.locator('.bulletin-calendar-head')).toContainText('Coming Up');
+  await expect(page.locator('details[data-home-section="family"] summary')).toContainText('Family');
+  await expect(page.locator('details[data-home-section="charlotte"] summary')).toContainText('Around Charlotte');
 });
