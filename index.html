@@ -3526,23 +3526,313 @@
       margin-bottom: 8px;
     }
 
-    .game-player-input {
-      width: 88px;
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.95rem;
-      padding: 4px 8px;
+    .game-player-select {
+      -webkit-appearance: none;
+      appearance: none;
+      min-width: 104px;
+      min-height: 40px;
+      padding: 6px 30px 6px 14px;
       border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      background: var(--panel-alt);
+      border-radius: 999px;
+      background: var(--panel-alt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 800;
+      text-align: center;
+      cursor: pointer;
     }
 
-    .game-player-input.p1 {
+    .game-player-select.p1 {
       color: var(--alex);
     }
 
-    .game-player-input.p2 {
+    .game-player-select.p2 {
       color: var(--louisa);
+    }
+
+    .mm-status,
+    .arcade-first {
+      font-size: var(--font-sm);
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      margin: 0;
+    }
+
+    .mm-status .alex,
+    .arcade-turn .alex,
+    .arcade-first .alex,
+    .arcade-level-row .alex,
+    .arcade-handoff .alex,
+    .arcade-results .alex {
+      color: var(--alex);
+    }
+
+    .mm-status .louisa,
+    .arcade-turn .louisa,
+    .arcade-first .louisa,
+    .arcade-level-row .louisa,
+    .arcade-handoff .louisa,
+    .arcade-results .louisa {
+      color: var(--louisa);
+    }
+
+    .mm-status.game-won {
+      font-size: 1.4rem;
+      padding: 8px;
+      animation: win-pulse 0.6s ease-out;
+    }
+
+    .mm-pairs {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .mm-pairs .alex { color: var(--alex); }
+    .mm-pairs .louisa { color: var(--louisa); }
+
+    .mm-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .mm-card {
+      aspect-ratio: 1 / 1;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4a90d9, #8a5bd1);
+      box-shadow: inset 0 -3px 0 rgba(15, 23, 42, 0.18);
+      color: var(--text);
+      font-size: clamp(1.4rem, 8vw, 2.2rem);
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+
+    .mm-card:not(.up)::after {
+      content: '?';
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 1.3rem;
+      font-weight: 900;
+    }
+
+    .mm-card:disabled {
+      cursor: default;
+    }
+
+    .mm-card.up {
+      background: #fff;
+      box-shadow: inset 0 0 0 2px var(--line);
+    }
+
+    .mm-card.flipping {
+      animation: mm-flip 0.22s ease-out;
+    }
+
+    .mm-card.found.p1 {
+      background: #eaf3ff;
+      box-shadow: inset 0 0 0 3px var(--alex);
+    }
+
+    .mm-card.found.p2 {
+      background: #f3edff;
+      box-shadow: inset 0 0 0 3px var(--louisa);
+    }
+
+    @keyframes mm-flip {
+      0% { transform: scaleX(0.2); }
+      100% { transform: scaleX(1); }
+    }
+
+    .arcade-level-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .arcade-level-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .level-chip {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-alt);
+      color: var(--text);
+      font: inherit;
+      font-size: var(--font-sm);
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .level-chip.active {
+      background: var(--alex);
+      border-color: var(--alex);
+      color: #fff;
+    }
+
+    .level-chip.p2.active {
+      background: var(--louisa);
+      border-color: var(--louisa);
+    }
+
+    .arcade-how {
+      text-align: center;
+      font-size: var(--font-sm);
+    }
+
+    .arcade-turn {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-size: var(--font-md);
+    }
+
+    .arcade-turn span {
+      color: var(--muted);
+      font-size: var(--font-sm);
+      font-weight: 700;
+    }
+
+    .arcade-stage {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .arcade-hud {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+    }
+
+    .arcade-score {
+      font-size: 1.6rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .arcade-extra {
+      color: var(--muted);
+      font-size: var(--font-sm);
+    }
+
+    .arcade-canvas {
+      display: block;
+      border-radius: 14px;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .arcade-pad {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .arcade-pad-dpad {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-areas: ". up ." "left down right";
+      max-width: 260px;
+    }
+
+    .arcade-pad-dpad .up { grid-area: up; }
+    .arcade-pad-dpad .left { grid-area: left; }
+    .arcade-pad-dpad .down { grid-area: down; }
+    .arcade-pad-dpad .right { grid-area: right; }
+
+    .arcade-pad-lr {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .arcade-pad-row {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .arcade-btn {
+      min-height: 58px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--panel-alt);
+      box-shadow: inset 0 -3px 0 rgba(15, 23, 42, 0.12);
+      color: var(--text);
+      font: inherit;
+      font-size: 1.5rem;
+      font-weight: 900;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .arcade-btn.accent {
+      background: var(--alex);
+      color: #fff;
+    }
+
+    .arcade-btn.pressed {
+      transform: scale(0.94);
+      filter: brightness(0.92);
+    }
+
+    .arcade-handoff {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .arcade-handoff p {
+      margin: 0;
+    }
+
+    .arcade-big {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text) !important;
+    }
+
+    .arcade-results {
+      display: grid;
+      gap: 8px;
+    }
+
+    .arcade-result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      background: var(--panel-alt);
+      font-weight: 700;
+    }
+
+    .arcade-result-row.won {
+      box-shadow: inset 0 0 0 2px #22c55e;
+      background: #effcf3;
     }
 
     .game-vs {
@@ -7475,6 +7765,775 @@
       }, 300);
     })();
   </script>
+  <script>
+    // Hub Arcade: canvas engines for the Fun tab's pass-the-phone score battles
+    // (Snake, Brick Breaker, Block Drop). Each turn mounts one engine into a host
+    // element. The engine reports the final score through opts.onEnd, and stops
+    // itself if its canvas leaves the page (Back button, tab tap, re-render).
+    (function () {
+      var LEVEL_INDEX = { slow: 0, medium: 1, fast: 2 };
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function shuffle(list) {
+        for (var i = list.length - 1; i > 0; i -= 1) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = list[i];
+          list[i] = list[j];
+          list[j] = tmp;
+        }
+        return list;
+      }
+
+      function roundRect(ctx, x, y, w, h, r) {
+        r = Math.max(0, Math.min(r, w / 2, h / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      function drawBlock(ctx, x, y, w, h, color) {
+        var pad = Math.max(1, Math.min(w, h) * 0.06);
+        var radius = Math.min(w, h) * 0.24;
+        roundRect(ctx, x + pad, y + pad, w - pad * 2, h - pad * 2, radius);
+        ctx.fillStyle = color;
+        ctx.fill();
+        roundRect(ctx, x + pad * 2.5, y + pad * 2, w - pad * 5, (h - pad * 4) * 0.34, radius * 0.6);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fill();
+      }
+
+      function levelIndex(level) {
+        return LEVEL_INDEX[level] != null ? LEVEL_INDEX[level] : 1;
+      }
+
+      function createShell(host, padClass) {
+        host.innerHTML = '';
+        var hud = el('div', 'arcade-hud');
+        var scoreEl = el('span', 'arcade-score', '0');
+        var extraEl = el('span', 'arcade-extra', '');
+        hud.appendChild(scoreEl);
+        hud.appendChild(extraEl);
+        var canvas = el('canvas', 'arcade-canvas');
+        var pad = el('div', 'arcade-pad ' + padClass);
+        host.appendChild(hud);
+        host.appendChild(canvas);
+        host.appendChild(pad);
+        return { scoreEl: scoreEl, extraEl: extraEl, canvas: canvas, pad: pad };
+      }
+
+      function availableSize(host) {
+        return {
+          width: Math.min(host.clientWidth || 320, 420),
+          height: clamp(window.innerHeight * 0.5, 240, 520)
+        };
+      }
+
+      function sizeCanvas(canvas, cssW, cssH) {
+        var dpr = Math.min(window.devicePixelRatio || 1, 3);
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        var ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return ctx;
+      }
+
+      function canvasPoint(canvas, event) {
+        var rect = canvas.getBoundingClientRect();
+        return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      }
+
+      function makeController(shell) {
+        var ctl = { alive: true, phase: 'countdown', score: 0, canvas: shell.canvas, cleanups: [], raf: 0, gameOver: function () {} };
+        ctl.setScore = function (value) {
+          ctl.score = value;
+          shell.scoreEl.textContent = String(value);
+        };
+        ctl.setExtra = function (text) {
+          shell.extraEl.textContent = text;
+        };
+        ctl.stop = function () {
+          if (!ctl.alive) return;
+          ctl.alive = false;
+          cancelAnimationFrame(ctl.raf);
+          ctl.cleanups.forEach(function (fn) {
+            try { fn(); } catch (error) { console.error(error); }
+          });
+          ctl.cleanups = [];
+        };
+        ctl.visible = function () {
+          return ctl.alive && ctl.canvas.isConnected && ctl.canvas.offsetParent !== null;
+        };
+        // handler(key, isDown) returns true when it used the key.
+        ctl.onKey = function (handler) {
+          function onDown(event) {
+            if (ctl.visible() && handler(event.key, true)) event.preventDefault();
+          }
+          function onUp(event) {
+            if (ctl.visible()) handler(event.key, false);
+          }
+          document.addEventListener('keydown', onDown);
+          document.addEventListener('keyup', onUp);
+          ctl.cleanups.push(function () {
+            document.removeEventListener('keydown', onDown);
+            document.removeEventListener('keyup', onUp);
+          });
+        };
+        // A big on-screen button. Holding it repeats onDown every repeatMs.
+        ctl.button = function (label, ariaLabel, extraClass, onDown, onUp, repeatMs) {
+          var button = el('button', 'arcade-btn' + (extraClass ? ' ' + extraClass : ''), label);
+          button.type = 'button';
+          button.setAttribute('aria-label', ariaLabel);
+          shell.pad.appendChild(button);
+          var delay = null;
+          var timer = null;
+          var held = false;
+          function start(event) {
+            event.preventDefault();
+            held = true;
+            button.classList.add('pressed');
+            onDown();
+            if (repeatMs) {
+              delay = setTimeout(function () { timer = setInterval(onDown, repeatMs); }, 200);
+            }
+          }
+          function end() {
+            clearTimeout(delay);
+            clearInterval(timer);
+            delay = null;
+            timer = null;
+            button.classList.remove('pressed');
+            if (held && onUp) onUp();
+            held = false;
+          }
+          button.addEventListener('pointerdown', start);
+          button.addEventListener('pointerup', end);
+          button.addEventListener('pointerleave', end);
+          button.addEventListener('pointercancel', end);
+          button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+          ctl.cleanups.push(end);
+          return button;
+        };
+        return ctl;
+      }
+
+      function drawOverlay(ctx, w, h, big, small, bigScale) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 ' + Math.round(w * (bigScale || 0.2)) + 'px system-ui, sans-serif';
+        ctx.fillText(big, w / 2, h / 2 - (small ? w * 0.05 : 0));
+        if (small) {
+          ctx.font = '700 ' + Math.round(w * 0.065) + 'px system-ui, sans-serif';
+          ctx.fillText(small, w / 2, h / 2 + w * 0.09);
+        }
+      }
+
+      // Drives countdown -> play -> game over. hooks: ctx, w, h, update(dt), draw(), unit, onEnd(score).
+      function run(ctl, hooks) {
+        var countdown = 3.6;
+        var overTimer = 0;
+        var last = performance.now();
+        ctl.gameOver = function () {
+          if (ctl.phase !== 'play') return;
+          ctl.phase = 'over';
+          overTimer = 1.8;
+        };
+        function frame(now) {
+          if (!ctl.alive) return;
+          if (!ctl.canvas.isConnected) {
+            ctl.stop();
+            return;
+          }
+          var dt = clamp((now - last) / 1000, 0, 0.05);
+          last = now;
+          if (ctl.canvas.offsetParent !== null) {
+            if (ctl.phase === 'countdown') {
+              countdown -= dt;
+              if (countdown <= 0) ctl.phase = 'play';
+            } else if (ctl.phase === 'play') {
+              hooks.update(dt);
+            } else if (ctl.phase === 'over') {
+              overTimer -= dt;
+              if (overTimer <= 0) {
+                var finalScore = ctl.score;
+                ctl.stop();
+                setTimeout(function () { hooks.onEnd(finalScore); }, 0);
+                return;
+              }
+            }
+            hooks.draw();
+            if (ctl.phase === 'countdown') {
+              drawOverlay(hooks.ctx, hooks.w, hooks.h, countdown > 0.6 ? String(Math.ceil(countdown - 0.6)) : 'Go!', null, 0.24);
+            } else if (ctl.phase === 'over') {
+              drawOverlay(hooks.ctx, hooks.w, hooks.h, 'Game over', ctl.score + ' ' + hooks.unit, 0.13);
+            }
+          }
+          ctl.raf = requestAnimationFrame(frame);
+        }
+        ctl.raf = requestAnimationFrame(frame);
+      }
+
+      // ── Snake ────────────────────────────────────────────────────────────
+      function startSnake(host, opts) {
+        var lv = levelIndex(opts.level);
+        var shell = createShell(host, 'arcade-pad-dpad');
+        var ctl = makeController(shell);
+        var N = 15;
+        var avail = availableSize(host);
+        var cell = Math.floor(Math.min(avail.width, avail.height) / N);
+        var size = cell * N;
+        var ctx = sizeCanvas(shell.canvas, size, size);
+        var wrap = lv === 0;
+        var stepMs = [240, 165, 120][lv];
+        var minStep = [240, 115, 80][lv];
+        var color = opts.color || '#4a90d9';
+        var snake = [{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }];
+        var dir = { x: 1, y: 0 };
+        var queue = [];
+        var acc = 0;
+        var food = placeFood();
+
+        ctl.setExtra(wrap ? 'Walls wrap around' : 'Don\'t touch the walls');
+
+        function placeFood() {
+          var free = [];
+          for (var y = 0; y < N; y += 1) {
+            for (var x = 0; x < N; x += 1) {
+              if (!snake.some(function (p) { return p.x === x && p.y === y; })) free.push({ x: x, y: y });
+            }
+          }
+          return free.length ? free[Math.floor(Math.random() * free.length)] : null;
+        }
+
+        function turn(dx, dy) {
+          if (ctl.phase === 'over') return;
+          var lastDir = queue.length ? queue[queue.length - 1] : dir;
+          if ((lastDir.x === -dx && lastDir.y === -dy) || (lastDir.x === dx && lastDir.y === dy)) return;
+          if (queue.length < 2) queue.push({ x: dx, y: dy });
+        }
+
+        function tick() {
+          if (queue.length) dir = queue.shift();
+          var head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+          if (wrap) {
+            head.x = (head.x + N) % N;
+            head.y = (head.y + N) % N;
+          } else if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N) {
+            ctl.gameOver();
+            return;
+          }
+          var eating = food && head.x === food.x && head.y === food.y;
+          var body = eating ? snake : snake.slice(0, -1);
+          if (body.some(function (p) { return p.x === head.x && p.y === head.y; })) {
+            ctl.gameOver();
+            return;
+          }
+          snake.unshift(head);
+          if (eating) {
+            ctl.setScore(ctl.score + 1);
+            stepMs = Math.max(minStep, stepMs - 4);
+            food = placeFood();
+            if (!food) ctl.gameOver();
+          } else {
+            snake.pop();
+          }
+        }
+
+        function update(dt) {
+          acc += dt * 1000;
+          while (acc >= stepMs && ctl.phase === 'play') {
+            acc -= stepMs;
+            tick();
+          }
+        }
+
+        function draw() {
+          for (var y = 0; y < N; y += 1) {
+            for (var x = 0; x < N; x += 1) {
+              ctx.fillStyle = (x + y) % 2 ? '#a9d974' : '#b7e284';
+              ctx.fillRect(x * cell, y * cell, cell, cell);
+            }
+          }
+          if (!wrap) {
+            ctx.strokeStyle = '#4d7c23';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(2, 2, size - 4, size - 4);
+          }
+          if (food) {
+            ctx.font = Math.round(cell * 0.86) + 'px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🍎', food.x * cell + cell / 2, food.y * cell + cell / 2 + 1);
+          }
+          for (var i = snake.length - 1; i >= 0; i -= 1) {
+            var part = snake[i];
+            ctx.globalAlpha = i === 0 ? 1 : (i % 2 ? 0.82 : 0.95);
+            roundRect(ctx, part.x * cell + 1, part.y * cell + 1, cell - 2, cell - 2, cell * 0.38);
+            ctx.fillStyle = color;
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          var headPart = snake[0];
+          var cx = headPart.x * cell + cell / 2;
+          var cy = headPart.y * cell + cell / 2;
+          var ex = dir.y !== 0 ? cell * 0.2 : 0;
+          var ey = dir.x !== 0 ? cell * 0.2 : 0;
+          [[-1], [1]].forEach(function (side) {
+            var px = cx + dir.x * cell * 0.15 + ex * side[0];
+            var py = cy + dir.y * cell * 0.15 + ey * side[0];
+            ctx.beginPath();
+            ctx.arc(px, py, cell * 0.14, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(px + dir.x * cell * 0.05, py + dir.y * cell * 0.05, cell * 0.07, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+          });
+        }
+
+        ctl.button('▲', 'Up', 'up', function () { turn(0, -1); });
+        ctl.button('◀', 'Left', 'left', function () { turn(-1, 0); });
+        ctl.button('▼', 'Down', 'down', function () { turn(0, 1); });
+        ctl.button('▶', 'Right', 'right', function () { turn(1, 0); });
+
+        var swipeStart = null;
+        shell.canvas.addEventListener('pointerdown', function (event) {
+          event.preventDefault();
+          swipeStart = canvasPoint(shell.canvas, event);
+        });
+        shell.canvas.addEventListener('pointerup', function (event) {
+          if (!swipeStart) return;
+          var end = canvasPoint(shell.canvas, event);
+          var dx = end.x - swipeStart.x;
+          var dy = end.y - swipeStart.y;
+          swipeStart = null;
+          if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+          if (Math.abs(dx) > Math.abs(dy)) turn(dx > 0 ? 1 : -1, 0);
+          else turn(0, dy > 0 ? 1 : -1);
+        });
+
+        ctl.onKey(function (key, isDown) {
+          if (!isDown) return false;
+          var map = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
+          if (!map[key]) return false;
+          turn(map[key][0], map[key][1]);
+          return true;
+        });
+
+        run(ctl, { ctx: ctx, w: size, h: size, update: update, draw: draw, unit: 'apples', onEnd: opts.onEnd });
+        return ctl;
+      }
+
+      // ── Brick Breaker ────────────────────────────────────────────────────
+      function startBricks(host, opts) {
+        var lv = levelIndex(opts.level);
+        var shell = createShell(host, 'arcade-pad-lr');
+        var ctl = makeController(shell);
+        var avail = availableSize(host);
+        var W = Math.floor(Math.min(avail.width, avail.height / 1.25));
+        var H = Math.round(W * 1.25);
+        var ctx = sizeCanvas(shell.canvas, W, H);
+        var COLS = 7;
+        var ROWS = [4, 5, 6][lv];
+        var ROW_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#8b5cf6'];
+        var lives = [5, 3, 3][lv];
+        var speed = W * [0.55, 0.75, 0.95][lv];
+        var radius = Math.max(5, W * 0.022);
+        var paddle = { w: W * [0.34, 0.25, 0.19][lv], h: Math.max(10, W * 0.032), x: W / 2, y: H - Math.max(22, W * 0.075) };
+        var ball = { x: W / 2, y: 0, vx: 0, vy: 0 };
+        var serving = 1;
+        var moveDir = 0;
+        var targetX = null;
+        var bricks = [];
+        var color = opts.color || '#4a90d9';
+
+        function hud() {
+          var hearts = '';
+          for (var i = 0; i < lives; i += 1) hearts += '❤️';
+          ctl.setExtra(hearts);
+        }
+
+        function buildWall() {
+          bricks = [];
+          var gap = Math.max(3, W * 0.012);
+          var top = H * 0.1;
+          var bw = (W - gap * (COLS + 1)) / COLS;
+          var bh = Math.max(12, H * 0.045);
+          for (var row = 0; row < ROWS; row += 1) {
+            for (var col = 0; col < COLS; col += 1) {
+              bricks.push({ x: gap + col * (bw + gap), y: top + row * (bh + gap), w: bw, h: bh, color: ROW_COLORS[row % ROW_COLORS.length], alive: true });
+            }
+          }
+        }
+
+        function serve() {
+          serving = 1;
+          ball.vx = 0;
+          ball.vy = 0;
+        }
+
+        function launch() {
+          var angle = Math.random() * 0.7 - 0.35;
+          ball.vx = speed * Math.sin(angle);
+          ball.vy = -speed * Math.cos(angle);
+        }
+
+        function hitBrick() {
+          for (var i = 0; i < bricks.length; i += 1) {
+            var b = bricks[i];
+            if (!b.alive) continue;
+            var cx = clamp(ball.x, b.x, b.x + b.w);
+            var cy = clamp(ball.y, b.y, b.y + b.h);
+            var dx = ball.x - cx;
+            var dy = ball.y - cy;
+            if (dx * dx + dy * dy <= radius * radius) {
+              b.alive = false;
+              ctl.setScore(ctl.score + 1);
+              return true;
+            }
+          }
+          return false;
+        }
+
+        function update(dt) {
+          if (targetX != null) paddle.x = targetX;
+          paddle.x += moveDir * W * 1.3 * dt;
+          paddle.x = clamp(paddle.x, paddle.w / 2, W - paddle.w / 2);
+          if (serving > 0) {
+            serving -= dt;
+            ball.x = paddle.x;
+            ball.y = paddle.y - radius - 1;
+            if (serving <= 0) launch();
+            return;
+          }
+          var steps = Math.max(1, Math.ceil(Math.hypot(ball.vx, ball.vy) * dt / (radius * 0.8)));
+          var sdt = dt / steps;
+          for (var i = 0; i < steps; i += 1) {
+            ball.x += ball.vx * sdt;
+            if (ball.x < radius) { ball.x = radius; ball.vx = Math.abs(ball.vx); }
+            else if (ball.x > W - radius) { ball.x = W - radius; ball.vx = -Math.abs(ball.vx); }
+            if (hitBrick()) { ball.x -= ball.vx * sdt; ball.vx = -ball.vx; }
+            ball.y += ball.vy * sdt;
+            if (ball.y < radius) { ball.y = radius; ball.vy = Math.abs(ball.vy); }
+            if (hitBrick()) { ball.y -= ball.vy * sdt; ball.vy = -ball.vy; }
+            var left = paddle.x - paddle.w / 2;
+            if (ball.vy > 0 && ball.y + radius >= paddle.y && ball.y - radius <= paddle.y + paddle.h &&
+                ball.x >= left - radius && ball.x <= left + paddle.w + radius) {
+              var hit = clamp((ball.x - paddle.x) / (paddle.w / 2), -1, 1);
+              var angle = hit * 1.05;
+              var s = Math.hypot(ball.vx, ball.vy);
+              ball.vx = s * Math.sin(angle);
+              ball.vy = -s * Math.cos(angle);
+              ball.y = paddle.y - radius;
+            }
+            if (ball.y - radius > H) {
+              lives -= 1;
+              hud();
+              if (lives <= 0) ctl.gameOver();
+              else serve();
+              return;
+            }
+          }
+          if (!bricks.some(function (b) { return b.alive; })) {
+            speed *= 1.1;
+            buildWall();
+            serve();
+          }
+        }
+
+        function draw() {
+          var bg = ctx.createLinearGradient(0, 0, 0, H);
+          bg.addColorStop(0, '#16213a');
+          bg.addColorStop(1, '#22304f');
+          ctx.fillStyle = bg;
+          ctx.fillRect(0, 0, W, H);
+          bricks.forEach(function (b) {
+            if (b.alive) drawBlock(ctx, b.x, b.y, b.w, b.h, b.color);
+          });
+          roundRect(ctx, paddle.x - paddle.w / 2, paddle.y, paddle.w, paddle.h, paddle.h / 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+        }
+
+        ctl.button('◀', 'Move left', 'wide', function () { targetX = null; moveDir = -1; }, function () { if (moveDir < 0) moveDir = 0; });
+        ctl.button('▶', 'Move right', 'wide', function () { targetX = null; moveDir = 1; }, function () { if (moveDir > 0) moveDir = 0; });
+
+        var dragging = false;
+        shell.canvas.addEventListener('pointerdown', function (event) {
+          event.preventDefault();
+          dragging = true;
+          targetX = canvasPoint(shell.canvas, event).x;
+        });
+        shell.canvas.addEventListener('pointermove', function (event) {
+          if (dragging || event.pointerType === 'mouse') targetX = canvasPoint(shell.canvas, event).x;
+        });
+        function stopDrag() {
+          dragging = false;
+          targetX = null;
+        }
+        shell.canvas.addEventListener('pointerup', stopDrag);
+        shell.canvas.addEventListener('pointercancel', stopDrag);
+        shell.canvas.addEventListener('pointerleave', stopDrag);
+
+        ctl.onKey(function (key, isDown) {
+          if (key !== 'ArrowLeft' && key !== 'ArrowRight') return false;
+          targetX = null;
+          var d = key === 'ArrowLeft' ? -1 : 1;
+          if (isDown) moveDir = d;
+          else if (moveDir === d) moveDir = 0;
+          return true;
+        });
+
+        buildWall();
+        hud();
+        run(ctl, { ctx: ctx, w: W, h: H, update: update, draw: draw, unit: 'bricks', onEnd: opts.onEnd });
+        return ctl;
+      }
+
+      // ── Block Drop ───────────────────────────────────────────────────────
+      var BLOCK_PIECES = [
+        { color: '#f472b6', cells: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]] },
+        { color: '#60a5fa', cells: [[1, 1], [1, 1]] },
+        { color: '#facc15', cells: [[0, 1, 0], [1, 1, 1], [0, 0, 0]] },
+        { color: '#fb923c', cells: [[0, 1, 1], [1, 1, 0], [0, 0, 0]] },
+        { color: '#34d399', cells: [[1, 1, 0], [0, 1, 1], [0, 0, 0]] },
+        { color: '#a78bfa', cells: [[1, 0, 0], [1, 1, 1], [0, 0, 0]] },
+        { color: '#f87171', cells: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] }
+      ];
+      var LINE_POINTS = [0, 10, 25, 40, 60];
+
+      function rotateCells(cells) {
+        var n = cells.length;
+        var out = [];
+        for (var y = 0; y < n; y += 1) {
+          out.push([]);
+          for (var x = 0; x < n; x += 1) out[y].push(cells[n - 1 - x][y]);
+        }
+        return out;
+      }
+
+      function startBlocks(host, opts) {
+        var lv = levelIndex(opts.level);
+        var shell = createShell(host, 'arcade-pad-row');
+        var ctl = makeController(shell);
+        var COLS = 10;
+        var ROWS = 18;
+        var avail = availableSize(host);
+        var cell = Math.floor(Math.min(avail.width / COLS, avail.height / ROWS));
+        var W = cell * COLS;
+        var H = cell * ROWS;
+        var ctx = sizeCanvas(shell.canvas, W, H);
+        var base = [1000, 720, 520][lv];
+        var speedUp = [0, 45, 45][lv];
+        var minMs = [1000, 300, 140][lv];
+        var linesPerLevel = [10, 5, 4][lv];
+        var board = [];
+        for (var r = 0; r < ROWS; r += 1) board.push(Array(COLS).fill(null));
+        var bag = [];
+        var piece = null;
+        var lines = 0;
+        var acc = 0;
+
+        ctl.setExtra('Lines 0');
+
+        function gravityMs() {
+          return Math.max(minMs, base - Math.floor(lines / linesPerLevel) * speedUp);
+        }
+
+        function collides(cells, px, py) {
+          for (var y = 0; y < cells.length; y += 1) {
+            for (var x = 0; x < cells.length; x += 1) {
+              if (!cells[y][x]) continue;
+              var bx = px + x;
+              var by = py + y;
+              if (bx < 0 || bx >= COLS || by >= ROWS) return true;
+              if (by >= 0 && board[by][bx]) return true;
+            }
+          }
+          return false;
+        }
+
+        function spawn() {
+          if (!bag.length) bag = shuffle([0, 1, 2, 3, 4, 5, 6]);
+          var type = BLOCK_PIECES[bag.pop()];
+          piece = {
+            cells: type.cells.map(function (row) { return row.slice(); }),
+            color: type.color,
+            x: Math.floor((COLS - type.cells.length) / 2),
+            y: type.cells.length === 4 ? -1 : 0
+          };
+          if (collides(piece.cells, piece.x, piece.y)) ctl.gameOver();
+        }
+
+        function canAct() {
+          return ctl.phase === 'play' && piece;
+        }
+
+        function move(dx) {
+          if (canAct() && !collides(piece.cells, piece.x + dx, piece.y)) piece.x += dx;
+        }
+
+        function turnPiece() {
+          if (!canAct()) return;
+          var rotated = rotateCells(piece.cells);
+          var kicks = [0, -1, 1, -2, 2];
+          for (var i = 0; i < kicks.length; i += 1) {
+            if (!collides(rotated, piece.x + kicks[i], piece.y)) {
+              piece.cells = rotated;
+              piece.x += kicks[i];
+              return;
+            }
+          }
+        }
+
+        function softDrop() {
+          if (canAct() && !collides(piece.cells, piece.x, piece.y + 1)) {
+            piece.y += 1;
+            acc = 0;
+          }
+        }
+
+        function hardDrop() {
+          if (!canAct()) return;
+          while (!collides(piece.cells, piece.x, piece.y + 1)) piece.y += 1;
+          lock();
+        }
+
+        function lock() {
+          var toppedOut = false;
+          for (var y = 0; y < piece.cells.length; y += 1) {
+            for (var x = 0; x < piece.cells.length; x += 1) {
+              if (!piece.cells[y][x]) continue;
+              var by = piece.y + y;
+              if (by < 0) toppedOut = true;
+              else board[by][piece.x + x] = piece.color;
+            }
+          }
+          if (toppedOut) {
+            ctl.gameOver();
+            return;
+          }
+          var cleared = 0;
+          for (var row = ROWS - 1; row >= 0; row -= 1) {
+            if (board[row].every(Boolean)) {
+              board.splice(row, 1);
+              board.unshift(Array(COLS).fill(null));
+              cleared += 1;
+              row += 1;
+            }
+          }
+          lines += cleared;
+          ctl.setScore(ctl.score + 1 + LINE_POINTS[cleared]);
+          ctl.setExtra('Lines ' + lines);
+          acc = 0;
+          spawn();
+        }
+
+        function update(dt) {
+          if (!piece) return;
+          acc += dt * 1000;
+          if (acc >= gravityMs()) {
+            acc = 0;
+            if (!collides(piece.cells, piece.x, piece.y + 1)) piece.y += 1;
+            else lock();
+          }
+        }
+
+        function draw() {
+          ctx.fillStyle = '#1c2140';
+          ctx.fillRect(0, 0, W, H);
+          ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+          ctx.lineWidth = 1;
+          for (var gx = 1; gx < COLS; gx += 1) {
+            ctx.beginPath();
+            ctx.moveTo(gx * cell + 0.5, 0);
+            ctx.lineTo(gx * cell + 0.5, H);
+            ctx.stroke();
+          }
+          for (var y = 0; y < ROWS; y += 1) {
+            for (var x = 0; x < COLS; x += 1) {
+              if (board[y][x]) drawBlock(ctx, x * cell, y * cell, cell, cell, board[y][x]);
+            }
+          }
+          if (!piece) return;
+          var ghostY = piece.y;
+          while (!collides(piece.cells, piece.x, ghostY + 1)) ghostY += 1;
+          for (var py = 0; py < piece.cells.length; py += 1) {
+            for (var px = 0; px < piece.cells.length; px += 1) {
+              if (!piece.cells[py][px]) continue;
+              var cx = (piece.x + px) * cell;
+              if (ghostY + py >= 0 && ghostY !== piece.y) {
+                roundRect(ctx, cx + 2, (ghostY + py) * cell + 2, cell - 4, cell - 4, cell * 0.22);
+                ctx.strokeStyle = piece.color;
+                ctx.globalAlpha = 0.45;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+              }
+              if (piece.y + py >= 0) drawBlock(ctx, cx, (piece.y + py) * cell, cell, cell, piece.color);
+            }
+          }
+        }
+
+        ctl.button('◀', 'Move left', '', function () { move(-1); }, null, 110);
+        ctl.button('⟳', 'Turn', 'accent', turnPiece);
+        ctl.button('▶', 'Move right', '', function () { move(1); }, null, 110);
+        ctl.button('▼', 'Move down', '', softDrop, null, 60);
+        ctl.button('⤓', 'Drop', '', hardDrop);
+
+        shell.canvas.addEventListener('pointerdown', function (event) {
+          event.preventDefault();
+          turnPiece();
+        });
+
+        ctl.onKey(function (key, isDown) {
+          if (!isDown) return key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === ' ';
+          if (key === 'ArrowLeft') move(-1);
+          else if (key === 'ArrowRight') move(1);
+          else if (key === 'ArrowUp') turnPiece();
+          else if (key === 'ArrowDown') softDrop();
+          else if (key === ' ') hardDrop();
+          else return false;
+          return true;
+        });
+
+        spawn();
+        run(ctl, { ctx: ctx, w: W, h: H, update: update, draw: draw, unit: 'points', onEnd: opts.onEnd });
+        return ctl;
+      }
+
+      window.HubArcade = {
+        start: function (host, opts) {
+          if (opts.game === 'snake') return startSnake(host, opts);
+          if (opts.game === 'bricks') return startBricks(host, opts);
+          return startBlocks(host, opts);
+        }
+      };
+    })();
+  </script>
   <script src="kid-fun-data.js"></script>
   <script>
     (function () {
@@ -7503,13 +8562,15 @@
         tttTurn: 'X',
         tttWinner: null,
         tttWinningLine: [],
-        tttScores: { X: 0, O: 0 },
         c4Board: [],
         c4Turn: 'red',
         c4Winner: null,
         c4WinningCells: [],
-        c4Scores: { red: 0, yellow: 0 },
         gamePlayers: { p1: 'Player 1', p2: 'Player 2' },
+        mm: null,
+        mmSize: 16,
+        arcade: null,
+        bsStarter: 'alex',
         bsPhase: 'idle',
         bsBoards: null,
         bsTurn: 'alex',
@@ -7575,31 +8636,6 @@
         }
       }
 
-      function gameStorageKey(name) {
-        var phase = runtime();
-        var familyPart = phase && phase.familyId ? phase.familyId : 'global';
-        return 'familyChores.' + name + '.' + familyPart;
-      }
-
-      function readGameScores(name, fallback) {
-        try {
-          var raw = localStorage.getItem(gameStorageKey(name));
-          if (!raw) return fallback;
-          var parsed = JSON.parse(raw);
-          return parsed && typeof parsed === 'object' ? parsed : fallback;
-        } catch (error) {
-          return fallback;
-        }
-      }
-
-      function writeGameScores(name, value) {
-        try {
-          localStorage.setItem(gameStorageKey(name), JSON.stringify(value));
-        } catch (error) {
-          console.error('Game score write failed:', error);
-        }
-      }
-
       function createEmptyC4Board() {
         return Array(6).fill(null).map(function () { return Array(7).fill(null); });
       }
@@ -7611,16 +8647,87 @@
         };
       }
 
-      function getDefaultGamePlayers() {
+      // Everyone who can be picked as a player: the parents, then each kid.
+      function gameRoster() {
         var phase = runtime();
-        var kidIds = Object.keys((phase && phase.currentConfig && phase.currentConfig.kids) || {});
-        if (kidIds.length >= 2) {
-          return {
-            p1: (phase.currentConfig.kids[kidIds[0]] || {}).name || 'Player 1',
-            p2: (phase.currentConfig.kids[kidIds[1]] || {}).name || 'Player 2'
-          };
-        }
-        return { p1: 'Player 1', p2: 'Player 2' };
+        var kids = (phase && phase.currentConfig && phase.currentConfig.kids) || {};
+        var names = ['Dad', 'Mom'];
+        Object.keys(kids).forEach(function (kidId) {
+          var name = String((kids[kidId] || {}).name || '').trim();
+          if (name && names.indexOf(name) < 0) names.push(name);
+        });
+        return names;
+      }
+
+      function getDefaultGamePlayers() {
+        var roster = gameRoster();
+        var pool = roster.slice(2).concat(roster.slice(0, 2));
+        return { p1: pool[0], p2: pool[1] };
+      }
+
+      function otherSlot(slot) {
+        return slot === 'p1' ? 'p2' : 'p1';
+      }
+
+      // Picking someone already in the other seat swaps the two players.
+      function setGamePlayer(slot, name) {
+        if (slot !== 'p1' && slot !== 'p2' || !name) return;
+        var other = otherSlot(slot);
+        if (state.gamePlayers[other] === name) state.gamePlayers[other] = state.gamePlayers[slot];
+        state.gamePlayers[slot] = name;
+        saveGamePlayers();
+      }
+
+      // Who goes first alternates between the two seats, game by game.
+      function nextStarterSlot(gameId) {
+        return readFunState('nextStarter.' + gameId, 'p1') === 'p2' ? 'p2' : 'p1';
+      }
+
+      function consumeStarterSlot(gameId) {
+        var slot = nextStarterSlot(gameId);
+        writeFunState('nextStarter.' + gameId, otherSlot(slot));
+        return slot;
+      }
+
+      // Wins are kept per pairing ("Alex|Dad"), so switching players shows that pair's record.
+      function matchupKey(names) {
+        return names.slice().sort().join('|');
+      }
+
+      function readMatchups(gameId) {
+        var all = readFunState('wins.' + gameId, {});
+        return all && typeof all === 'object' ? all : {};
+      }
+
+      function currentPlayerNames() {
+        return [state.gamePlayers.p1, state.gamePlayers.p2];
+      }
+
+      function matchupWins(gameId, name, names) {
+        var record = readMatchups(gameId)[matchupKey(names || currentPlayerNames())] || {};
+        return Number(record[name] || 0);
+      }
+
+      function recordMatchupWin(gameId, winner, names) {
+        var all = readMatchups(gameId);
+        var key = matchupKey(names || currentPlayerNames());
+        var record = all[key] && typeof all[key] === 'object' ? all[key] : {};
+        record[winner] = Number(record[winner] || 0) + 1;
+        all[key] = record;
+        writeFunState('wins.' + gameId, all);
+      }
+
+      function resetMatchup(gameId) {
+        var all = readMatchups(gameId);
+        delete all[matchupKey(currentPlayerNames())];
+        writeFunState('wins.' + gameId, all);
+      }
+
+      function renderMatchupScoreboard(gameId) {
+        var p1 = state.gamePlayers.p1;
+        var p2 = state.gamePlayers.p2;
+        return '<div class="game-scoreboard"><span><strong class="alex">' + escapeBulletinHtml(p1) + '</strong> ' + matchupWins(gameId, p1) + ' wins</span>' +
+          '<span><strong class="louisa">' + escapeBulletinHtml(p2) + '</strong> ' + matchupWins(gameId, p2) + ' wins</span></div>';
       }
 
       function loadSavedGamePlayers() {
@@ -7647,11 +8754,22 @@
         }
       }
 
+      function renderPlayerSelect(slot) {
+        var current = state.gamePlayers[slot];
+        var roster = gameRoster();
+        if (roster.indexOf(current) < 0) roster.push(current);
+        return '<select class="game-player-select ' + slot + '" data-player="' + slot + '" aria-label="' + (slot === 'p1' ? 'Player 1' : 'Player 2') + '">' +
+          roster.map(function (name) {
+            return '<option value="' + escapeBulletinHtml(name) + '"' + (name === current ? ' selected' : '') + '>' + escapeBulletinHtml(name) + '</option>';
+          }).join('') +
+        '</select>';
+      }
+
       function renderPlayerNameBar() {
         return '<div class="game-player-names">' +
-          '<label><input type="text" class="game-player-input p1" value="' + escapeBulletinHtml(state.gamePlayers.p1) + '" maxlength="12" data-player="p1"></label>' +
+          renderPlayerSelect('p1') +
           '<span class="game-vs">vs</span>' +
-          '<label><input type="text" class="game-player-input p2" value="' + escapeBulletinHtml(state.gamePlayers.p2) + '" maxlength="12" data-player="p2"></label>' +
+          renderPlayerSelect('p2') +
         '</div>';
       }
 
@@ -7714,21 +8832,18 @@
         state.triviaScore = Number(readFunState('triviaScore', 0)) || 0;
         state.triviaAnswered = false;
         state.triviaSelectedChoice = -1;
-        var tttScores = readGameScores('tttScores', { X: 0, O: 0 });
-        state.tttScores = { X: Number(tttScores.X || 0), O: Number(tttScores.O || 0) };
-        state.tttBoard = Array(9).fill(null);
-        state.tttTurn = 'X';
-        state.tttWinner = null;
-        state.tttWinningLine = [];
-        var c4Scores = readGameScores('c4Scores', { red: 0, yellow: 0 });
-        state.c4Scores = { red: Number(c4Scores.red || 0), yellow: Number(c4Scores.yellow || 0) };
-        state.c4Board = createEmptyC4Board();
-        state.c4Turn = 'red';
-        state.c4Winner = null;
-        state.c4WinningCells = [];
         state.gamePlayers = getDefaultGamePlayers();
         var savedPlayers = loadSavedGamePlayers();
-        if (savedPlayers) state.gamePlayers = savedPlayers;
+        var roster = gameRoster();
+        if (savedPlayers && savedPlayers.p1 !== savedPlayers.p2 &&
+            roster.indexOf(savedPlayers.p1) >= 0 && roster.indexOf(savedPlayers.p2) >= 0) {
+          state.gamePlayers = savedPlayers;
+        }
+        resetTTTBoard();
+        resetConnectFourBoard();
+        state.mm = null;
+        state.mmSize = [12, 16, 20].indexOf(Number(readFunState('mmSize', 16))) >= 0 ? Number(readFunState('mmSize', 16)) : 16;
+        state.arcade = null;
         state.bsPhase = 'idle';
         state.bsBoards = createEmptyBSBoards();
         state.bsTurn = 'alex';
@@ -7874,6 +8989,7 @@
         if (activityId === 'jokes') {
           state.jokeShowStarred = false;
         }
+        if (ARCADE_GAMES[activityId]) resetArcade(activityId);
         state.funView = activityId || 'home';
         renderFun().catch(function (error) { console.error(error); });
       }
@@ -8011,8 +9127,7 @@
           state.tttWinner = result.winner;
           state.tttWinningLine = result.line || [];
           if (result.winner === 'X' || result.winner === 'O') {
-            state.tttScores[result.winner] += 1;
-            writeGameScores('tttScores', state.tttScores);
+            recordMatchupWin('ttt', kidLabelForMarker(result.winner));
           }
           return;
         }
@@ -8021,14 +9136,13 @@
 
       function resetTTTBoard() {
         state.tttBoard = Array(9).fill(null);
-        state.tttTurn = 'X';
+        state.tttTurn = consumeStarterSlot('ttt') === 'p1' ? 'X' : 'O';
         state.tttWinner = null;
         state.tttWinningLine = [];
       }
 
       function resetTTTScores() {
-        state.tttScores = { X: 0, O: 0 };
-        writeGameScores('tttScores', state.tttScores);
+        resetMatchup('ttt');
         resetTTTBoard();
       }
 
@@ -8082,8 +9196,7 @@
           state.c4Winner = result.winner;
           state.c4WinningCells = result.cells || [];
           if (result.winner === 'red' || result.winner === 'yellow') {
-            state.c4Scores[result.winner] += 1;
-            writeGameScores('c4Scores', state.c4Scores);
+            recordMatchupWin('connect4', kidLabelForMarker(result.winner));
           }
           return;
         }
@@ -8092,14 +9205,13 @@
 
       function resetConnectFourBoard() {
         state.c4Board = createEmptyC4Board();
-        state.c4Turn = 'red';
+        state.c4Turn = consumeStarterSlot('connect4') === 'p1' ? 'red' : 'yellow';
         state.c4Winner = null;
         state.c4WinningCells = [];
       }
 
       function resetConnectFourScores() {
-        state.c4Scores = { red: 0, yellow: 0 };
-        writeGameScores('c4Scores', state.c4Scores);
+        resetMatchup('connect4');
         resetConnectFourBoard();
       }
 
@@ -8107,6 +9219,7 @@
         state.bsBoards = createEmptyBSBoards();
         state.bsPhase = 'setup-1';
         state.bsTurn = 'alex';
+        state.bsStarter = consumeStarterSlot('battleship') === 'p1' ? 'alex' : 'louisa';
         state.bsOrientation = 'horizontal';
         state.bsShipIndex = 0;
         state.bsMessage = '';
@@ -8236,7 +9349,7 @@
         }
         if (state.bsPhase === 'setup-2') {
           state.bsPhase = 'handoff-play';
-          state.bsTurn = 'alex';
+          state.bsTurn = state.bsStarter || 'alex';
           state.bsShipIndex = 0;
           clearBSPreview();
           return true;
@@ -8987,9 +10100,9 @@
           ? 'It\'s a tie!'
           : state.tttWinner
             ? kidLabelForMarker(state.tttWinner) + ' (' + state.tttWinner + ') wins! 🎉'
-            : kidLabelForMarker(state.tttTurn) + '\'s turn (' + state.tttTurn + ')';
+            : kidLabelForMarker(state.tttTurn) + (state.tttBoard.every(function (cell) { return !cell; }) ? ' goes first (' : '\'s turn (') + state.tttTurn + ')';
         var statusClass = 'ttt-status' + ((state.tttWinner && state.tttWinner !== 'draw') ? ' game-won' : '');
-        var statusTone = state.tttWinner === 'O' ? 'louisa' : 'alex';
+        var statusTone = (state.tttWinner || state.tttTurn) === 'O' ? 'louisa' : 'alex';
         container.innerHTML = '<div class="fun-shell">' +
           '<div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Tic Tac Toe</h2></div>' +
           '<article class="fun-card hub-card">' +
@@ -9001,7 +10114,7 @@
               if (state.tttWinningLine.indexOf(index) >= 0) classes += ' win';
               return '<button type="button" class="' + classes + '" data-ttt-cell="' + index + '"' + (state.tttWinner || cell ? ' disabled' : '') + '>' + (cell || '') + '</button>';
             }).join('') + '</div>' +
-            '<div class="game-scoreboard"><span><strong class="alex">' + escapeBulletinHtml(state.gamePlayers.p1) + '</strong> ' + state.tttScores.X + '</span><span><strong class="louisa">' + escapeBulletinHtml(state.gamePlayers.p2) + '</strong> ' + state.tttScores.O + '</span></div>' +
+            renderMatchupScoreboard('ttt') +
             '<div class="fun-actions"><button type="button" class="fun-btn" id="funTTTNewBtn">New Game</button><button type="button" class="fun-btn secondary" id="funTTTResetBtn">Reset Scores</button></div>' +
           '</article>' +
         '</div>';
@@ -9013,9 +10126,9 @@
           ? 'Board full - draw!'
           : state.c4Winner
             ? kidLabelForMarker(state.c4Winner) + ' ' + colorLabel + ' wins! 🎉'
-            : kidLabelForMarker(state.c4Turn) + '\'s turn';
+            : kidLabelForMarker(state.c4Turn) + (state.c4Board.every(function (row) { return row.every(function (cell) { return !cell; }); }) ? ' goes first' : '\'s turn');
         var winnerClass = 'c4-status' + ((state.c4Winner && state.c4Winner !== 'draw') ? ' game-won' : '');
-        var winnerTone = state.c4Winner === 'yellow' ? 'louisa' : 'alex';
+        var winnerTone = (state.c4Winner || state.c4Turn) === 'yellow' ? 'louisa' : 'alex';
         container.innerHTML = '<div class="fun-shell">' +
           '<div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Connect Four</h2></div>' +
           '<article class="fun-card hub-card">' +
@@ -9030,7 +10143,7 @@
                 return '<div class="c4-cell' + (win ? ' win' : '') + '">' + (cell ? '<div class="c4-piece ' + cell + '"></div>' : '') + '</div>';
               }).join('');
             }).join('') + '</div>' +
-            '<div class="game-scoreboard"><span><strong class="alex">' + escapeBulletinHtml(state.gamePlayers.p1) + '</strong> ' + state.c4Scores.red + '</span><span><strong class="louisa">' + escapeBulletinHtml(state.gamePlayers.p2) + '</strong> ' + state.c4Scores.yellow + '</span></div>' +
+            renderMatchupScoreboard('connect4') +
             '<div class="fun-actions"><button type="button" class="fun-btn" id="funC4NewBtn">New Game</button><button type="button" class="fun-btn secondary" id="funC4ResetBtn">Reset Scores</button></div>' +
           '</article>' +
         '</div>';
@@ -9110,6 +10223,264 @@
         container.innerHTML = '<div class="fun-shell"><div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">Battleship</h2></div><article class="fun-card hub-card">' + renderPlayerNameBar() + '<div class="bs-status"><strong>' + escapeBulletinHtml(playerName) + '</strong> attacking</div><div class="bs-legend"><span>' + escapeBulletinHtml(state.bsMessage || 'Pick a square to fire.') + '</span></div>' + renderBattleshipGrid(player, false, true) + '</article></div>';
       }
 
+      function funActivityHead(title) {
+        return '<div class="fun-activity-head"><button type="button" class="fun-back-btn" data-fun-open="home">← Back</button><h2 class="hub-section-head">' + escapeBulletinHtml(title) + '</h2></div>';
+      }
+
+      function slotTone(slot) {
+        return slot === 'p2' ? 'louisa' : 'alex';
+      }
+
+      // ── Memory Match: one board, players take turns; a match earns another go ──
+      var MEMORY_EMOJI = ['🐶', '🐱', '🦊', '🐼', '🐸', '🐵', '🦁', '🐷', '🐰', '🐻', '🐨', '🐙', '🦄', '🐢'];
+      var MEMORY_SIZES = [12, 16, 20];
+
+      function shuffleList(list) {
+        for (var i = list.length - 1; i > 0; i -= 1) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = list[i];
+          list[i] = list[j];
+          list[j] = tmp;
+        }
+        return list;
+      }
+
+      function startMemory() {
+        var picks = shuffleList(MEMORY_EMOJI.slice()).slice(0, state.mmSize / 2);
+        state.mm = {
+          cards: shuffleList(picks.concat(picks)).map(function (emoji) { return { emoji: emoji, matched: false, by: null }; }),
+          open: [],
+          turn: consumeStarterSlot('memory'),
+          pairs: { p1: 0, p2: 0 },
+          lock: false,
+          done: false,
+          message: ''
+        };
+      }
+
+      function memoryWinnerSlot(mm) {
+        if (mm.pairs.p1 === mm.pairs.p2) return null;
+        return mm.pairs.p1 > mm.pairs.p2 ? 'p1' : 'p2';
+      }
+
+      function flipMemoryCard(index) {
+        var mm = state.mm;
+        if (!mm || mm.lock || mm.done) return;
+        var card = mm.cards[index];
+        if (!card || card.matched || mm.open.indexOf(index) >= 0) return;
+        mm.open.push(index);
+        mm.message = '';
+        if (mm.open.length < 2) return;
+        var first = mm.cards[mm.open[0]];
+        var second = mm.cards[mm.open[1]];
+        var name = state.gamePlayers[mm.turn];
+        if (first.emoji === second.emoji) {
+          first.matched = second.matched = true;
+          first.by = second.by = mm.turn;
+          mm.pairs[mm.turn] += 1;
+          mm.open = [];
+          if (mm.cards.every(function (c) { return c.matched; })) {
+            mm.done = true;
+            var winner = memoryWinnerSlot(mm);
+            if (winner) recordMatchupWin('memory', state.gamePlayers[winner]);
+          } else {
+            mm.message = 'Match! ' + name + ' goes again';
+          }
+          return;
+        }
+        mm.lock = true;
+        mm.message = 'No match';
+        setTimeout(function () {
+          if (state.mm !== mm) return;
+          mm.open = [];
+          mm.lock = false;
+          mm.turn = otherSlot(mm.turn);
+          mm.message = state.gamePlayers[mm.turn] + '\'s turn';
+          if (state.funView === 'memory') renderFun().catch(function (error) { console.error(error); });
+        }, 1100);
+      }
+
+      function renderMemoryActivity(container) {
+        if (!state.mm) startMemory();
+        var mm = state.mm;
+        var p1 = state.gamePlayers.p1;
+        var p2 = state.gamePlayers.p2;
+        var winner = mm.done ? memoryWinnerSlot(mm) : null;
+        var status = mm.done
+          ? (winner ? state.gamePlayers[winner] + ' wins! 🎉' : 'It\'s a tie!')
+          : (mm.message || (state.gamePlayers[mm.turn] + (mm.pairs.p1 + mm.pairs.p2 === 0 && !mm.open.length ? ' goes first' : '\'s turn') + ': flip two cards'));
+        var cols = state.mmSize === 20 ? 5 : 4;
+        container.innerHTML = '<div class="fun-shell">' + funActivityHead('🃏 Memory Match') +
+          '<article class="fun-card hub-card">' +
+            renderPlayerNameBar() +
+            '<div class="mm-status' + (winner ? ' game-won' : '') + '"><strong class="' + slotTone(winner || mm.turn) + '">' + escapeBulletinHtml(status) + '</strong></div>' +
+            '<div class="mm-pairs"><span><strong class="alex">' + escapeBulletinHtml(p1) + '</strong> ' + mm.pairs.p1 + (mm.pairs.p1 === 1 ? ' pair' : ' pairs') + '</span>' +
+              '<span><strong class="louisa">' + escapeBulletinHtml(p2) + '</strong> ' + mm.pairs.p2 + (mm.pairs.p2 === 1 ? ' pair' : ' pairs') + '</span></div>' +
+            '<div class="mm-grid" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">' + mm.cards.map(function (card, index) {
+              var up = card.matched || mm.open.indexOf(index) >= 0;
+              var classes = 'mm-card' + (up ? ' up' : '') + (card.matched ? ' found ' + card.by : '') + (mm.open.indexOf(index) >= 0 ? ' flipping' : '');
+              return '<button type="button" class="' + classes + '" data-mm-card="' + index + '"' +
+                (up || mm.lock || mm.done ? ' disabled' : '') + ' aria-label="' + (up ? escapeBulletinHtml(card.emoji) : 'Hidden card') + '">' +
+                (up ? card.emoji : '') + '</button>';
+            }).join('') + '</div>' +
+            renderMatchupScoreboard('memory') +
+            '<div class="arcade-level-row"><span class="fun-meta">Cards</span><div class="arcade-level-chips">' + MEMORY_SIZES.map(function (size) {
+              return '<button type="button" class="level-chip' + (size === state.mmSize ? ' active' : '') + '" data-mm-size="' + size + '">' + size + '</button>';
+            }).join('') + '</div></div>' +
+            '<div class="fun-actions"><button type="button" class="fun-btn" id="funMMNewBtn">New Game</button><button type="button" class="fun-btn secondary" id="funMMResetBtn">Reset Scores</button></div>' +
+          '</article>' +
+        '</div>';
+      }
+
+      // ── Arcade score battles: each player takes a turn, higher score wins ──
+      var ARCADE_GAMES = {
+        snake: { title: 'Snake', icon: '🐍', unit: 'apples', how: 'Eat the apples to grow. Don\'t bump into your own tail! Use the arrows or swipe.' },
+        bricks: { title: 'Brick Breaker', icon: '🧱', unit: 'bricks', how: 'Slide your finger to move the paddle. Bounce the ball to break the bricks.' },
+        blocks: { title: 'Block Drop', icon: '🟪', unit: 'points', how: 'Slide and turn the falling blocks to fill a whole row. Tap the board to turn.' }
+      };
+      var ARCADE_LEVELS = [
+        { id: 'slow', label: '🐢 Slow' },
+        { id: 'medium', label: '🐇 Medium' },
+        { id: 'fast', label: '🚀 Fast' }
+      ];
+      // Starting speeds by age; each person's pick is remembered on this phone.
+      var ARCADE_DEFAULT_LEVELS = { louisa: 'slow', alex: 'medium' };
+
+      function arcadeLevelFor(name) {
+        var saved = readFunState('arcadeLevels', {}) || {};
+        var valid = ARCADE_LEVELS.some(function (level) { return level.id === saved[name]; });
+        if (valid) return saved[name];
+        return ARCADE_DEFAULT_LEVELS[String(name || '').toLowerCase()] || 'fast';
+      }
+
+      function setArcadeLevel(name, levelId) {
+        var saved = readFunState('arcadeLevels', {}) || {};
+        saved[name] = levelId;
+        writeFunState('arcadeLevels', saved);
+      }
+
+      function arcadeLevelLabel(levelId) {
+        var match = ARCADE_LEVELS.filter(function (level) { return level.id === levelId; })[0];
+        return match ? match.label : '';
+      }
+
+      function arcadeBest(gameId) {
+        var best = readFunState('arcadeBest.' + gameId, {});
+        return best && typeof best === 'object' ? best : {};
+      }
+
+      function resetArcade(gameId) {
+        if (state.arcade && state.arcade.controller) state.arcade.controller.stop();
+        state.arcade = { game: gameId, phase: 'ready', slots: [], order: [], turn: 0, scores: [null, null], newBest: [false, false], controller: null };
+      }
+
+      function startArcadeMatch() {
+        var a = state.arcade;
+        var first = consumeStarterSlot(a.game);
+        a.slots = [first, otherSlot(first)];
+        a.order = a.slots.map(function (slot) { return state.gamePlayers[slot]; });
+        a.turn = 0;
+        a.scores = [null, null];
+        a.newBest = [false, false];
+        a.phase = 'playing';
+      }
+
+      function arcadeWinnerIndex(a) {
+        if (a.scores[0] === a.scores[1]) return -1;
+        return a.scores[0] > a.scores[1] ? 0 : 1;
+      }
+
+      function finishArcadeTurn(match, score) {
+        if (state.arcade !== match) return;
+        match.controller = null;
+        match.scores[match.turn] = score;
+        var name = match.order[match.turn];
+        var best = arcadeBest(match.game);
+        if (score > 0 && score > Number(best[name] || 0)) {
+          best[name] = score;
+          writeFunState('arcadeBest.' + match.game, best);
+          match.newBest[match.turn] = true;
+        }
+        if (match.turn === 0) {
+          match.turn = 1;
+          match.phase = 'handoff';
+        } else {
+          match.phase = 'result';
+          var winner = arcadeWinnerIndex(match);
+          if (winner >= 0) recordMatchupWin(match.game, match.order[winner], match.order);
+        }
+        if (state.funView === match.game) renderFun().catch(function (error) { console.error(error); });
+      }
+
+      function mountArcadeTurn() {
+        var a = state.arcade;
+        var host = document.getElementById('arcadeStage');
+        if (!host || !window.HubArcade) return;
+        var name = a.order[a.turn];
+        a.controller = window.HubArcade.start(host, {
+          game: a.game,
+          level: arcadeLevelFor(name),
+          color: a.slots[a.turn] === 'p2' ? '#8a5bd1' : '#4a90d9',
+          onEnd: function (score) { finishArcadeTurn(a, score); }
+        });
+      }
+
+      function renderArcadeLevelRow(slot) {
+        var name = state.gamePlayers[slot];
+        var current = arcadeLevelFor(name);
+        return '<div class="arcade-level-row"><strong class="' + slotTone(slot) + '">' + escapeBulletinHtml(name) + '</strong><div class="arcade-level-chips">' +
+          ARCADE_LEVELS.map(function (level) {
+            return '<button type="button" class="level-chip ' + slot + (level.id === current ? ' active' : '') + '" data-arcade-level="' + level.id + '" data-arcade-player="' + slot + '">' + level.label + '</button>';
+          }).join('') +
+        '</div></div>';
+      }
+
+      function renderArcadeActivity(container) {
+        var a = state.arcade;
+        var game = ARCADE_GAMES[a.game];
+        var unit = game.unit;
+        var body;
+        if (a.phase === 'playing') {
+          var playerName = a.order[a.turn];
+          body = '<div class="arcade-turn"><strong class="' + slotTone(a.slots[a.turn]) + '">' + escapeBulletinHtml(playerName) + '\'s turn</strong>' +
+            '<span>' + arcadeLevelLabel(arcadeLevelFor(playerName)) + (a.turn === 1 ? ' · beat ' + a.scores[0] : '') + '</span></div>' +
+            '<div class="arcade-stage" id="arcadeStage"></div>';
+        } else if (a.phase === 'handoff') {
+          var firstName = a.order[0];
+          var nextName = a.order[1];
+          body = '<div class="arcade-handoff">' +
+            '<p class="arcade-big"><strong class="' + slotTone(a.slots[0]) + '">' + escapeBulletinHtml(firstName) + '</strong> got ' + a.scores[0] + ' ' + unit + (a.newBest[0] ? ' ⭐ new best!' : '') + '</p>' +
+            '<p>Pass the phone to <strong class="' + slotTone(a.slots[1]) + '">' + escapeBulletinHtml(nextName) + '</strong>. Can you beat ' + a.scores[0] + '?</p>' +
+            '<button type="button" class="fun-btn" id="funArcadeGoBtn">' + escapeBulletinHtml(nextName) + ', go!</button>' +
+          '</div>';
+        } else if (a.phase === 'result') {
+          var winner = arcadeWinnerIndex(a);
+          body = '<div class="mm-status game-won"><strong class="' + (winner >= 0 ? slotTone(a.slots[winner]) : 'alex') + '">' +
+              escapeBulletinHtml(winner >= 0 ? a.order[winner] + ' wins! 🎉' : 'It\'s a tie!') + '</strong></div>' +
+            '<div class="arcade-results">' + [0, 1].map(function (i) {
+              return '<div class="arcade-result-row' + (i === winner ? ' won' : '') + '"><strong class="' + slotTone(a.slots[i]) + '">' + escapeBulletinHtml(a.order[i]) + '</strong>' +
+                '<span>' + a.scores[i] + ' ' + unit + (a.newBest[i] ? ' ⭐' : '') + '</span></div>';
+            }).join('') + '</div>' +
+            renderMatchupScoreboard(a.game) +
+            '<div class="fun-actions"><button type="button" class="fun-btn" id="funArcadeStartBtn">Play Again</button><button type="button" class="fun-btn secondary" id="funArcadeSetupBtn">Players &amp; Speed</button></div>';
+        } else {
+          var best = arcadeBest(a.game);
+          var p1 = state.gamePlayers.p1;
+          var p2 = state.gamePlayers.p2;
+          body = renderPlayerNameBar() +
+            '<p class="arcade-how">' + escapeBulletinHtml(game.how) + '</p>' +
+            renderArcadeLevelRow('p1') +
+            renderArcadeLevelRow('p2') +
+            '<p class="arcade-first">⭐ <strong class="' + slotTone(nextStarterSlot(a.game)) + '">' + escapeBulletinHtml(state.gamePlayers[nextStarterSlot(a.game)]) + '</strong> goes first</p>' +
+            '<div class="fun-actions"><button type="button" class="fun-btn" id="funArcadeStartBtn">Start</button><button type="button" class="fun-btn secondary" id="funArcadeResetBtn">Reset Scores</button></div>' +
+            renderMatchupScoreboard(a.game) +
+            '<p class="fun-meta">Best: ' + escapeBulletinHtml(p1) + ' ' + Number(best[p1] || 0) + ' · ' + escapeBulletinHtml(p2) + ' ' + Number(best[p2] || 0) + '</p>';
+        }
+        container.innerHTML = '<div class="fun-shell">' + funActivityHead(game.icon + ' ' + game.title) +
+          '<article class="fun-card hub-card arcade-card">' + body + '</article></div>';
+        if (a.phase === 'playing') mountArcadeTurn();
+      }
+
       function renderFunHome(container) {
         var tiles = [
           { id: 'jokes', icon: '😂', label: 'Jokes', color: '#f59e0b', sub: state.starredJokes.length ? '★ ' + state.starredJokes.length + ' saved' : '' },
@@ -9119,7 +10490,11 @@
           { id: 'trivia', icon: '🧠', label: 'Trivia', color: '#22c55e', sub: '' },
           { id: 'ttt', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4v16M16 4v16M4 8h16M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="m6.5 6.5 3 3m0-3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><circle cx="17.5" cy="17.5" r="2.5" stroke="currentColor" stroke-width="2"></circle></svg>', label: 'Tic Tac Toe', color: '#4a90d9', sub: '' },
           { id: 'connect4', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="3" stroke="currentColor" stroke-width="2"></rect><circle cx="8" cy="10" r="1.8" fill="currentColor"></circle><circle cx="12" cy="10" r="1.8" fill="currentColor" opacity=".7"></circle><circle cx="16" cy="10" r="1.8" fill="currentColor" opacity=".45"></circle><circle cx="8" cy="14" r="1.8" fill="currentColor" opacity=".7"></circle><circle cx="12" cy="14" r="1.8" fill="currentColor"></circle><circle cx="16" cy="14" r="1.8" fill="currentColor" opacity=".7"></circle></svg>', label: 'Connect Four', color: '#2563eb', sub: '' },
-          { id: 'battleship', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 16c2.2 0 2.2-1 4.4-1s2.2 1 4.4 1 2.2-1 4.4-1 2.2 1 4.4 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M7 12h10l-1.5-3H8.5L7 12Zm3-3V6l2 1.4L14 6v3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>', label: 'Battleship', color: '#0f766e', sub: '' }
+          { id: 'battleship', icon: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 16c2.2 0 2.2-1 4.4-1s2.2 1 4.4 1 2.2-1 4.4-1 2.2 1 4.4 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M7 12h10l-1.5-3H8.5L7 12Zm3-3V6l2 1.4L14 6v3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>', label: 'Battleship', color: '#0f766e', sub: '' },
+          { id: 'memory', icon: '🃏', label: 'Memory Match', color: '#14b8a6', sub: 'Take turns' },
+          { id: 'snake', icon: '🐍', label: 'Snake', color: '#16a34a', sub: 'Pass the phone' },
+          { id: 'bricks', icon: '🧱', label: 'Brick Breaker', color: '#ef4444', sub: 'Pass the phone' },
+          { id: 'blocks', icon: '🟪', label: 'Block Drop', color: '#6366f1', sub: 'Pass the phone' },
         ];
         container.innerHTML = '<div class="fun-shell"><div class="fun-grid">' + tiles.map(function (tile) {
           return '<button type="button" class="fun-tile" data-fun-open="' + tile.id + '" style="--tile-color:' + tile.color + '">' +
@@ -9270,9 +10645,21 @@
         var container = document.getElementById('funContent');
         if (!container) return;
         ensureKidFunStyles();
-        loadFunState();
         if (!phase || !phase.database || !phase.familyId || !phase.configLoaded) {
           container.innerHTML = '<div class="fun-shell"><p class="fun-empty hub-empty">Connect to a family to unlock activities.</p></div>';
+          return;
+        }
+        loadFunState();
+        if (ARCADE_GAMES[state.funView]) {
+          if (!state.arcade || state.arcade.game !== state.funView) resetArcade(state.funView);
+          var live = state.arcade.controller;
+          // Never re-render over a turn in progress; that would end it.
+          if (state.arcade.phase === 'playing' && live && live.alive && live.canvas.isConnected) return;
+          renderArcadeActivity(container);
+          return;
+        }
+        if (state.funView === 'memory') {
+          renderMemoryActivity(container);
           return;
         }
         if (state.funView === 'jokes') {
@@ -9635,6 +11022,65 @@
           return;
         }
 
+        var mmCard = event.target.closest('[data-mm-card]');
+        if (mmCard) {
+          flipMemoryCard(Number(mmCard.dataset.mmCard));
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var mmSize = event.target.closest('[data-mm-size]');
+        if (mmSize) {
+          state.mmSize = Number(mmSize.dataset.mmSize) || 16;
+          writeFunState('mmSize', state.mmSize);
+          startMemory();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funMMNewBtn')) {
+          startMemory();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (event.target.closest('#funMMResetBtn')) {
+          resetMatchup('memory');
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        var arcadeLevel = event.target.closest('[data-arcade-level]');
+        if (arcadeLevel) {
+          setArcadeLevel(state.gamePlayers[arcadeLevel.dataset.arcadePlayer], arcadeLevel.dataset.arcadeLevel);
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (state.arcade && event.target.closest('#funArcadeStartBtn')) {
+          startArcadeMatch();
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (state.arcade && event.target.closest('#funArcadeGoBtn')) {
+          state.arcade.phase = 'playing';
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (state.arcade && event.target.closest('#funArcadeSetupBtn')) {
+          state.arcade.phase = 'ready';
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
+        if (state.arcade && event.target.closest('#funArcadeResetBtn')) {
+          resetMatchup(state.arcade.game);
+          renderFun().catch(function (error) { console.error(error); });
+          return;
+        }
+
         var c4Column = event.target.closest('[data-c4-col]');
         if (c4Column) {
           playConnectFour(Number(c4Column.dataset.c4Col));
@@ -9752,6 +11198,11 @@
         }
         if (event.target.id === 'funMadLibAnswer') {
           updateMadLibAnswer(event.target.value || '');
+          return;
+        }
+        if (event.target.classList && event.target.classList.contains('game-player-select')) {
+          setGamePlayer(event.target.dataset.player, event.target.value);
+          renderFun().catch(function (error) { console.error(error); });
         }
       });
 
@@ -9763,12 +11214,6 @@
         if (event.target.id === 'funMadLibAnswer') {
           updateMadLibAnswer(event.target.value || '');
           return;
-        }
-        if (event.target.classList.contains('game-player-input')) {
-          var player = event.target.dataset.player;
-          if (!player) return;
-          state.gamePlayers[player] = String(event.target.value || '').trim() || (player === 'p1' ? 'Player 1' : 'Player 2');
-          saveGamePlayers();
         }
       });
 
